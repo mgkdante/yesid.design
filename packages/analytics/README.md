@@ -24,6 +24,25 @@ onMount(() => {
 });
 ```
 
+### Custom properties
+
+Declare each property and its exact allowed values; lists may be built at runtime.
+
+```ts
+const preset = defineAnalyticsPreset({
+	events: ['signup_click'],
+	props: { placement: ['hero', 'footer'], locale: ['en', 'fr'] },
+});
+const analytics = createAnalytics(preset, {
+	domain: PUBLIC_PLAUSIBLE_DOMAIN,
+	context: () => ({ locale: currentLocale() }),
+});
+analytics.trackEvent('signup_click', { placement: 'hero' });
+```
+
+`context` is read on every pageview and event. Keys or values outside the preset are dropped
+before anything is sent. Register the keys under Custom properties in Plausible to see them.
+
 It sends nothing unless `domain` is set and the page is served from that host or a subdomain,
 so local, preview and fork deployments stay silent. Call it once per page load in the browser
 (it throws if the tracker is started twice). Each request carries only the page path, bounded
@@ -45,8 +64,8 @@ runs and where the samples go.
 - URLs and referrers are reduced before they leave the browser. A URL that can't be reduced drops
   the event instead of throwing into navigation.
 - No cookies or storage writes; the tracker only reads its own `plausible_ignore` opt-out.
-- Only pageviews, engagement and the preset's custom events are sent, never custom properties or
-  revenue.
+- Only pageviews, engagement and the preset's custom events are sent, never revenue. Custom
+  properties are limited to the preset's allowlisted keys and values.
 - Delivery is fire-and-forget. Products own any monitoring of it.
 
 ## Develop

@@ -1,5 +1,5 @@
 import { init, track, type PlausibleRequestPayload } from '@plausible-analytics/tracker';
-import type { AnalyticsPreset } from './config';
+import type { AnalyticsPreset, AnalyticsPropValues, AnalyticsProps } from './config';
 
 const ACQUISITION_KEYS = [
 	'utm_source',
@@ -42,13 +42,29 @@ export function sanitizeAnalyticsReferrer(value: string): string | undefined {
 	}
 }
 
-export interface AnalyticsOptions {
-	/** The Plausible site domain. Unset or empty turns measurement off. */
-	domain: string | undefined;
+/** Keeps only allowed keys whose value is one of that key's allowed values. */
+export function allowAnalyticsProps(
+	allowed: AnalyticsProps,
+	props: Readonly<Record<string, unknown>> | undefined,
+): Record<string, string> | undefined {
+	const kept = Object.entries(props ?? {}).filter(
+		([key, value]) =>
+			typeof value === 'string' &&
+			Object.hasOwn(allowed, key) &&
+			allowed[key]?.includes(value) === true,
+	);
+	return kept.length > 0 ? (Object.fromEntries(kept) as Record<string, string>) : undefined;
 }
 
-export interface Analytics<EventName extends string> {
-	trackEvent(name: EventName): void;
+export interface AnalyticsOptions<Props extends AnalyticsProps = AnalyticsProps> {
+	/** The Plausible site domain. Unset or empty turns measurement off. */
+	domain: string | undefined;
+	/** Properties added to every pageview and event, read each time one is sent. */
+	context?: () => AnalyticsPropValues<Props>;
+}
+
+export interface Analytics<EventName extends string, Props extends AnalyticsProps = AnalyticsProps> {
+	trackEvent(name: EventName, props?: AnalyticsPropValues<Props>): void;
 }
 
 /**
@@ -57,30 +73,42 @@ export interface Analytics<EventName extends string> {
  * served from it or one of its subdomains, so local, preview and fork hosts stay silent; without
  * a browser location it returns a no-op. Call it once per page load.
  */
-export function createAnalytics<const EventName extends string>(
-	preset: AnalyticsPreset<EventName>,
-	{ domain }: AnalyticsOptions,
-): Analytics<EventName> {
+export function createAnalytics<
+	const EventName extends string,
+	const Props extends AnalyticsProps = Record<never, never>,
+>(
+	preset: AnalyticsPreset<EventName, Props>,
+	{ domain, context }: AnalyticsOptions<Props>,
+): Analytics<EventName, Props> {
 	const hostname = globalThis.location?.hostname;
 	if (!domain || !hostname || (hostname !== domain && !hostname.endsWith(`.${domain}`))) {
 		return { trackEvent() {} };
 	}
 	const sendable = new Set<string>(['pageview', ...preset.events]);
+	const allowed: AnalyticsProps = preset.props ?? {};
 	init({
 		domain,
+		customProperties: () => allowAnalyticsProps(allowed, context?.()) ?? {},
 		// The tracker also sends class-tagged clicks and window.plausible calls, so filter here.
-		transformRequest({ p: _properties, $: _revenue, ...payload }): PlausibleRequestPayload | null {
+		transformRequest({ p, $: _revenue, ...payload }): PlausibleRequestPayload | null {
 			if (!sendable.has(payload.n)) return null;
 			try {
+				const props = allowAnalyticsProps(allowed, p);
 				return {
 					...payload,
 					u: sanitizeAnalyticsUrl(new URL(payload.u)),
 					r: sanitizeAnalyticsReferrer(payload.r ?? '') ?? null,
+					...(props && { p: props }),
 				};
 			} catch {
 				return null;
 			}
 		},
 	});
-	return { trackEvent: (name) => track(name, {}) };
+	return {
+		trackEvent(name, props) {
+			const kept = allowAnalyticsProps(allowed, props);
+			track(name, kept ? { props: kept } : {});
+		},
+	};
 }

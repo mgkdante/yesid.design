@@ -2,7 +2,12 @@ vi.mock('@plausible-analytics/tracker', () => ({ init: vi.fn(), track: vi.fn() }
 
 import { init, track } from '@plausible-analytics/tracker';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createAnalytics, sanitizeAnalyticsReferrer, sanitizeAnalyticsUrl } from './client';
+import {
+	allowAnalyticsProps,
+	createAnalytics,
+	sanitizeAnalyticsReferrer,
+	sanitizeAnalyticsUrl,
+} from './client';
 import { defineAnalyticsPreset } from './config';
 
 afterEach(() => {
@@ -81,6 +86,28 @@ describe('sanitizeAnalyticsReferrer', () => {
 	});
 });
 
+describe('allowAnalyticsProps', () => {
+	const allowed = { link: ['live', 'repo'], project: ['alpha-project'] };
+
+	it('keeps only allowed keys carrying one of their allowed values', () => {
+		expect(
+			allowAnalyticsProps(allowed, {
+				link: 'repo',
+				project: 'beta-project',
+				email: 'user@example.com',
+				count: 3,
+				toString: 'live',
+			}),
+		).toEqual({ link: 'repo' });
+	});
+
+	it('returns undefined when nothing survives', () => {
+		expect(allowAnalyticsProps(allowed, { link: 'docs' })).toBeUndefined();
+		expect(allowAnalyticsProps(allowed, undefined)).toBeUndefined();
+		expect(allowAnalyticsProps({}, { link: 'live' })).toBeUndefined();
+	});
+});
+
 describe('createAnalytics', () => {
 	it.each([undefined, ''])('stays silent with domain %s', (domain) => {
 		vi.stubGlobal('location', { hostname: 'example.test' });
@@ -155,5 +182,36 @@ describe('createAnalytics', () => {
 		expect(transformRequest({ ...payload, n: 'event_gamma' })).toBeNull();
 		expect(() => transformRequest({ ...payload, u: 'https://example.test//' })).not.toThrow();
 		expect(transformRequest({ ...payload, u: 'https://example.test//' })).toBeNull();
+	});
+
+	it('sends allowed properties on events and context properties on every request', () => {
+		vi.stubGlobal('location', { hostname: 'example.test' });
+		let locale = 'en';
+		const analytics = createAnalytics(
+			defineAnalyticsPreset({
+				events: ['event_alpha'],
+				props: { locale: ['en', 'fr'], link: ['live', 'repo'] },
+			}),
+			// A stale or mistyped context value is dropped at runtime too.
+			{ domain: 'example.test', context: () => ({ locale }) as { locale: 'en' } },
+		);
+		const config = vi.mocked(init).mock.calls[0]?.[0];
+		const customProperties = config?.customProperties;
+		const transformRequest = config?.transformRequest;
+		if (typeof customProperties !== 'function' || !transformRequest) {
+			throw new Error('Expected custom properties and a request transform');
+		}
+
+		expect(customProperties('pageview')).toEqual({ locale: 'en' });
+		locale = 'de';
+		expect(customProperties('pageview')).toEqual({});
+
+		analytics.trackEvent('event_alpha', { link: 'repo' });
+		expect(track).toHaveBeenLastCalledWith('event_alpha', { props: { link: 'repo' } });
+
+		const payload = { n: 'event_alpha', d: 'example.test', u: 'https://example.test/a', r: null };
+		expect(
+			transformRequest({ ...payload, p: { locale: 'fr', link: 'docs', secret: 'x' } }),
+		).toEqual({ ...payload, p: { locale: 'fr' } });
 	});
 });

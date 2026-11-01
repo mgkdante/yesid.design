@@ -39,30 +39,44 @@
 
 ```ts
 
+// @public
+function allowAnalyticsProps(allowed: AnalyticsProps, props: Readonly<Record<string, unknown>> | undefined): Record<string, string> | undefined;
+
 // @public (undocumented)
-interface Analytics<EventName extends string> {
+interface Analytics<EventName extends string, Props extends AnalyticsProps = AnalyticsProps> {
     // (undocumented)
-    trackEvent(name: EventName): void;
+    trackEvent(name: EventName, props?: AnalyticsPropValues<Props>): void;
 }
 
 // @public (undocumented)
 type AnalyticsEventName<Preset extends AnalyticsPreset> = Preset['events'][number];
 
 // @public (undocumented)
-interface AnalyticsOptions {
+interface AnalyticsOptions<Props extends AnalyticsProps = AnalyticsProps> {
+    context?: () => AnalyticsPropValues<Props>;
     domain: string | undefined;
 }
 
 // @public (undocumented)
-interface AnalyticsPreset<EventName extends string = string> {
+interface AnalyticsPreset<EventName extends string = string, Props extends AnalyticsProps = AnalyticsProps> {
     // (undocumented)
     readonly events: readonly EventName[];
+    readonly props?: Props;
 }
+
+// @public
+type AnalyticsProps = Readonly<Record<string, readonly string[]>>;
+
+// @public
+type AnalyticsPropValues<Props extends AnalyticsProps> = {
+    readonly [Key in keyof Props]?: Props[Key][number];
+};
 
 declare namespace Client {
     export {
         sanitizeAnalyticsUrl,
         sanitizeAnalyticsReferrer,
+        allowAnalyticsProps,
         createAnalytics,
         AnalyticsOptions,
         Analytics
@@ -72,27 +86,32 @@ declare namespace Client {
 declare namespace Config {
     export {
         defineAnalyticsPreset,
+        AnalyticsProps,
         AnalyticsPreset,
-        AnalyticsEventName
+        AnalyticsEventName,
+        AnalyticsPropValues
     }
 }
 
 // @public
-function createAnalytics<const EventName extends string>(preset: AnalyticsPreset<EventName>, input: AnalyticsOptions): Analytics<EventName>;
+function createAnalytics<const EventName extends string, const Props extends AnalyticsProps = Record<never, never>>(preset: AnalyticsPreset<EventName, Props>, input: AnalyticsOptions<Props>): Analytics<EventName, Props>;
 
 // @public (undocumented)
-function defineAnalyticsPreset<const EventName extends string>(preset: AnalyticsPreset<EventName>): AnalyticsPreset<EventName>;
+function defineAnalyticsPreset<const EventName extends string, const Props extends AnalyticsProps = Record<never, never>>(preset: AnalyticsPreset<EventName, Props>): AnalyticsPreset<EventName, Props>;
 
 declare namespace Index {
     export {
         sanitizeAnalyticsUrl,
         sanitizeAnalyticsReferrer,
+        allowAnalyticsProps,
         createAnalytics,
         AnalyticsOptions,
         Analytics,
         defineAnalyticsPreset,
+        AnalyticsProps,
         AnalyticsPreset,
         AnalyticsEventName,
+        AnalyticsPropValues,
         parseVitalsSample,
         parseVitalsBeacon,
         startVitals,
