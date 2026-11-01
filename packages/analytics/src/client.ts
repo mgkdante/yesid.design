@@ -88,7 +88,14 @@ export function createAnalytics<
 	const allowed: AnalyticsProps = preset.props ?? {};
 	init({
 		domain,
-		customProperties: () => allowAnalyticsProps(allowed, context?.()) ?? {},
+		// The tracker calls this inside history.pushState, so a failing context must not throw.
+		customProperties: () => {
+			try {
+				return allowAnalyticsProps(allowed, context?.()) ?? {};
+			} catch {
+				return {};
+			}
+		},
 		// The tracker also sends class-tagged clicks and window.plausible calls, so filter here.
 		transformRequest({ p, $: _revenue, ...payload }): PlausibleRequestPayload | null {
 			if (!sendable.has(payload.n)) return null;

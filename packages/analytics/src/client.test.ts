@@ -214,4 +214,18 @@ describe('createAnalytics', () => {
 			transformRequest({ ...payload, p: { locale: 'fr', link: 'docs', secret: 'x' } }),
 		).toEqual({ ...payload, p: { locale: 'fr' } });
 	});
+
+	it('sends no context properties instead of throwing when context fails', () => {
+		vi.stubGlobal('location', { hostname: 'example.test' });
+		createAnalytics(defineAnalyticsPreset({ events: [], props: { locale: ['en'] } }), {
+			domain: 'example.test',
+			context: () => {
+				throw new Error('router not ready');
+			},
+		});
+		const customProperties = vi.mocked(init).mock.calls[0]?.[0].customProperties;
+		if (typeof customProperties !== 'function') throw new Error('Expected custom properties');
+
+		expect(customProperties('pageview')).toEqual({});
+	});
 });
