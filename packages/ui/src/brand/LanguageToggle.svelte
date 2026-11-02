@@ -119,8 +119,10 @@
 {/if}
 
 <style>
-	/* Fixed 44px height with no vertical padding: a three-board post bleeds into the pill's padding instead of growing it. */
+	/* Fixed 44px height with no vertical padding: a three-board post bleeds into the pill's padding instead of growing it.
+	   The boards never shrink; the post stays centred and its pole runs past the slot as far as it needs. */
 	.lang-post {
+		flex: none;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -138,6 +140,11 @@
 	.lang-post:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 2px;
+	}
+
+	.lang-post svg {
+		flex: none;
+		overflow: visible;
 	}
 
 	.pole {
@@ -206,24 +213,10 @@
 		}
 	}
 
-	/* Phones shrink the drawing, not the letters' proportions; heights follow the post's viewBox. */
-	@media (max-width: 479px) {
+	/* Phones give up the side padding, never the board size. */
+	@media (max-width: 767px) {
 		.lang-post {
-			min-inline-size: var(--size-tap-min);
-			padding-inline: 3px;
-		}
-		.lang-post svg {
-			width: 34px;
-			height: calc(27px * var(--vb-h, 44) / 44);
-		}
-	}
-	@media (max-width: 359px) {
-		.lang-post {
-			padding-inline: 2px;
-		}
-		.lang-post svg {
-			width: 22px;
-			height: calc(17px * var(--vb-h, 44) / 44);
+			padding-inline: 0;
 		}
 	}
 </style>
