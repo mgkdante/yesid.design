@@ -9,6 +9,9 @@ vi.mock('@yesid/motion/stores/reducedMotion', async (original) => ({
 	isPrefersReducedMotion: () => motion.reduced,
 }));
 
+const lenis = vi.hoisted(() => ({ current: null as null | { isScrolling: false | 'smooth'; scroll: number; scrollTo: ReturnType<typeof vi.fn> } }));
+vi.mock('@yesid/motion/utils/lenis', () => ({ getLenis: () => lenis.current }));
+
 import SiteHeader, { type SiteHeaderProps } from './SiteHeader.svelte';
 import type { NavigationEvent } from '../brand/navigation.js';
 
@@ -43,10 +46,22 @@ function setup(overrides: Partial<SiteHeaderProps> = {}) {
 
 afterEach(() => {
 	motion.reduced = true;
+	lenis.current = null;
 	vi.useRealTimers();
 });
 
 describe('SiteHeader', () => {
+	it('stops a smooth scroll still in flight when a navigation starts', () => {
+		const { hooks } = setup();
+		lenis.current = { isScrolling: 'smooth', scroll: 4200, scrollTo: vi.fn() };
+		hooks.before!(link('/b'));
+		expect(lenis.current.scrollTo).toHaveBeenCalledWith(4200, { immediate: true });
+
+		lenis.current = { isScrolling: false, scroll: 4200, scrollTo: vi.fn() };
+		hooks.before!(link('/c'));
+		expect(lenis.current.scrollTo).not.toHaveBeenCalled();
+	});
+
 	it('menu items show their icon, and items without one keep the stop', async () => {
 		const { menu, open } = setup({ menuItems: [
 			{ href: '/a', label: 'A', icon: Map },
