@@ -232,14 +232,14 @@
 				<button
 					{...triggerProps}
 					bind:this={trigger}
-					class="section-header flex w-full items-center gap-2.5 px-6 py-4 text-left"
+					class="section-header section-pad-x flex w-full items-center gap-2.5 py-4 text-left"
 				>
 					{@render legacyHeaderContent()}
 					<ChevronToggle open={isOpen} direction="right" {...bootMarks} />
 				</button>
 			{/if}
 		{:else}
-			<div class="flex items-center gap-2.5 px-6 py-4">
+			<div class="section-pad-x flex items-center gap-2.5 py-4">
 				{@render legacyHeaderContent()}
 			</div>
 		{/if}
@@ -256,7 +256,7 @@
 			aria-hidden={isOpen ? undefined : 'true'}
 		>
 			<div class="collapsible-content__inner">
-				<div class="px-6 pb-6 pt-3">
+				<div class="section-pad-x pb-6 pt-3">
 					{@render children?.()}
 				</div>
 			</div>
@@ -265,8 +265,20 @@
 </Card>
 
 <style>
+	/* One side inset for header and body; phones give the text more room. */
 	:global([data-slot='card'].section-card) {
+		--collapsible-pad-x: 1.5rem;
 		border-width: 3px;
+	}
+
+	@media (max-width: 767px) {
+		:global([data-slot='card'].section-card) {
+			--collapsible-pad-x: 1rem;
+		}
+	}
+
+	.section-pad-x {
+		padding-inline: var(--collapsible-pad-x);
 	}
 
 	:global([data-slot='card'].section-card.section-card--article-summary) {
@@ -291,7 +303,7 @@
 		grid-template-columns: minmax(0, 1fr) 1.25rem;
 		align-items: center;
 		column-gap: 0.625rem;
-		padding-inline-end: 1.5rem;
+		padding-inline-end: var(--collapsible-pad-x);
 	}
 
 	.section-heading-row--actions {
@@ -313,7 +325,7 @@
 		align-items: center;
 		column-gap: 0.625rem;
 		min-height: 44px;
-		padding: 1rem 0 0.375rem 1.5rem;
+		padding: 1rem 0 0.375rem var(--collapsible-pad-x);
 		text-align: left;
 	}
 
@@ -398,7 +410,7 @@
 		grid-template-columns: minmax(0, 1fr) 1.25rem;
 		column-gap: 0.625rem;
 		margin: 0;
-		padding: 0 1.5rem 1rem;
+		padding: 0 var(--collapsible-pad-x) 1rem;
 		color: var(--foreground);
 		font-family: var(--font-body);
 		font-size: var(--text-small);
