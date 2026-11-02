@@ -211,6 +211,12 @@ These components own their shared SVG/classes and label styles. Both Chevron dir
 the established 90-degree open rotation, keyed on `data-state="open"`. Equivalent class ordering is
 not a consumer seam.
 
+### SliderButton
+
+The previous/next control for sliders, carousels and lightboxes: a round tap target with a
+chevron drawn on the button centre. `direction` and `aria-label` are required; state such as
+`disabled` and handlers pass through.
+
 ### StopLabel
 
 The component supports an optional label and heading element and defaults `prefix` to `ARRÊT`.
