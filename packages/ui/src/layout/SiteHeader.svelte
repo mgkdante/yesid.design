@@ -117,6 +117,9 @@
 
 	beforeNavigate(({ to, type, shallow }) => {
 		if (shallow && type === 'goto') return;
+		// Stop a smooth scroll still in flight, or it carries on and scrolls the next page.
+		const lenis = getLenis();
+		if (lenis?.isScrolling) lenis.scrollTo(lenis.scroll, { immediate: true });
 		navigationVersion++;
 		// A language switch from the open menu keeps it open on the translated page.
 		localeNavigation = menuOpen && type === 'link' && to?.url.href === languageToggle()?.href;
