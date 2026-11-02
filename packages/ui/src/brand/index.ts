@@ -56,6 +56,9 @@ export type { SearchInputProps } from './SearchInput.svelte';
 export { default as SectionHeading } from './SectionHeading.svelte';
 export type { SectionHeadingProps } from './SectionHeading.svelte';
 
+export { default as SliderButton } from './SliderButton.svelte';
+export type { SliderButtonProps } from './SliderButton.svelte';
+
 export { default as SectionIcon } from './SectionIcon.svelte';
 export type { SectionIconName } from './SectionIcon.svelte';
 

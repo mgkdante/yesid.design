@@ -23,6 +23,7 @@
 		SectionIcon,
 		SectionLabel,
 		SegmentedChoice,
+		SliderButton,
 		StatusDot,
 		StickyPanel,
 		StopLabel,
@@ -41,6 +42,7 @@
 	import * as blueprints from '@yesid/ui/blueprints';
 
 	let chevronOpen = $state(false);
+	let slide = $state(1);
 	let manifestoHost = $state<HTMLElement>();
 	let constructionEnd = $state<HTMLElement>();
 	let filterMode = $state<string | null>('tram');
@@ -505,6 +507,18 @@
 					collapsible
 					onSelect={(key) => (filterMode = key)}
 				/>
+			</Card.Content>
+		</Card.Root>
+
+		<Card.Root data-gallery-family="brand:SliderButton">
+			<Card.Header>
+				<Card.Title>SliderButton</Card.Title>
+				<Card.Description>Shared previous/next control with a centred chevron.</Card.Description>
+			</Card.Header>
+			<Card.Content class="flex items-center gap-3">
+				<SliderButton direction="previous" aria-label="Previous slide" disabled={slide === 1} onclick={() => (slide -= 1)} />
+				<span class="font-mono text-small">{slide} / 3</span>
+				<SliderButton direction="next" aria-label="Next slide" disabled={slide === 3} onclick={() => (slide += 1)} />
 			</Card.Content>
 		</Card.Root>
 

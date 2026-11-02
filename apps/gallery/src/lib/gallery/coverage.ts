@@ -38,6 +38,7 @@ export const GALLERY_COVERAGE = {
 		'SectionIcon',
 		'SectionLabel',
 		'SegmentedChoice',
+		'SliderButton',
 		'StatusDot',
 		'StickyPanel',
 		'StopLabel',

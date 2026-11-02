@@ -821,6 +821,8 @@ declare namespace Brand {
         SearchInputProps,
         SectionHeading,
         SectionHeadingProps,
+        SliderButton,
+        SliderButtonProps,
         SectionIcon,
         SectionIconName,
         SectionLabel,
@@ -1694,6 +1696,8 @@ declare namespace Index {
         SearchInputProps,
         SectionHeading,
         SectionHeadingProps,
+        SliderButton,
+        SliderButtonProps,
         SectionIcon,
         SectionIconName,
         SectionLabel,
@@ -2734,6 +2738,19 @@ const Skeleton: Component<WithElementRef<HTMLAttributes<HTMLDivElement>>, {}, "r
 
 // @public (undocumented)
 type Skeleton = ReturnType<typeof Skeleton>;
+
+// @public (undocumented)
+const SliderButton: Component<SliderButtonProps, {}, "">;
+
+// @public (undocumented)
+type SliderButton = ReturnType<typeof SliderButton>;
+
+// @public (undocumented)
+type SliderButtonProps = Omit<HTMLButtonAttributes, 'children' | 'class' | 'type'> & {
+    direction: 'previous' | 'next';
+    'aria-label': string;
+    class?: string;
+};
 
 declare namespace State {
     export {
