@@ -9,7 +9,7 @@ vi.mock('@yesid/motion/stores/reducedMotion', async (original) => ({
 	isPrefersReducedMotion: () => motion.reduced,
 }));
 
-const lenis = vi.hoisted(() => ({ current: null as null | { isScrolling: false | 'smooth'; scroll: number; scrollTo: ReturnType<typeof vi.fn> } }));
+const lenis = vi.hoisted(() => ({ current: null as null | { isScrolling: false | 'smooth'; isStopped: boolean; stop: ReturnType<typeof vi.fn>; start: ReturnType<typeof vi.fn>; scroll: number; scrollTo: ReturnType<typeof vi.fn> } }));
 vi.mock('@yesid/motion/utils/lenis', () => ({ getLenis: () => lenis.current }));
 
 import SiteHeader, { type SiteHeaderProps } from './SiteHeader.svelte';
@@ -50,13 +50,15 @@ afterEach(() => {
 describe('SiteHeader', () => {
 	it('stops a smooth scroll still in flight when a navigation starts', () => {
 		const { hooks } = setup();
-		lenis.current = { isScrolling: 'smooth', scroll: 4200, scrollTo: vi.fn() };
+		lenis.current = { isScrolling: 'smooth', isStopped: false, scroll: 4200, scrollTo: vi.fn(), stop: vi.fn(), start: vi.fn() };
 		hooks.before!(link('/b'));
-		expect(lenis.current.scrollTo).toHaveBeenCalledWith(4200, { immediate: true });
+		expect(lenis.current.stop).toHaveBeenCalledOnce();
+		expect(lenis.current.start).toHaveBeenCalledOnce();
 
-		lenis.current = { isScrolling: false, scroll: 4200, scrollTo: vi.fn() };
+		lenis.current = { isScrolling: false, isStopped: false, scroll: 4200, scrollTo: vi.fn(), stop: vi.fn(), start: vi.fn() };
 		hooks.before!(link('/c'));
-		expect(lenis.current.scrollTo).not.toHaveBeenCalled();
+		expect(lenis.current.stop).not.toHaveBeenCalled();
+		expect(lenis.current.start).not.toHaveBeenCalled();
 	});
 
 	it('menu items show their icon, and items without one keep the stop', async () => {
@@ -130,6 +132,28 @@ describe('SiteHeader', () => {
 		expect(landed).toBe(false);
 		await vi.advanceTimersByTimeAsync(200);
 		expect(landed).toBe(true);
+	});
+
+	it('re-closes a menu reopened after the first close completes during a slow loader', async () => {
+		motion.reduced = false;
+		vi.useFakeTimers();
+		const view = setup();
+		await view.open();
+		const event = link('/slow');
+		view.hooks.before(event);
+		await tick();
+		await vi.advanceTimersByTimeAsync(600);
+		expect(view.menu()).toBeNull();
+		await view.open();
+		expect(view.menu()).not.toBeNull();
+		const held = view.hooks.on(event);
+		await tick();
+		expect(view.toggle.getAttribute('aria-expanded')).toBe('false');
+		expect(view.navigation.pending).toBe(true);
+		await vi.advanceTimersByTimeAsync(600);
+		await held;
+		expect(view.navigation.pending).toBe(false);
+		expect(view.menu()).toBeNull();
 	});
 
 	it.each(['Escape', 'toggle'])('uses the bound language link without test IDs and restores %s focus after a preserved switch', async (dismiss) => {

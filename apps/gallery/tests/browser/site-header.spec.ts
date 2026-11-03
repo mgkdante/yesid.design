@@ -21,6 +21,19 @@ const menu = (page: Page) => page.getByRole('dialog', { name: LABELS.menu });
 const menuLinks = (page: Page) => page.getByRole('navigation', { name: LABELS.menu });
 const language = (page: Page) => page.getByRole('link', { name: new RegExp(`^${literal(LANGUAGE_LABEL)}:`) });
 
+async function delayNextRouteModule(page: Page) {
+	let requested!: () => void;
+	let release!: () => void;
+	const loading = new Promise<void>((resolve) => { requested = resolve; });
+	const gate = new Promise<void>((resolve) => { release = resolve; });
+	await page.route('**/_app/immutable/nodes/*.js', async (route) => {
+		requested();
+		await gate;
+		await route.continue();
+	});
+	return { loading, release };
+}
+
 test('links and search show at the header widths their priority allows', async ({ page }) => {
 	const width = page.viewportSize()!.width;
 	await page.goto(HOME);
@@ -134,6 +147,48 @@ test('a state-preserving language switch from the closed header resets page focu
 
 test.describe('with motion on', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
+
+	test('a slow navigation re-closes a menu reopened after its first close completes', async ({ page }) => {
+		await page.goto(HOME);
+		const delay = await delayNextRouteModule(page);
+		try {
+			await toggle(page).click();
+			const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
+			const link = menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) });
+			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'off'));
+			await link.click({ noWaitAfter: true });
+			await delay.loading;
+			await expect(menu(page)).toBeHidden();
+			await toggle(page).click();
+			await expect(menu(page)).toBeVisible();
+			delay.release();
+			await expect(page).toHaveURL((url) => url.pathname === target.href);
+			await expect(menu(page)).toBeHidden();
+		} finally {
+			delay.release();
+			await page.unrouteAll({ behavior: 'wait' });
+		}
+	});
+
+	test('a locale click superseding a slow navigation resets focus without another beforeNavigate', async ({ page }) => {
+		await page.goto(HOME);
+		const delay = await delayNextRouteModule(page);
+		try {
+			await toggle(page).click();
+			const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
+			const link = menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) });
+			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'off'));
+			await link.click({ noWaitAfter: true });
+			await delay.loading;
+			await expect(menu(page)).toBeHidden();
+			await language(page).click();
+			await expect(page).toHaveURL(new RegExp(`lang=${LOCALES[1]}$`));
+			await expect(page.locator('body')).toBeFocused();
+		} finally {
+			delay.release();
+			await page.unrouteAll({ behavior: 'wait' });
+		}
+	});
 
 	test('a menu link closes the menu and navigates', async ({ page }) => {
 		const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;

@@ -41,12 +41,48 @@ export function createNavigationLifecycle(
 	let transition: {
 		version: number;
 		href: string | undefined;
+		type: string;
+		event: Event | undefined;
+		stage: 'loading' | 'committing';
 		menu: NavigationMenu | undefined;
+		localeSwitch: boolean;
 		keepMenu: boolean;
 		resetFocus: boolean;
 	} | undefined;
 	const waiting = new Set<() => void>();
 	const shallow = (event: NavigationEvent) => event.shallow && event.type === 'goto';
+	function interruptScroll() {
+		const lenis = getLenis();
+		if (!lenis?.isScrolling || lenis.isStopped) return;
+		// Cancel the animation through Lenis's public API, then immediately restore input.
+		// No afterNavigate is needed for cancellation/unload; an existing stop stays owned by its caller.
+		lenis.stop();
+		lenis.start();
+	}
+	function reconcile(event: NavigationEvent, stage: 'loading' | 'committing') {
+		const previous = transition;
+		// Kit can skip beforeNavigate during an active load. A fresh native event is a new
+		// intent; redirects retain the trigger or omit it, but keep the original intent's type.
+		const continuing = stage === 'committing' && previous?.stage === 'loading' &&
+			previous.type === event.type && (previous.event
+				? !event.event || previous.event === event.event
+				: !event.event && previous.href === event.to?.url.href);
+		const language = menu?.languageLink() ?? options.languageLink?.();
+		const localeSwitch = continuing ? previous.localeSwitch :
+			event.type === 'link' && !!language && event.to?.url.href === language.href;
+		return transition = {
+			version: ++version,
+			href: event.to?.url.href,
+			type: event.type,
+			event: continuing ? previous.event : event.event,
+			stage,
+			menu,
+			localeSwitch,
+			keepMenu: localeSwitch && !!menu?.open,
+			resetFocus: continuing ? previous.resetFocus :
+				localeSwitch && language?.getAttribute('data-sveltekit-reset') === 'false',
+		};
+	}
 	function menuClosed() {
 		for (const resolve of waiting) resolve();
 		waiting.clear();
@@ -54,26 +90,19 @@ export function createNavigationLifecycle(
 
 	router.beforeNavigate((event) => {
 		if (shallow(event)) return;
-		const lenis = getLenis();
-		if (lenis?.isScrolling) lenis.scrollTo(lenis.scroll, { immediate: true });
-		const language = menu?.languageLink() ?? options.languageLink?.();
-		const localeSwitch = event.type === 'link' && !!language && event.to?.url.href === language.href;
-		transition = {
-			version: ++version,
-			href: event.to?.url.href,
-			menu,
-			keepMenu: localeSwitch && !!menu?.open,
-			resetFocus: localeSwitch && language?.getAttribute('data-sveltekit-reset') === 'false',
-		};
-		if (!transition.keepMenu) menu?.close();
+		interruptScroll();
+		if (!reconcile(event, 'loading').keepMenu) menu?.close();
 	});
 
 	router.onNavigate((event) => {
 		if (shallow(event)) return;
-		const current = transition;
-		if (!current || current.href !== event.to?.url.href) return;
+		interruptScroll();
+		const current = reconcile(event, 'committing');
 		// Decide menu continuity before creating any reset callback. No component hook-order rule.
 		if (current.keepMenu) return;
+		// Loading can outlast the first close, allowing the reader to reopen the menu.
+		// Re-close it before waiting, or the focus trap can block this navigation forever.
+		menu?.close();
 		const reset = current.resetFocus ? resetFocusAfterNavigation() : undefined;
 		const after = reset ? () => { if (version === current.version) reset(); } : undefined;
 		if (menu?.active) return new Promise<void>((resolve) => waiting.add(resolve)).then(() => after);
@@ -83,7 +112,9 @@ export function createNavigationLifecycle(
 	router.afterNavigate(async (event) => {
 		if (shallow(event)) return;
 		const current = transition;
-		if (!current?.keepMenu || current.href !== event.to?.url.href) return;
+		if (!current || current.stage !== 'committing' || current.href !== event.to?.url.href) return;
+		transition = undefined;
+		if (!current.keepMenu) return;
 		await tick();
 		if (version !== current.version || menu !== current.menu || !menu?.open) return;
 		menu.languageLink()?.focus({ preventScroll: true });

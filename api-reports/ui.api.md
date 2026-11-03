@@ -1935,6 +1935,7 @@ type MetroStationProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
 
 // @public
 interface NavigationEvent {
+    event?: Event;
     // (undocumented)
     shallow?: boolean;
     // (undocumented)

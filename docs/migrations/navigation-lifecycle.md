@@ -38,6 +38,22 @@ open menu and returns focus to the updated language link. Shallow `goto` remains
 The module interrupts the current Lenis instance's momentum; it does not own scroll restoration,
 analytics, view transitions or locale/URL policy. Keep those app-owned hooks.
 
+`onNavigate` reconciles the actual commit event even when SvelteKit skips `beforeNavigate`
+during an active load. It re-closes an ordinary menu that was reopened while loading, then waits
+for that close. Redirects retain their original locale/ordinary intent; a fresh native trigger
+starts a new intent and advances the stale-focus guard. Pass the hooks directly. A custom router
+wrapper should forward the optional native `NavigationEvent.event`, so a redirected locale link
+can retain its intent even if the destination URL changes. Without trigger metadata, unmatched
+URLs are handled from the actual event rather than dropped.
+
+Lenis interruption is independent of header attachment and runs in both `beforeNavigate` and
+`onNavigate`, including when only the latter fires. The lifecycle uses Lenis's public `stop()`
+then `start()` in the same callback to cancel its animation and velocity while restoring input.
+It leaves an already-stopped instance alone. This is momentum cancellation, not a navigation-long
+scroll lock: cancellation or document departure may have no `afterNavigate`, and a deferred restart
+could leave scrolling locked. Real-Lenis tests cover both window and element scrollers, wheel-like
+and programmatic animations, subsequent animation frames, and ownership of an existing stop.
+
 `SiteRoot` props are unchanged. The lifecycle does not depend on SiteRoot or SiteHeader mounting.
 
 ## Required props and copy
@@ -157,6 +173,20 @@ and give the lifecycle a live getter so it can restore focus after the state-pre
 The header supplies its own direct link ref automatically. Do not query test IDs in production.
 
 ## Consumer acceptance and rollback
+
+Update the consumer test integrations with the production calls during each bump:
+
+- **Transit, `apps/web/src/lib/components/shell/NavPill.svelte.test.ts`:** its current harness
+  renders NavPill with no lifecycle and mocks the three raw `$app/navigation` hooks as no-ops.
+  Create the real lifecycle with an app-local fake router adapter and supply it through the new
+  NavPill prop or app context, matching the production layout integration. Give each test a fresh
+  adapter/lifecycle and exercise the relevant callbacks when asserting navigation. Do not import
+  this repository's private fake-router fixture from the released package.
+- **yesid.dev, `apps/web/tests/header.spec.ts` and `apps/web/tests/accessibility.spec.ts`:**
+  replace header expectation reads from CMS-generated `siteLabels.navChrome.shared` with the same
+  local locale copy files the header now uses. Update their `chrome` mapping and locale resolution
+  for open/close/menu/skip/language labels, using the exact keys and strings above. Keep CMS imports
+  that still serve unrelated content expectations.
 
 Neither consumer is edited or accepted by this source PR. At each eventual package bump, run
 that app's full source guards, generated-output checks, unit tests, build and accessibility/browser

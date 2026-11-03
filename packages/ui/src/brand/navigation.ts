@@ -3,6 +3,8 @@ export interface NavigationEvent {
 	type: string;
 	to: { url: URL } | null;
 	shallow?: boolean;
+	/** Native navigation trigger when provided by the router; retained to distinguish new clicks from redirects. */
+	event?: Event;
 }
 type NavigationResult = void | (() => void) | Promise<void | (() => void)>;
 export type OnNavigate = (callback: (navigation: NavigationEvent) => NavigationResult) => void;

@@ -433,6 +433,11 @@ Call `createNavigationLifecycle` from `@yesid/ui/brand` once during the persiste
 initialization with `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation`.
 Pass its result as `navigation`: the menu closes before a navigation lands, and a language switch
 from the open menu keeps it open. The lifecycle interrupts Lenis momentum even without a header.
+It reconciles redirect and superseding events in `onNavigate` when `beforeNavigate` was skipped,
+and re-closes a menu reopened during loading before waiting for its animation and focus trap.
+Custom adapters forward the optional native `NavigationEvent.event` for redirect intent continuity.
+Momentum cancellation uses Lenis stop/start in the same callback, preserving an existing external
+stop and leaving input available if navigation is canceled.
 
 ```svelte
 <script lang="ts">

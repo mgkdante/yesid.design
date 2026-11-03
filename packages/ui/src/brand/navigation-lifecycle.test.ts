@@ -3,9 +3,13 @@ import { createNavigationLifecycle, type NavigationMenu } from './navigation-lif
 import { fakeRouter, linkNavigation as link } from './test-fixtures/fake-router.js';
 
 const lenis = vi.hoisted(() => ({ current: null as null | {
-	isScrolling: boolean | string; scroll: number; scrollTo: ReturnType<typeof vi.fn>;
+	isScrolling: boolean | string; isStopped: boolean; scroll: number; stop: ReturnType<typeof vi.fn>; start: ReturnType<typeof vi.fn>;
 } }));
 vi.mock('@yesid/motion/utils/lenis', () => ({ getLenis: () => lenis.current }));
+
+function momentum(scroll: number) {
+	return { isScrolling: 'smooth', isStopped: false, scroll, stop: vi.fn(), start: vi.fn() };
+}
 
 function setup() {
 	const hooks = fakeRouter();
@@ -35,6 +39,124 @@ afterEach(() => {
 });
 
 describe('navigation lifecycle', () => {
+	it('closes a menu reopened during a slow load before waiting for its second close', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state } = attach(lifecycle);
+		const event = link('/slow');
+		hooks.before(event);
+		// The first close completes while the route loader is still pending.
+		state.active = false;
+		lifecycle.menuClosed();
+		state.open = state.active = true;
+		const held = hooks.on(event);
+		expect(state.open).toBe(false);
+		expect(lifecycle.pending).toBe(true);
+		state.active = false;
+		lifecycle.menuClosed();
+		await held;
+		expect(lifecycle.pending).toBe(false);
+	});
+
+	it('holds a redirected menu navigation without a second beforeNavigate', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state } = attach(lifecycle);
+		hooks.before(link('/redirect'));
+		const held = hooks.on(link('/redirected'));
+		expect(lifecycle.pending).toBe(true);
+		const completed = vi.fn();
+		void Promise.resolve(held).then(completed);
+		await Promise.resolve();
+		expect(completed).not.toHaveBeenCalled();
+		state.active = false;
+		lifecycle.menuClosed();
+		await held;
+		expect(completed).toHaveBeenCalledOnce();
+	});
+
+	it('resets focus for a superseding locale click with no beforeNavigate', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		hooks.before({ ...link('/slow'), event: new MouseEvent('click') });
+		state.active = false;
+		lifecycle.menuClosed();
+		language.focus();
+		const previousVersion = lifecycle.version;
+		const reset = await hooks.on({ ...link('/fr?q=1#section'), event: new MouseEvent('click') });
+		expect(reset).toBeTypeOf('function');
+		expect(lifecycle.version).toBeGreaterThan(previousVersion);
+		reset?.();
+		expect(document.activeElement).toBe(document.body);
+	});
+
+	it('invalidates an earlier focus callback when onNavigate supersedes it without beforeNavigate', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		state.open = state.active = false;
+		language.focus();
+		const event = link('/fr?q=1#section');
+		hooks.before(event);
+		const reset = await hooks.on(event);
+		expect(reset).toBeTypeOf('function');
+		hooks.on(link('/superseding'));
+		reset?.();
+		expect(document.activeElement).toBe(language);
+	});
+
+	it('interrupts header-less momentum in onNavigate when beforeNavigate was skipped', () => {
+		const { hooks } = setup();
+		lenis.current = momentum(1200);
+		hooks.on(link('/superseding'));
+		expect(lenis.current.stop).toHaveBeenCalledOnce();
+		expect(lenis.current.start).toHaveBeenCalledOnce();
+	});
+
+	it('retains locale intent and focuses its updated link after a redirect with no native event', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		hooks.before({ ...link('/fr?q=1#section'), event: new MouseEvent('click') });
+		const redirected = link('/fr/canonical?q=1#section');
+		expect(hooks.on(redirected)).toBeUndefined();
+		expect(state.open).toBe(true);
+		language.href = '/en/canonical?q=1#section';
+		await hooks.after(redirected);
+		expect(document.activeElement).toBe(language);
+	});
+
+	it('does not turn an ordinary redirect to the locale URL into a locale click', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state } = attach(lifecycle);
+		hooks.before({ ...link('/redirect'), event: new MouseEvent('click') });
+		state.open = true;
+		const held = hooks.on(link('/fr?q=1#section'));
+		expect(state.open).toBe(false);
+		expect(lifecycle.pending).toBe(true);
+		state.active = false;
+		lifecycle.menuClosed();
+		await held;
+	});
+
+	it('treats a new ordinary native click as superseding a locale switch', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state } = attach(lifecycle);
+		hooks.before({ ...link('/fr?q=1#section'), event: new MouseEvent('click') });
+		const held = hooks.on({ ...link('/ordinary'), event: new MouseEvent('click') });
+		expect(state.open).toBe(false);
+		expect(lifecycle.pending).toBe(true);
+		state.active = false;
+		lifecycle.menuClosed();
+		expect(await held).toBeUndefined();
+	});
+
+	it('interrupts momentum started during the loader before committing without a header', () => {
+		const { hooks } = setup();
+		const event = link('/slow');
+		hooks.before(event);
+		lenis.current = momentum(2600);
+		hooks.on(event);
+		expect(lenis.current.stop).toHaveBeenCalledOnce();
+		expect(lenis.current.start).toHaveBeenCalledOnce();
+	});
+
 	it('registers each hook once, independently of header mounting', () => {
 		const { hooks, lifecycle } = setup();
 		attach(lifecycle).detach();
@@ -44,25 +166,29 @@ describe('navigation lifecycle', () => {
 
 	it('interrupts window or element-scroller momentum with no header', () => {
 		const { hooks } = setup();
-		lenis.current = { isScrolling: 'smooth', scroll: 4200, scrollTo: vi.fn() };
+		lenis.current = momentum(4200);
 		hooks.before(link('/next'));
-		expect(lenis.current.scrollTo).toHaveBeenCalledWith(4200, { immediate: true });
+		expect(lenis.current.stop).toHaveBeenCalledOnce();
+		expect(lenis.current.start).toHaveBeenCalledOnce();
 		lenis.current.isScrolling = false;
-		lenis.current.scrollTo.mockClear();
+		lenis.current.stop.mockClear();
+		lenis.current.start.mockClear();
 		hooks.before(link('/other'));
-		expect(lenis.current.scrollTo).not.toHaveBeenCalled();
+		expect(lenis.current.stop).not.toHaveBeenCalled();
+		expect(lenis.current.start).not.toHaveBeenCalled();
 	});
 
 	it('ignores shallow goto without closing, stopping scroll or advancing the focus guard', () => {
 		const { hooks, lifecycle } = setup();
 		const { menu } = attach(lifecycle);
-		lenis.current = { isScrolling: 'smooth', scroll: 20, scrollTo: vi.fn() };
+		lenis.current = momentum(20);
 		const event = { ...link('/next'), type: 'goto', shallow: true };
 		hooks.before(event);
 		expect(hooks.on(event)).toBeUndefined();
 		hooks.after(event);
 		expect(menu.close).not.toHaveBeenCalled();
-		expect(lenis.current.scrollTo).not.toHaveBeenCalled();
+		expect(lenis.current.stop).not.toHaveBeenCalled();
+		expect(lenis.current.start).not.toHaveBeenCalled();
 		expect(lifecycle.version).toBe(0);
 	});
 

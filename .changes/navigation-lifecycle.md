@@ -14,3 +14,10 @@ local locales, not the CMS): `SiteHeader.labels.menuFooter` and `skipToContent`,
 explicitly to hide it. No built-in EN/FR/ES copy or language-name fallback remains. See
 `docs/migrations/navigation-lifecycle.md` for the exact Transit and yesid.dev changes and strings.
 This is source-stage work for the coordinated minor release, not consumer adoption or release proof.
+
+Navigation also re-closes a menu reopened during a slow loader, reconciles redirect and superseding
+events when `beforeNavigate` is skipped, and advances the stale-focus guard for each actual commit.
+The optional `NavigationEvent.event` preserves native trigger identity through custom adapters.
+Lenis momentum is canceled through its public stop/start API in both navigation hooks, independently
+of any header, without leaving input locked after cancellation. The migration includes the Transit
+unit harness and yesid.dev browser expectation updates required alongside the production calls.
