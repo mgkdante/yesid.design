@@ -26,12 +26,20 @@ export function fakeRouter() {
 		on: (event: NavigationEvent) => on!(event),
 		after: (event: NavigationEvent) => after!(event),
 		/** Dispatch the native link trigger, allowing the lifecycle to observe it before a redirect drops it. */
-		async click(anchor: HTMLAnchorElement, { handled = true, ...init }: MouseEventInit & { handled?: boolean } = {}): Promise<NavigationEvent> {
+		async click(anchor: HTMLAnchorElement, { handled = true, onIntercept, ...init }: MouseEventInit & {
+			handled?: boolean;
+			onIntercept?: (navigation: NavigationEvent) => void;
+		} = {}): Promise<NavigationEvent> {
 			const href = anchor.href;
 			const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
-			if (handled) anchor.addEventListener('click', (click) => click.preventDefault(), { once: true });
+			const intercept = (click: MouseEvent) => {
+				click.preventDefault();
+				onIntercept?.({ type: 'link', to: { url: new URL(href) }, event: click });
+			};
+			if (handled) document.addEventListener('click', intercept, { once: true });
 			anchor.focus();
-			anchor.dispatchEvent(event);
+			try { anchor.dispatchEvent(event); }
+			finally { document.removeEventListener('click', intercept); }
 			await Promise.resolve();
 			return { type: 'link', to: { url: new URL(href) }, event };
 		},

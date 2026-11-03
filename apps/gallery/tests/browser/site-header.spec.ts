@@ -163,6 +163,49 @@ test('a state-preserving language switch from the closed header resets page focu
 test.describe('with motion on', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
 
+	test('a trusted locale redirect keeps the menu open and focuses the updated language link', async ({ page }) => {
+		await page.goto(HOME);
+		await toggle(page).click();
+		await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ redirect: 'locale' }));
+		await page.evaluate(() => {
+			window.addEventListener('click', (event) => { document.documentElement.dataset.nativeClickTrusted = String(event.isTrusted); }, { once: true });
+		});
+		await language(page).click();
+		await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
+		await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('lang') === LOCALES[1] && url.searchParams.get('landed') === 'locale');
+		await expect(menu(page)).toBeVisible();
+		await expect(language(page)).toBeFocused();
+		await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[0]));
+	});
+
+	test('a trusted redirected locale switch after a slow ordinary load preserves a reopened menu', async ({ page }) => {
+		await page.goto(HOME);
+		const delay = await delayFixtureLoad(page);
+		try {
+			await toggle(page).click();
+			const ordinary = header(page).getByRole('link').first();
+			await ordinary.evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ delay: 'ordinary' }));
+			await ordinary.click({ noWaitAfter: true });
+			await delay.loading;
+			await expect(menu(page)).toBeHidden();
+			await toggle(page).click();
+			await expect(menu(page)).toBeVisible();
+			await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ redirect: 'locale' }));
+			await page.evaluate(() => {
+				window.addEventListener('click', (event) => { document.documentElement.dataset.nativeClickTrusted = String(event.isTrusted); }, { once: true });
+			});
+			await language(page).click();
+			await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
+			await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('lang') === LOCALES[1] && url.searchParams.get('landed') === 'locale');
+			await expect(menu(page)).toBeVisible();
+			await expect(language(page)).toBeFocused();
+			await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[0]));
+		} finally {
+			delay.release();
+			await page.unrouteAll({ behavior: 'wait' });
+		}
+	});
+
 	test('an ordinary redirect superseding a slow locale switch closes the menu', async ({ page }) => {
 		await page.goto(HOME);
 		const delay = await delayFixtureLoad(page);

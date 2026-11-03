@@ -36,10 +36,30 @@ function attach(lifecycle: NavigationLifecycle) {
 
 afterEach(() => {
 	lenis.current = null;
+	vi.restoreAllMocks();
 	document.body.replaceChildren();
 });
 
 describe('navigation lifecycle', () => {
+	it('confirms a routed click before a cached redirect hook, without a later stale-focus increment', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		const redirected = link('/fr/canonical?q=1#section');
+		let commitVersion = -1;
+		await hooks.click(language, { onIntercept: (navigation) => {
+			// Native routing can reach its hooks at a microtask checkpoint before window bubble.
+			hooks.before(navigation);
+			expect(hooks.on(redirected)).toBeUndefined();
+			expect(state.open).toBe(true);
+			commitVersion = lifecycle.version;
+		} });
+		expect(lifecycle.version).toBe(commitVersion);
+		language.href = '/en/canonical?q=1#section';
+		await hooks.after(redirected);
+		expect(state.open).toBe(true);
+		expect(document.activeElement).toBe(language);
+	});
+
 	it('uses an ordinary superseding click when its redirect omits the native event', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state, language } = attach(lifecycle);
@@ -90,10 +110,20 @@ describe('navigation lifecycle', () => {
 	});
 
 	it('removes the click observer when its layout unmounts', async () => {
+		const addCapture = vi.spyOn(document, 'addEventListener');
+		const removeCapture = vi.spyOn(document, 'removeEventListener');
+		const addBubble = vi.spyOn(window, 'addEventListener');
+		const removeBubble = vi.spyOn(window, 'removeEventListener');
 		const { hooks, lifecycle, unmount } = setup();
 		const { language } = attach(lifecycle);
+		const capture = addCapture.mock.calls.find(([type, , options]) => type === 'click' && options === true);
+		const bubble = addBubble.mock.calls.find(([type]) => type === 'click');
+		expect(capture).toBeTruthy();
+		expect(bubble).toBeTruthy();
 		const version = lifecycle.version;
 		unmount();
+		expect(removeCapture).toHaveBeenCalledWith('click', capture![1], true);
+		expect(removeBubble).toHaveBeenCalledWith('click', bubble![1]);
 		await hooks.click(language);
 		expect(lifecycle.version).toBe(version);
 	});

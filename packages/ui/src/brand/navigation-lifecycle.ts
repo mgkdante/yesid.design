@@ -38,12 +38,14 @@ export function createNavigationLifecycle(
 ): NavigationLifecycle {
 	let menu: NavigationMenu | undefined;
 	let version = 0;
-	let observedLink: {
+	type LinkIntent = {
 		event: MouseEvent;
 		href: string;
 		localeSwitch: boolean;
 		resetFocus: boolean;
-	} | undefined;
+	};
+	let observedLink: LinkIntent | undefined;
+	let candidateLink: LinkIntent | undefined;
 	let transition: {
 		version: number;
 		href: string | undefined;
@@ -57,8 +59,13 @@ export function createNavigationLifecycle(
 	} | undefined;
 	const waiting = new Set<() => void>();
 	const shallow = (event: NavigationEvent) => event.shallow && event.type === 'goto';
+	function confirmLink(event?: Event) {
+		if (!candidateLink || (event && candidateLink.event !== event) || !candidateLink.event.defaultPrevented) return;
+		observedLink = candidateLink;
+		candidateLink = undefined;
+		version++;
+	}
 	onMount(() => {
-		let mounted = true;
 		function observeLink(event: MouseEvent) {
 			if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			const anchor = event.composedPath().find((node): node is HTMLAnchorElement => node instanceof HTMLAnchorElement);
@@ -66,24 +73,26 @@ export function createNavigationLifecycle(
 				(anchor.target && anchor.target.toLowerCase() !== '_self') || anchor.origin !== location.origin) return;
 			if (anchor.href.includes('#') && anchor.pathname === location.pathname && anchor.search === location.search) return;
 			const language = menu?.languageLink() ?? options.languageLink?.();
-			const intent = {
+			candidateLink = {
 				event,
 				href: anchor.href,
 				localeSwitch: anchor === language,
 				resetFocus: anchor === language && language.getAttribute('data-sveltekit-reset') === 'false',
 			};
-			// Let the router intercept the click first. Plain native links need no client-navigation intent.
-			queueMicrotask(() => {
-				if (!mounted || !event.defaultPrevented) return;
-				observedLink = intent;
-				version++;
-			});
+		}
+		function confirmAtWindow(event: MouseEvent) {
+			// Window bubble follows the router's document bubble listener. A capture-time
+			// microtask can run before that listener for a trusted native click.
+			confirmLink(event);
+			if (candidateLink?.event === event) candidateLink = undefined;
 		}
 		document.addEventListener('click', observeLink, true);
+		window.addEventListener('click', confirmAtWindow);
 		return () => {
-			mounted = false;
+			candidateLink = undefined;
 			observedLink = undefined;
 			document.removeEventListener('click', observeLink, true);
+			window.removeEventListener('click', confirmAtWindow);
 		};
 	});
 	function interruptScroll() {
@@ -96,6 +105,10 @@ export function createNavigationLifecycle(
 	}
 	function reconcile(event: NavigationEvent, stage: 'loading' | 'committing') {
 		const previous = transition;
+		// Cached routing can reach its hooks before window bubbling. The router has
+		// already intercepted the click here, so it can confirm the captured candidate too.
+		if (event.type === 'link') confirmLink(event.event);
+		else candidateLink = undefined;
 		if (event.type !== 'link' || (event.event && observedLink?.event !== event.event) ||
 			(stage === 'loading' && (!event.event && (event.type !== 'link' || observedLink?.href !== event.to?.url.href)))) {
 			observedLink = undefined;
