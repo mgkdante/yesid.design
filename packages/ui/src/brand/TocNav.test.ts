@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { quietMode } from '../state/quiet-mode.svelte.js';
+import { sections } from '../state/sections.svelte.js';
 import TocNav, { type TocNavProps } from './TocNav.svelte';
 import type { TocEntry } from './toc.js';
 
@@ -20,7 +20,7 @@ const counter = ({ container }: View) =>
 const expanded = ({ container }: View) => container.querySelector('[data-section-trigger]')?.getAttribute('aria-expanded');
 
 afterEach(() => {
-	quietMode.resetForTest();
+	sections.expandAll();
 });
 
 describe('TocNav', () => {
@@ -56,10 +56,14 @@ describe('TocNav', () => {
 		expect(show({ collapsible: false }).container.querySelector('[data-section-trigger]')).toBeNull();
 	});
 
-	it('collapses with quiet mode unless quiet={false}', async () => {
-		const [followed, ignored] = [show(), show({ quiet: false })];
-		quietMode.set(true);
+	it('keeps its own toggle and never registers as a content section', async () => {
+		const [first, second] = [show(), show({ open: false })];
+		expect(sections.count).toBe(0);
+		sections.collapseAll();
 		await tick();
-		expect([expanded(followed), expanded(ignored)]).toEqual(['false', 'true']);
+		expect([expanded(first), expanded(second)]).toEqual(['true', 'false']);
+		sections.expandAll();
+		await tick();
+		expect([expanded(first), expanded(second)]).toEqual(['true', 'false']);
 	});
 });

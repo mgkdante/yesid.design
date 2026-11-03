@@ -1,6 +1,6 @@
 <!--
   One single-choice filter: a label, an "All" reset and one button per item. Optionally
-  collapsible, with its open state kept in `persisted(persistKey)`.
+  collapsible, starting at its declared default on every mount.
 -->
 <script lang="ts" module>
 	export interface FilterGroupItem {
@@ -18,7 +18,6 @@
 		allowDeselect?: boolean;
 		collapsible?: boolean;
 		startOpen?: boolean;
-		persistKey?: string;
 		density?: 'compact' | 'spacious';
 		onSelect: (key: string | null) => void;
 		/** Each item button gets `data-testid="{testIdPrefix}-{key}"`. */
@@ -29,7 +28,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { ToggleGroup, ToggleGroupItem } from '../primitives/toggle-group/index.js';
-	import { persisted } from '../state/persisted.svelte.js';
 	import ChevronToggle from './ChevronToggle.svelte';
 
 	let {
@@ -40,7 +38,6 @@
 		allowDeselect = true,
 		collapsible = false,
 		startOpen = true,
-		persistKey,
 		density = 'compact',
 		onSelect,
 		testIdPrefix,
@@ -49,15 +46,8 @@
 	const collapseId = `filter-group-${uid}`;
 	const labelId = `${collapseId}-label`;
 
-	const persistedOpen = untrack(() => (persistKey ? persisted(persistKey, startOpen) : null));
-	let localOpen = $state(untrack(() => startOpen));
-	const isOpen = $derived(persistedOpen ? persistedOpen.value : localOpen);
-	// The head boot script applies the stored choice to these marked elements before first paint.
-	const persistedKey = $derived(collapsible ? persistKey : undefined);
-	function toggleOpen(): void {
-		if (persistedOpen) persistedOpen.value = !persistedOpen.value;
-		else localOpen = !localOpen;
-	}
+	let isOpen = $state(untrack(() => startOpen));
+	function toggleOpen(): void { isOpen = !isOpen; }
 
 	const groupValue = $derived(activeKey ?? '__all__');
 
@@ -78,11 +68,10 @@
 			class="tap-press flex w-full items-center justify-between label-section text-sm font-semibold py-2.5 min-h-11 transition-colors hover:text-[var(--foreground)] active:text-[var(--foreground)]"
 			aria-expanded={isOpen}
 			aria-controls={collapseId}
-			data-persisted-key={persistedKey}
 			onclick={toggleOpen}
 		>
 			{label}
-			<ChevronToggle open={isOpen} size="sm" direction="down" data-persisted-key={persistedKey} />
+			<ChevronToggle open={isOpen} size="sm" direction="down" />
 		</button>
 	{:else}
 		<div id={labelId} class="label-section text-sm font-semibold">
@@ -94,7 +83,6 @@
 		id={collapseId}
 		class="filter-collapse"
 		data-state={!collapsible || isOpen ? 'open' : 'closed'}
-		data-persisted-body={persistedKey}
 		inert={collapsible && !isOpen}
 		aria-hidden={collapsible && !isOpen ? 'true' : undefined}
 	>

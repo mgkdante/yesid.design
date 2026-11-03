@@ -1,5 +1,5 @@
 <!--
-  The app root: adopts the pre-paint theme, restores quiet mode, keeps <html lang> on the page's
+  The app root: adopts the pre-paint theme, keeps <html lang> on the page's
   language and owns the Lenis lifecycle. Renders no element of its own.
 -->
 <script lang="ts" module>
@@ -23,13 +23,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { destroyLenis, initLenis } from '@yesid/motion/utils/lenis';
-	import { quietMode } from '../state/quiet-mode.svelte.js';
 	import { theme } from '../state/theme.svelte.js';
 
 	let { children, smoothScroll = true, scroller, lang }: SiteRootProps = $props();
-
-	// Before the children render, so sections hydrate in the quiet mode the boot script painted.
-	quietMode.init();
 
 	$effect(() => {
 		if (lang) document.documentElement.lang = lang;

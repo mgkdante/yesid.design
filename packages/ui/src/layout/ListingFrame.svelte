@@ -24,8 +24,6 @@
 		onHeaderMount?: (header: HTMLElement, frame: HTMLElement) => (() => void) | void;
 		/** Text of the button that opens the filter panel below 1024px. */
 		filterLabel: string;
-		/** Keeps the panel's open state in `persisted(filterPersistKey)`. */
-		filterPersistKey?: string;
 		search?: Snippet;
 		filters: Snippet;
 		children: Snippet;
@@ -33,11 +31,10 @@
 </script>
 
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onMount } from 'svelte';
 	import { scrollChain } from '@yesid/motion/actions';
 	import ChevronToggle from '../brand/ChevronToggle.svelte';
 	import { Separator } from '../primitives/separator/index.js';
-	import { persisted } from '../state/persisted.svelte.js';
 
 	let {
 		heading,
@@ -48,7 +45,6 @@
 		aside,
 		onHeaderMount,
 		filterLabel,
-		filterPersistKey,
 		search,
 		filters,
 		children,
@@ -56,13 +52,8 @@
 
 	const uid = $props.id();
 	const panelId = `${uid}-filters`;
-	const storedOpen = untrack(() => (filterPersistKey ? persisted(filterPersistKey, false) : null));
-	let localOpen = $state(false);
-	const filterOpen = $derived(storedOpen ? storedOpen.value : localOpen);
-	function toggleFilters(): void {
-		if (storedOpen) storedOpen.value = !storedOpen.value;
-		else localOpen = !localOpen;
-	}
+	let filterOpen = $state(false);
+	function toggleFilters(): void { filterOpen = !filterOpen; }
 
 	let frameEl: HTMLElement;
 	let headerEl: HTMLElement;
@@ -139,7 +130,6 @@
 						data-slot="listing-filter-toggle"
 						aria-expanded={filterOpen}
 						aria-controls={panelId}
-						data-persisted-key={filterPersistKey}
 						onclick={toggleFilters}
 					>
 						<span>{filterLabel}</span>
@@ -147,7 +137,6 @@
 							open={filterOpen}
 							size="sm"
 							direction="right"
-							data-persisted-key={filterPersistKey}
 						/>
 					</button>
 
@@ -156,7 +145,6 @@
 						class="listing-filter-panel"
 						data-slot="listing-filter-panel"
 						data-state={filterOpen ? 'open' : 'closed'}
-						data-persisted-key={filterPersistKey}
 					>
 						<div class="listing-filter-overflow">
 							<div class="listing-filter-shell">{@render filters()}</div>

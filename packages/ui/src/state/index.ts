@@ -1,6 +1,6 @@
 import { clock as clockStore } from './clock.svelte.js';
 import { persisted as persistedState } from './persisted.svelte.js';
-import { quietMode as quietModeStore } from './quiet-mode.svelte.js';
+import { sections as sectionsState } from './sections.svelte.js';
 import { theme as themeStore } from './theme.svelte.js';
 
 export type Theme = 'dark' | 'light';
@@ -17,22 +17,14 @@ export interface ThemeStore {
 	init(): void;
 }
 
-/**
- * Collapses every collapsible section on request. Sections close on `closeSignal` and reopen on
- * `openSignal`; `init()` closes them when a remembered default exists and never issues an open.
- * `SiteRoot` calls it before its children render, so sections hydrate already closed.
- */
-export interface QuietModeStore {
-	readonly enabled: boolean;
-	readonly remembered: boolean;
-	readonly closeSignal: number;
-	readonly openSignal: number;
-	set(next: boolean): void;
+/** In-memory actions for every mounted collapsible content section on the page. */
+export interface SectionsState {
+	/** Number of mounted collapsible content sections. */
+	readonly count: number;
+	readonly allCollapsed: boolean;
+	collapseAll(): void;
+	expandAll(): void;
 	toggle(): void;
-	rememberCurrent(): void;
-	forgetDefault(): void;
-	init(): void;
-	resetForTest(): void;
 }
 
 /** A value that stays valid in every locale: ids, slugs, flags, numbers, never translated text. */
@@ -74,7 +66,7 @@ export interface ClockStore {
 
 export const theme: ThemeStore = themeStore;
 export const clock: ClockStore = clockStore;
-export const quietMode: QuietModeStore = quietModeStore;
+export const sections: SectionsState = sectionsState;
 export const persisted: <T extends LocaleFree>(key: string, initial: T) => Persisted<Widen<T>> =
 	persistedState;
 export { desktop } from './desktop.js';

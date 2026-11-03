@@ -17,7 +17,7 @@
 		ManifestoCanvas,
 		MetricDisplay,
 		MetroStation,
-		QuietModeButton,
+		SectionsToggle,
 		SearchInput,
 		SectionHeading,
 		SectionIcon,
@@ -92,13 +92,11 @@
 	] as const;
 	const sql = sqlTokens.map(([, text]) => text).join('');
 	const copyLabels = { label: 'Copy', ariaLabel: 'Copy code', copied: 'Copied', failed: 'Copy failed' };
-	const quietModeCopy = {
+	const sectionsToggleCopy = {
 		collapse: 'Collapse all',
 		expand: 'Expand all',
 		collapseTitle: 'Collapse every section',
 		expandTitle: 'Expand every section',
-		remember: 'Always start collapsed',
-		forget: "Don't start collapsed",
 	};
 </script>
 
@@ -253,13 +251,13 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root data-gallery-family="brand:QuietModeButton">
+		<Card.Root data-gallery-family="brand:SectionsToggle">
 			<Card.Header>
-				<Card.Title>QuietModeButton</Card.Title>
-				<Card.Description>Caller-owned copy on the shared quiet-mode store, with an explicit active effect.</Card.Description>
+				<Card.Title>SectionsToggle</Card.Title>
+				<Card.Description>Caller-owned copy on the shared sections state, with an explicit active effect.</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				<QuietModeButton copy={quietModeCopy} activeEffect="glow" />
+				<SectionsToggle copy={sectionsToggleCopy} activeEffect="glow" />
 			</Card.Content>
 		</Card.Root>
 
@@ -356,11 +354,14 @@
 		<Card.Root data-gallery-family="brand:CollapsibleSection">
 			<Card.Header>
 				<Card.Title>CollapsibleSection</Card.Title>
-				<Card.Description>Toggle header with an index badge; follows quiet mode by default.</Card.Description>
+				<Card.Description>Two content sections with independent defaults and one shared expand-all action.</Card.Description>
 			</Card.Header>
-			<Card.Content>
-				<CollapsibleSection title="Service notes" subtitle="Weekday timetable" index={0} sectionKey="gallery-service-notes">
+			<Card.Content class="space-y-4">
+				<CollapsibleSection title="Service notes" subtitle="Weekday timetable" index={0}>
 					<p class="text-small">Trains run every six minutes between 06:00 and 22:00.</p>
+				</CollapsibleSection>
+				<CollapsibleSection title="Additional notes" subtitle="Connections and access" index={1} open={false}>
+					<p class="text-small">Check the connection details before setting out.</p>
 				</CollapsibleSection>
 			</Card.Content>
 		</Card.Root>

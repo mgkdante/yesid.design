@@ -6,7 +6,6 @@ const lenis = vi.hoisted(() => ({ initLenis: vi.fn(), destroyLenis: vi.fn() }));
 vi.mock('@yesid/motion/utils/lenis', () => lenis);
 
 import SiteRoot from './SiteRoot.svelte';
-import { quietMode } from '../state/quiet-mode.svelte.js';
 import { theme } from '../state/theme.svelte.js';
 
 const page = createRawSnippet(() => ({
@@ -17,7 +16,6 @@ describe('SiteRoot', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		localStorage.clear();
-		quietMode.resetForTest();
 	});
 
 	it('renders its children without a wrapper element', () => {
@@ -25,20 +23,11 @@ describe('SiteRoot', () => {
 		expect(container.firstElementChild?.id).toBe('main');
 	});
 
-	it('adopts the document theme and restores quiet mode on mount', () => {
-		document.documentElement.dataset.theme = 'light';
-		localStorage.setItem('quiet-mode', 'true');
-		render(SiteRoot, { props: { children: page } });
-		expect(theme.current).toBe('light');
-		expect(quietMode.enabled).toBe(true);
-	});
-
-	it('restores a remembered quiet mode before its children render', () => {
-		localStorage.setItem('quiet-mode', 'true');
-		const probe = createRawSnippet(() => ({ render: () => `<p>${quietMode.enabled}</p>` }));
-		const { container } = render(SiteRoot, { props: { children: probe } });
-		expect(container.textContent).toBe('true');
-	});
+	it('adopts the document theme', () => {
+  document.documentElement.dataset.theme = 'light';
+  render(SiteRoot, { props: { children: page } });
+  expect(theme.current).toBe('light');
+ });
 
 	it('keeps <html lang> on the page language', async () => {
 		const view = render(SiteRoot, { props: { children: page, lang: 'fr' } });

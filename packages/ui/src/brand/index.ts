@@ -43,12 +43,12 @@ export type { MetricDisplayProps } from './MetricDisplay.svelte';
 export { default as MetroStation } from './MetroStation.svelte';
 export type { MetroStationProps } from './MetroStation.svelte';
 
-export { default as QuietModeButton } from './QuietModeButton.svelte';
+export { default as SectionsToggle } from './SectionsToggle.svelte';
 export type {
-	QuietModeActiveEffect,
-	QuietModeButtonCopy,
-	QuietModeButtonProps,
-} from './QuietModeButton.svelte';
+	SectionsToggleActiveEffect,
+	SectionsToggleCopy,
+	SectionsToggleProps,
+} from './SectionsToggle.svelte';
 
 export { default as SearchInput } from './SearchInput.svelte';
 export type { SearchInputProps } from './SearchInput.svelte';
@@ -124,3 +124,5 @@ export {
 	type OnNavigate,
 	type SiteNavigation,
 } from './navigation.js';
+
+export { openSection } from './sections-registry.js';

@@ -1,8 +1,9 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { createRawSnippet, tick } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
-import { quietMode } from '../state/quiet-mode.svelte.js';
+import { sections } from '../state/sections.svelte.js';
 import CollapsibleSection, { type CollapsibleSectionProps } from './CollapsibleSection.svelte';
+import { openSection } from './sections-registry.js';
 import Bound from './test-fixtures/CollapsibleSectionBound.svelte';
 
 type View = { container: HTMLElement };
@@ -20,21 +21,19 @@ const children = createRawSnippet(() => ({
 }));
 
 const section = (props: Props = {}) => render(CollapsibleSection, { props: { title: 'Section', children, ...props } });
-const keyed = (props: Props = {}) => section({ sectionKey: 'reader', ...props });
 const query = <T extends Element>({ container }: View, selector: string) => container.querySelector<T>(selector)!;
 const trigger = (view: View) => query<HTMLButtonElement>(view, '[data-section-trigger]');
 const content = (view: View) => query(view, '.section-body');
 const isOpen = (view: View) => trigger(view).getAttribute('aria-expanded') === 'true';
 const boundText = (view: View) => query(view, '[data-testid="bound"]').textContent;
-const stored = () => sessionStorage.getItem('persisted:reader');
 const click = fireEvent.click;
-const setQuiet = async (enabled: boolean) => {
-	quietMode.set(enabled);
+const setCollapsed = async (collapsed: boolean) => {
+	collapsed ? sections.collapseAll() : sections.expandAll();
 	await tick();
 };
 
 afterEach(() => {
-	quietMode.resetForTest();
+	sections.expandAll();
 	sessionStorage.clear();
 	window.getSelection()?.removeAllRanges();
 });
@@ -74,24 +73,14 @@ describe('disclosure', () => {
 	});
 
 	it('is a static, always-open card with collapsible={false}', async () => {
-		quietMode.set(true);
+		sections.collapseAll();
 		const view = section({ collapsible: false });
 		expect(view.container.querySelector('[data-section-trigger]')).toBeNull();
 		await click(view.getByTestId('prose'));
 		expect(content(view).getAttribute('data-state')).toBe('open');
 	});
 
-	it('shows a static body over a stored close, and keeps that choice for later', async () => {
-		sessionStorage.setItem('persisted:reader', 'false');
-		const view = keyed({ collapsible: false });
-		expect(content(view).hasAttribute('inert')).toBe(false);
 
-		const runtime = keyed();
-		expect(content(runtime).getAttribute('data-state')).toBe('closed');
-		await runtime.rerender({ collapsible: false });
-		expect(content(runtime).getAttribute('data-state')).toBe('open');
-		expect(stored()).toBe('false');
-	});
 });
 
 describe('whole-card toggling', () => {
@@ -175,101 +164,52 @@ describe('focus', () => {
 	});
 });
 
-describe('keyed section', () => {
-	it('starts closed when quiet mode was on before mount, leaving storage untouched', () => {
-		quietMode.set(true);
-		const view = keyed();
-		expect(isOpen(view)).toBe(false);
-		expect(stored()).toBeNull();
-	});
-
-	it('stores reader clicks, from the header or the card, and restores them on remount', async () => {
-		const first = keyed();
-		await click(trigger(first));
-		expect(stored()).toBe('false');
-		await click(first.getByTestId('prose'));
-		expect(stored()).toBe('true');
+describe('page disclosure controls', () => {
+	it('ignores old stored state and starts at the declared default on every mount', async () => {
+		sessionStorage.setItem('persisted:reader', 'false');
+		const first = section();
 		await click(trigger(first));
 		first.unmount();
-		expect(isOpen(keyed())).toBe(false);
+		expect(isOpen(section())).toBe(true);
+		expect(isOpen(section({ open: false }))).toBe(false);
+		expect(sessionStorage.getItem('persisted:reader')).toBe('false');
 	});
-
-	it.each([
-		['a stored close', true, 'false', false],
-		['an untouched default', false, null, true],
-	])('Collapse all then Expand all leaves %s alone', async (_case, readerClicks, kept, reopens) => {
-		const first = keyed();
-		if (readerClicks) await click(trigger(first));
-		await setQuiet(true);
-		expect(isOpen(first)).toBe(false);
-		await setQuiet(false);
-		expect(isOpen(first)).toBe(true);
-		expect(stored()).toBe(kept);
-		first.unmount();
-		expect(isOpen(keyed())).toBe(reopens);
-	});
-
-	it.each([
-		['off then on', [false, true], false],
-		['on then off', [true, false], true],
-	] as const)('lands on the final mode when quiet mode toggles %s in one tick', async (_case, modes, open) => {
-		if (!modes[0]) quietMode.set(true);
-		const view = keyed();
-		const bound = render(Bound);
-		for (const mode of modes) quietMode.set(mode);
-		await tick();
-		expect([isOpen(view), boundText(bound), stored()]).toEqual([open, String(open), null]);
-	});
-
-	it('lets a reader click replace a quiet override', async () => {
-		const view = keyed();
-		await setQuiet(true);
-		await click(trigger(view));
-		expect([isOpen(view), stored()]).toEqual([true, 'true']);
-	});
-
-	it('ignores quiet changes with quiet={false}', async () => {
-		quietMode.set(true);
-		const view = keyed({ quiet: false });
-		await setQuiet(false);
-		await setQuiet(true);
-		expect([isOpen(view), stored()]).toEqual([true, null]);
-	});
-
-	it('opens and stores true when openSignal changes, like a reader click', async () => {
-		const view = keyed();
-		await click(trigger(view));
-		await view.rerender({ openSignal: 1 });
-		expect([isOpen(view), stored()]).toEqual([true, 'true']);
-
-		await click(trigger(view));
-		await view.rerender({ openSignal: 1 });
-		expect(isOpen(view)).toBe(false);
-	});
-
-	it('closes when quiet mode is remembered', async () => {
-		const view = keyed();
-		quietMode.rememberCurrent();
-		await tick();
-		expect([isOpen(view), stored()]).toEqual([false, null]);
-	});
-});
-
-describe('unkeyed section with a bound open', () => {
-	it('follows quiet mode and reader clicks in the parent value', async () => {
+	it('bulk actions reach bound sections and new sections keep their defaults', async () => {
 		const view = render(Bound);
-		expect(boundText(view)).toBe('true');
-		await setQuiet(true);
+		await setCollapsed(true);
 		expect(boundText(view)).toBe('false');
-		await setQuiet(false);
+		expect(isOpen(section())).toBe(true);
+		await setCollapsed(false);
 		expect(boundText(view)).toBe('true');
-		await click(trigger(view));
-		expect(boundText(view)).toBe('false');
 	});
-
-	it('mounts closed when quiet mode is already on, unless quiet={false}', () => {
-		quietMode.set(true);
-		const [followed, ignored] = [render(Bound), render(Bound, { props: { quiet: false } })];
-		expect([boundText(followed), boundText(ignored)]).toEqual(['false', 'true']);
+	it('opens by anchor, unregisters on unmount and follows anchor changes', async () => {
+		const view = section({ anchor: 'intro', open: false });
+		expect(openSection('missing')).toBe(false);
+		expect(openSection('intro')).toBe(true);
+		await tick();
+		expect(isOpen(view)).toBe(true);
+		await view.rerender({ anchor: 'other', open: false });
+		expect(openSection('intro')).toBe(false);
+		expect(openSection('other')).toBe(true);
+		await tick();
+		expect(isOpen(view)).toBe(true);
+		view.unmount();
+		expect(openSection('other')).toBe(false);
+	});
+	it('opens every copy of an anchor and safely unregisters one copy', async () => {
+		const first = section({ anchor: 'same', open: false });
+		const second = section({ anchor: 'same', open: false });
+		first.unmount();
+		expect(openSection('same')).toBe(true);
+		await tick();
+		expect(isOpen(second)).toBe(true);
+	});
+	it('opens only when openSignal changes', async () => {
+		const view = section({ open: false });
+		await view.rerender({ openSignal: 1 });
+		expect(isOpen(view)).toBe(true);
+		await click(trigger(view));
+		await view.rerender({ openSignal: 1 });
+		expect(isOpen(view)).toBe(false);
 	});
 });

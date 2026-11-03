@@ -42,7 +42,7 @@ import {
 	FilterSection,
 	FilterSummary,
 	MetricDisplay,
-	QuietModeButton,
+	SectionsToggle,
 	SearchInput,
 	SectionHeading,
 	SectionIcon,
@@ -58,7 +58,7 @@ import {
 	type FilterSectionProps,
 	type FilterSummaryProps,
 	type MetricDisplayProps,
-	type QuietModeButtonProps,
+	type SectionsToggleProps,
 	type SearchInputProps,
 	type StopLabelProps,
 	type TerminalCursorProps,
@@ -145,28 +145,24 @@ const invalidChevronChildren: ChevronToggleProps = { open: false, children: igno
 // @ts-expect-error the decorative cursor owns its empty span
 const invalidCursorChildren: TerminalCursorProps = { children: ignoredChildren };
 
-const quietModeProps: QuietModeButtonProps = {
+const sectionsToggleProps: SectionsToggleProps = {
 	copy: {
 		collapse: 'Collapse all',
 		expand: 'Expand all',
 		collapseTitle: 'Collapse every section',
 		expandTitle: 'Expand every section',
-		remember: 'Always start collapsed',
-		forget: "Don't start collapsed",
 	},
-	enabled: false,
-	remembered: false,
+	collapsed: false,
 	onToggle: () => undefined,
-	onRememberToggle: () => undefined,
 	activeEffect: 'glow',
 };
-type QuietModeComponentProps = ComponentProps<typeof QuietModeButton>;
-const quietModeComponentProps: QuietModeComponentProps = quietModeProps;
+type SectionsToggleComponentProps = ComponentProps<typeof SectionsToggle>;
+const sectionsToggleComponentProps: SectionsToggleComponentProps = sectionsToggleProps;
 // @ts-expect-error visual policy is a closed neutral variant
-const invalidQuietModeEffect: QuietModeButtonProps = { ...quietModeProps, activeEffect: 'pulse' };
-const invalidQuietModeChildren: QuietModeButtonProps = {
-	...quietModeProps,
-	// @ts-expect-error the package owns the two-button body
+const invalidSectionsToggleEffect: SectionsToggleProps = { ...sectionsToggleProps, activeEffect: 'pulse' };
+const invalidSectionsToggleChildren: SectionsToggleProps = {
+	...sectionsToggleProps,
+	// @ts-expect-error the package owns the single-button body
 	children: ignoredChildren,
 };
 
@@ -178,8 +174,6 @@ const tocNavProps: TocNavProps = {
 	activeId: 'intro',
 	heading: 'Contents',
 	open: true,
-	sectionKey: 'toc',
-	quiet: false,
 	onNavigate: (id) => expectTypeOf(id).toEqualTypeOf<string>(),
 };
 const tocPillProps: TocPillProps = {
@@ -194,8 +188,6 @@ const invalidTocPill: TocPillProps = { entries: [], activeId: '', closeAria: 'cl
 const collapsibleSectionProps: CollapsibleSectionProps = {
 	title: 'Section',
 	open: false,
-	sectionKey: 'section',
-	quiet: false,
 	openSignal: 1,
 	headerVariant: 'article-summary',
 };
@@ -244,7 +236,6 @@ const listingFrameProps: ListingFrameProps = {
 	subtitle: 'Everything shipped',
 	blueprint: ignoredChildren,
 	filterLabel: 'Filters',
-	filterPersistKey: 'listing-filters',
 	filters: ignoredChildren,
 	children: ignoredChildren,
 	onHeaderMount: (header, frame) => {
@@ -417,7 +408,6 @@ describe('public UI prop contracts', () => {
 		expect(filterSectionProps.children).toBe(ignoredChildren);
 		expect(filterSummaryProps.locale).toBe('en');
 		expect(searchInputProps.value).toBe('');
-		expect(listingFrameProps.filterPersistKey).toBe('listing-filters');
 		expect(articleHeaderProps.highlight).toBe('line');
 		expect(detailFrameProps.measure).toBe('46rem');
 		expect(errorPageProps.status).toBe(404);

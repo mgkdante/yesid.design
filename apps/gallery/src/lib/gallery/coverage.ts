@@ -32,7 +32,7 @@ export const GALLERY_COVERAGE = {
 		'ManifestoCanvas',
 		'MetricDisplay',
 		'MetroStation',
-		'QuietModeButton',
+		'SectionsToggle',
 		'SearchInput',
 		'SectionHeading',
 		'SectionIcon',

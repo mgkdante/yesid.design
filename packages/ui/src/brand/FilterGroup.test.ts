@@ -93,12 +93,12 @@ describe('FilterGroup collapsible', () => {
 		expect(within(body(view)).getAllByRole('radio')).toHaveLength(3);
 	});
 
-	it('starts open by default and keeps its state across a remount with persistKey', async () => {
-		const first = group({ collapsible: true, persistKey: 'filters:affects' });
+	it('starts at its declared default on every mount', async () => {
+		const first = group({ collapsible: true });
 		expect(header(first).getAttribute('aria-expanded')).toBe('true');
 		await click(header(first));
 		first.unmount();
-		expect(header(group({ collapsible: true, persistKey: 'filters:affects' })).getAttribute('aria-expanded')).toBe('false');
+		expect(header(group({ collapsible: true })).getAttribute('aria-expanded')).toBe('true');
 	});
 });
 

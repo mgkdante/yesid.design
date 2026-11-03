@@ -127,8 +127,11 @@ test('filter panel is usable at this width', async ({ page, browser, baseURL }) 
 	await expectTabTo(page, toggle);
 	await expectTabTo(page, clear);
 
-	await toggle.click();
-	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	// Server controls exist before hydration wires their handlers. Wait for the real action.
+	await expect(async () => {
+		if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+		await expect(toggle).toHaveAttribute('aria-expanded', 'true', { timeout: 1000 });
+	}).toPass();
 	await expect(firstButton).toBeVisible();
 	await expectTabTo(page, firstButton);
 
@@ -139,11 +142,11 @@ test('filter panel is usable at this width', async ({ page, browser, baseURL }) 
 	await toggle.focus();
 	await expectTabTo(page, clear);
 
-	// The stored open state survives a reload, and an open panel stays shown at desktop width.
+	// Reload restores the declared closed state; desktop CSS still keeps filters reachable.
 	await toggle.click();
 	await page.reload();
-	await expect(listing(page).toggle).toHaveAttribute('aria-expanded', 'true');
-	await expect(listing(page).firstButton).toBeVisible();
+	await expect(listing(page).toggle).toHaveAttribute('aria-expanded', 'false');
+	await expect(listing(page).firstButton).toBeHidden();
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await expect(listing(page).firstButton).toBeVisible();
 });

@@ -125,15 +125,10 @@ describe('filter toggle', () => {
 		expect(document.body.style.overflow).not.toBe('hidden');
 	});
 
-	it('keeps the open state across a remount with filterPersistKey, and not without one', async () => {
-		const keyed = frame({ filterPersistKey: 'listing:filters' });
-		await click(toggle(keyed));
-		keyed.unmount();
-		expect(isOpen(frame({ filterPersistKey: 'listing:filters' }))).toEqual(['true', 'open']);
-
-		const plain = frame();
-		await click(toggle(plain));
-		plain.unmount();
+	it('starts closed on every remount', async () => {
+		const first = frame();
+		await click(toggle(first));
+		first.unmount();
 		expect(isOpen(frame())).toEqual(['false', 'closed']);
 	});
 });

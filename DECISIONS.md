@@ -114,3 +114,10 @@ pattern promotes once two independent products need the same contract. The rule 
 component duplicated in Transit and yesid.dev while they waited for a third product. The copies
 drifted, and each carried fixes the other lacked. Principle 1 still holds: a difference that cannot be a
 prop with a default stays in the app.
+
+## D15: Disclosure state is never remembered
+
+Sections, filter groups and listing panels start at their declared state on every mount or visit;
+nothing about open or closed is persisted or written by the boot script. Pages with at least two
+collapsible content sections offer one expand-all control for those sections instead; the TOC
+keeps its independent toggle and does not count toward that threshold.

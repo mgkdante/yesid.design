@@ -9,8 +9,8 @@ vi.mock('svelte', async (importOriginal) => ({
 	onMount: () => {},
 }));
 
-it.each([undefined, 'listing:filters'])('server markup of a closed frame keeps the filter controls reachable (filterPersistKey=%s)', (filterPersistKey) => {
-	const { body } = render(Fixture, { props: { filterPersistKey } });
+it('server markup keeps closed filter controls reachable', () => {
+	const { body } = render(Fixture);
 	const panel = body.match(/<div[^>]*data-slot="listing-filter-panel"[^>]*>/)?.[0] ?? '';
 	const toggle = body.match(/<button[^>]*data-slot="listing-filter-toggle"[^>]*>/)?.[0] ?? '';
 
