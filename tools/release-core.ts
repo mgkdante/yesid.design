@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import {
 	existsSync,
 	mkdirSync,
@@ -9,25 +10,32 @@ import {
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-export const RELEASED_PACKAGES = [
-	'@yesid/tokens',
-	'@yesid/motion',
-	'@yesid/gates',
-	'@yesid/seo-kit',
-	'@yesid/ui',
-	'@yesid/analytics',
-	'@yesid/i18n-core',
+/** Current API/fragment policy. Tagged workspace data owns recovery inventories. */
+export const RELEASE_PACKAGES = [
+	{ name: '@yesid/tokens', directory: 'tokens', apiReport: true, sideEffects: ['**/*.css'] },
+	{ name: '@yesid/motion', directory: 'motion', apiReport: true, sideEffects: ['**/*.css'] },
+	{ name: '@yesid/gates', directory: 'gates', apiReport: true, sideEffects: ['**/*.css'] },
+	{ name: '@yesid/seo-kit', directory: 'seo-kit', apiReport: true, sideEffects: false },
+	{ name: '@yesid/ui', directory: 'ui', apiReport: true, sideEffects: ['**/*.css'] },
+	{ name: '@yesid/analytics', directory: 'analytics', apiReport: true, sideEffects: false },
+	{ name: '@yesid/i18n-core', directory: 'i18n-core', apiReport: true, sideEffects: false },
+	{ name: '@yesid/config', directory: 'config', apiReport: false, sideEffects: undefined },
 ] as const;
-const LOCKSTEP_PACKAGES = [...RELEASED_PACKAGES, '@yesid/config'] as const;
 
-export type ReleasedPackageName = (typeof RELEASED_PACKAGES)[number];
-type LockstepPackageName = (typeof LOCKSTEP_PACKAGES)[number];
+export type ReleasedPackage = (typeof RELEASE_PACKAGES)[number];
+export type ReleasedPackageName = ReleasedPackage['name'];
+export type ApiPackage = Extract<ReleasedPackage, { apiReport: true }>;
+export type ApiPackageName = ApiPackage['name'];
+export const API_PACKAGES = RELEASE_PACKAGES.filter((pkg): pkg is ApiPackage => pkg.apiReport);
+export const API_REPORT_PATHS = Object.fromEntries(
+	API_PACKAGES.map(({ name, directory }) => [name, `api-reports/${directory}.api.md`]),
+) as Record<ApiPackageName, string>;
 export type ReleaseBump = 'patch' | 'minor' | 'major';
 
 export interface ParsedChangeFragment {
 	id: string;
 	path: string;
-	packages: ReadonlyMap<LockstepPackageName, ReleaseBump>;
+	packages: ReadonlyMap<ReleasedPackageName, ReleaseBump>;
 	description: string;
 }
 
@@ -50,16 +58,6 @@ export interface PreparedReleaseExpectation {
 	tag?: string;
 }
 
-const RELEASED_WORKSPACES: Readonly<Record<LockstepPackageName, `packages/${string}`>> = {
-	'@yesid/tokens': 'packages/tokens',
-	'@yesid/motion': 'packages/motion',
-	'@yesid/gates': 'packages/gates',
-	'@yesid/seo-kit': 'packages/seo-kit',
-	'@yesid/ui': 'packages/ui',
-	'@yesid/analytics': 'packages/analytics',
-	'@yesid/i18n-core': 'packages/i18n-core',
-	'@yesid/config': 'packages/config',
-};
 const FRAGMENT_PATH = /^\.changes\/([a-z0-9]+(?:-[a-z0-9]+)*)\.md$/u;
 const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/u;
 const CORE_IDENTIFIER = '(0|[1-9]\\d*)';
@@ -76,8 +74,8 @@ function normalizeLineEndings(source: string): string {
 	return source.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
 }
 
-function isLockstepPackage(value: string): value is LockstepPackageName {
-	return LOCKSTEP_PACKAGES.some((packageName) => packageName === value);
+function isLockstepPackage(value: string): value is ReleasedPackageName {
+	return RELEASE_PACKAGES.some(({ name }) => name === value);
 }
 
 function isReleaseBump(value: string): value is ReleaseBump {
@@ -134,7 +132,7 @@ export function parseChangeFragment(source: string, path: string): ParsedChangeF
 	if (end === -1) throw new Error(`${path} must close release fragment front matter`);
 	const descriptionStart = emptyFrontMatter ? 8 : end + '\n---\n'.length;
 
-	const packages = new Map<LockstepPackageName, ReleaseBump>();
+	const packages = new Map<ReleasedPackageName, ReleaseBump>();
 	const frontMatter = normalized.slice(4, end);
 	for (const declaration of frontMatter ? frontMatter.split('\n') : []) {
 		const match = declaration.match(/^"([^"]+)":\s*([^\s]+)$/u);
@@ -185,6 +183,12 @@ interface RepositoryVersionState {
 	version: string;
 	manifests: ManifestState[];
 	lockfile: string;
+	packages: readonly TargetReleasePackage[];
+}
+
+interface TargetReleasePackage {
+	name: string;
+	directory: string;
 }
 
 function readManifest(repositoryRoot: string, path: string, expectedName: string): ManifestState {
@@ -273,14 +277,57 @@ export function replaceLockWorkspaceVersion(
 	return `${source.slice(0, block.start)}${updated}${source.slice(block.end + 1)}`;
 }
 
+interface LockedWorkspace {
+	name?: unknown;
+	version?: unknown;
+}
+
+function readLockWorkspaces(lockfile: string): Record<string, LockedWorkspace | null> {
+	// Bun's workspace data is JSONC. Preserve string tokens while stripping comments and
+	// trailing commas, so URLs and quoted dependency values retain their exact meaning.
+	const json = lockfile
+		.replace(/"(?:[^"\\]|\\.)*"|\/\/[^\r\n]*|\/\*[\s\S]*?\*\//gu,
+			(token) => token.startsWith('"') ? token : ' ')
+		.replace(/"(?:[^"\\]|\\.)*"|,\s*(?=[}\]])/gu,
+			(token) => token.startsWith('"') ? token : '');
+	const { workspaces } = JSON.parse(json) as { workspaces?: Record<string, LockedWorkspace | null> };
+	if (!workspaces || typeof workspaces !== 'object' || Array.isArray(workspaces)) {
+		throw new Error('bun.lock must define a workspace object');
+	}
+	return workspaces;
+}
+
+/** Resolve the target's released packages, including historical packages absent from this runner. */
+function readReleaseInventory(workspaces: Record<string, LockedWorkspace | null>): TargetReleasePackage[] {
+	const packages: TargetReleasePackage[] = [];
+	const names = new Set<string>();
+	for (const [workspace, manifest] of Object.entries(workspaces)) {
+		// packages/* are release units; apps/* (including private Gallery) are not.
+		if (!workspace.startsWith('packages/')) continue;
+		const directory = /^packages\/([a-z0-9][a-z0-9._-]*)$/u.exec(workspace)?.[1];
+		if (!directory) throw new Error(`Unsafe release workspace in bun.lock: ${workspace}`);
+		const name = manifest?.name;
+		if (typeof name !== 'string' || !/^@yesid\/[a-z0-9][a-z0-9._-]*$/u.test(name)) {
+			throw new Error(`bun.lock workspace ${workspace} must name an @yesid package`);
+		}
+		if (names.has(name)) throw new Error(`Duplicate released package in bun.lock: ${name}`);
+		names.add(name);
+		packages.push({ name, directory });
+	}
+	if (packages.length === 0) throw new Error('bun.lock has no released package workspaces');
+	return packages;
+}
+
 function readRepositoryVersionState(repositoryRootInput: string): RepositoryVersionState {
 	const repositoryRoot = resolve(repositoryRootInput);
 	const root = readManifest(repositoryRoot, 'package.json', 'yesid-dev-design');
+	const lockfile = readFileSync(join(repositoryRoot, 'bun.lock'), 'utf8');
+	const workspaces = readLockWorkspaces(lockfile);
+	const packages = readReleaseInventory(workspaces);
 	const manifests = [
 		root,
-		...LOCKSTEP_PACKAGES.map((packageName) => {
-			const workspace = RELEASED_WORKSPACES[packageName];
-			return readManifest(repositoryRoot, `${workspace}/package.json`, packageName);
+		...packages.map(({ name, directory }) => {
+			return readManifest(repositoryRoot, `packages/${directory}/package.json`, name);
 		}),
 	];
 	for (const manifest of manifests.slice(1)) {
@@ -296,23 +343,22 @@ function readRepositoryVersionState(repositoryRootInput: string): RepositoryVers
 			`Private Gallery version drift: apps/gallery/package.json is ${gallery.version}; expected 0.1.0`,
 		);
 	}
-	const lockfile = readFileSync(join(repositoryRoot, 'bun.lock'), 'utf8');
-	for (const packageName of LOCKSTEP_PACKAGES) {
-		const workspace = RELEASED_WORKSPACES[packageName];
-		const version = lockWorkspaceVersion(lockfile, workspace);
+	for (const { directory } of packages) {
+		const workspace = `packages/${directory}`;
+		const version = workspaces[workspace]?.version;
 		if (version !== root.version) {
 			throw new Error(
 				`Lockstep version drift: bun.lock ${workspace} is ${version}; expected ${root.version}`,
 			);
 		}
 	}
-	const galleryLockVersion = lockWorkspaceVersion(lockfile, 'apps/gallery');
+	const galleryLockVersion = workspaces['apps/gallery']?.version;
 	if (galleryLockVersion !== '0.1.0') {
 		throw new Error(
 			`Private Gallery version drift: bun.lock apps/gallery is ${galleryLockVersion}; expected 0.1.0`,
 		);
 	}
-	return { version: root.version, manifests, lockfile };
+	return { version: root.version, manifests, lockfile, packages };
 }
 
 function replaceManifestVersion(manifest: ManifestState, targetVersion: string): string {
@@ -324,7 +370,7 @@ function replaceManifestVersion(manifest: ManifestState, targetVersion: string):
 	return manifest.source.replace(pattern, `$1${targetVersion}$3`);
 }
 
-function readChangeFragmentInputs(repositoryRoot: string): ChangeFragmentInput[] {
+export function readChangeFragmentInputs(repositoryRoot: string): ChangeFragmentInput[] {
 	const directory = join(repositoryRoot, '.changes');
 	if (!existsSync(directory)) return [];
 	return readdirSync(directory, { withFileTypes: true })
@@ -433,13 +479,7 @@ function assertFragmentReleaseTransition(
 	current: ExactSemVer,
 	target: ExactSemVer,
 	fragments: readonly ParsedChangeFragment[],
-	latestChangelog: string | undefined,
 ): void {
-	const bootstrap =
-		current.version === '0.7.0' &&
-		target.version === '0.7.0-rc.1' &&
-		latestChangelog === undefined;
-	if (bootstrap) return;
 	if (compareVersions(target, current) <= 0) {
 		throw new Error(`Release version ${target.version} must advance from ${current.version}`);
 	}
@@ -477,8 +517,8 @@ function assertStablePromotion(
 }
 
 function renderFragment(fragment: ParsedChangeFragment): string {
-	const packages = LOCKSTEP_PACKAGES.filter((packageName) => fragment.packages.has(packageName)).map(
-		(packageName) => `\`${packageName}\` (${fragment.packages.get(packageName)})`,
+	const packages = RELEASE_PACKAGES.filter(({ name }) => fragment.packages.has(name)).map(
+		({ name }) => `\`${name}\` (${fragment.packages.get(name)})`,
 	);
 	const description = fragment.description
 		.split('\n')
@@ -539,7 +579,7 @@ export function prepareRelease(repositoryRootInput: string, version: string): vo
 	const latest = latestChangelogVersion(changelog);
 	let nextChangelog: string;
 	if (fragments.length > 0) {
-		assertFragmentReleaseTransition(current, target, fragments, latest);
+		assertFragmentReleaseTransition(current, target, fragments);
 		if (changelogVersions(changelog).includes(target.version)) {
 			throw new Error(`CHANGELOG.md already contains release ${target.version}`);
 		}
@@ -550,15 +590,15 @@ export function prepareRelease(repositoryRootInput: string, version: string): vo
 	}
 
 	let nextLockfile = state.lockfile;
-	for (const packageName of LOCKSTEP_PACKAGES) {
+	for (const { directory } of state.packages) {
 		nextLockfile = replaceLockWorkspaceVersion(
 			nextLockfile,
-			RELEASED_WORKSPACES[packageName],
+			`packages/${directory}`,
 			state.version,
 			target.version,
 		);
 	}
-	const readmes = LOCKSTEP_PACKAGES.map((name) => `${RELEASED_WORKSPACES[name]}/README.md`);
+	const readmes = state.packages.map(({ directory }) => `packages/${directory}/README.md`);
 	const writes = [
 		...state.manifests.map((manifest) => ({
 			path: join(repositoryRoot, manifest.path),
@@ -583,8 +623,15 @@ export function checkPreparedRelease(
 	expectation: PreparedReleaseExpectation,
 ): void {
 	const repositoryRoot = resolve(repositoryRootInput);
+	validatePreparedRelease(repositoryRoot, expectation, readRepositoryVersionState(repositoryRoot));
+}
+
+function validatePreparedRelease(
+	repositoryRoot: string,
+	expectation: PreparedReleaseExpectation,
+	state: RepositoryVersionState,
+): void {
 	const expected = parseExactSemVer(expectation.version);
-	const state = readRepositoryVersionState(repositoryRoot);
 	if (state.version !== expected.version) {
 		throw new Error(`Prepared release version is ${state.version}; expected ${expected.version}`);
 	}
@@ -602,11 +649,90 @@ export function checkPreparedRelease(
 	if (latest !== expected.version) {
 		throw new Error(`Latest CHANGELOG.md release is ${latest ?? '<missing>'}; expected ${expected.version}`);
 	}
-	for (const name of LOCKSTEP_PACKAGES) {
-		const path = `${RELEASED_WORKSPACES[name]}/README.md`;
+	for (const { directory } of state.packages) {
+		const path = `packages/${directory}/README.md`;
 		const stale = readFileSync(join(repositoryRoot, path), 'utf8')
 			.match(/blob\/v[^/]+\//gu)
 			?.find((link) => link !== `blob/v${expected.version}/`);
 		if (stale) throw new Error(`${path} links ${stale}; expected blob/v${expected.version}/`);
+	}
+}
+
+export interface PackReleaseOptions {
+	tag: string;
+	repository: string;
+}
+
+function packageAssetName(pkg: TargetReleasePackage, version: string): string {
+	return `yesid-${pkg.name.slice('@yesid/'.length)}-${version}.tgz`;
+}
+
+/** Pack exactly the release inventory. Temporary checkout edits are restored even on failure. */
+export function packRelease(repositoryRootInput: string, options: PackReleaseOptions): string[] {
+	const repositoryRoot = resolve(repositoryRootInput);
+	const version = parseReleaseTag(options.tag);
+	if (!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/u.test(options.repository)) {
+		throw new Error('pack requires a GitHub repository in owner/name form');
+	}
+	const state = readRepositoryVersionState(repositoryRoot);
+	validatePreparedRelease(repositoryRoot, { version, tag: options.tag }, state);
+	const inventory = state.packages;
+	const base = `https://github.com/${options.repository}/releases/download/${options.tag}`;
+	const legal = ['LICENSE', 'NOTICE'].map((name) => ({
+		name, source: readFileSync(join(repositoryRoot, name)),
+	}));
+	// Validate every rewrite before touching the checkout or creating output.
+	const packages = inventory.map((pkg) => {
+		const directory = join(repositoryRoot, 'packages', pkg.directory);
+		const path = join(directory, 'package.json');
+		const source = readFileSync(path, 'utf8');
+		// Like the former workflow, rewrite all sibling workspace declarations, including
+		// devDependencies. Preserve formatting so Bun receives the same manifest bytes.
+		const packed = source.replace(
+			/("(@yesid\/[a-z0-9][a-z0-9._-]*)"\s*:\s*)"workspace:[^"]*"/gu,
+			(_match, prefix: string, name: string) => {
+				const sibling = inventory.find((candidate) => candidate.name === name);
+				if (!sibling) throw new Error(`${path} names unknown sibling dependency ${name}`);
+				return `${prefix}"${base}/${packageAssetName(sibling, version)}"`;
+			},
+		);
+		return { directory, path, packed, pkg };
+	});
+	const destination = join(repositoryRoot, 'dist');
+	// An existing directory may contain someone else's artifacts. Never overwrite or delete it.
+	mkdirSync(destination);
+	const tarballs: string[] = [];
+	try {
+		for (const pkg of packages) {
+			const originals = [pkg.path, ...legal.map(({ name }) => join(pkg.directory, name))]
+				.map((path) => ({ path, source: existsSync(path) ? readFileSync(path) : undefined }));
+			try {
+				writeFileSync(pkg.path, pkg.packed);
+				for (const { name, source } of legal) writeFileSync(join(pkg.directory, name), source);
+				const result = spawnSync('bun', ['pm', 'pack', '--destination', destination], {
+					cwd: pkg.directory, encoding: 'utf8',
+				});
+				if (result.status !== 0) {
+					throw new Error(`Packing ${pkg.pkg.name} failed: ${result.error?.message ?? result.stderr}`);
+				}
+				const tarball = join(destination, packageAssetName(pkg.pkg, version));
+				if (!existsSync(tarball)) throw new Error(`Packing ${pkg.pkg.name} did not create ${tarball}`);
+				tarballs.push(tarball);
+			} finally {
+				for (const { path, source } of originals) {
+					if (source === undefined) rmSync(path, { force: true });
+					else writeFileSync(path, source);
+				}
+			}
+		}
+		const actual = readdirSync(destination).sort();
+		const expected = inventory.map((pkg) => packageAssetName(pkg, version)).sort();
+		if (actual.join('\n') !== expected.join('\n')) {
+			throw new Error(`Packed assets do not match the release inventory: ${actual.join(', ')}`);
+		}
+		return tarballs;
+	} catch (error) {
+		rmSync(destination, { recursive: true, force: true });
+		throw error;
 	}
 }

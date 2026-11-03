@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkPreparedRelease, prepareRelease } from './release-core.js';
+import { checkPreparedRelease, packRelease, prepareRelease } from './release-core.js';
 
 interface ReleaseArguments {
 	command: 'prepare' | 'check';
@@ -8,11 +8,13 @@ interface ReleaseArguments {
 	tag?: string;
 }
 
+const USAGE = 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>, or pack --tag <tag> --repository <owner/name> [--checkout <path>]';
+
 function parseArguments(args: readonly string[]): ReleaseArguments {
 	const normalized = args.filter((argument) => argument !== '--');
 	const command = normalized[0];
 	if (command !== 'prepare' && command !== 'check') {
-		throw new Error('usage: bun tools/release.ts <prepare|check> --version <exact SemVer>');
+		throw new Error(USAGE);
 	}
 	let version: string | undefined;
 	let tag: string | undefined;
@@ -44,8 +46,25 @@ export function runReleaseCommand(
 	args: readonly string[],
 	repositoryRootInput: string,
 ): string {
-	const parsed = parseArguments(args);
 	const repositoryRoot = resolve(repositoryRootInput);
+	const normalized = args.filter((argument) => argument !== '--');
+	if (normalized[0] === 'pack') {
+		const options = new Map<string, string>();
+		for (let index = 1; index < normalized.length; index += 2) {
+			const key = normalized[index];
+			const value = normalized[index + 1];
+			if ((key !== '--tag' && key !== '--repository' && key !== '--checkout') || !value || value.startsWith('--') || options.has(key)) {
+				throw new Error(USAGE);
+			}
+			options.set(key, value);
+		}
+		const tag = options.get('--tag');
+		const repository = options.get('--repository');
+		if (!tag || !repository) throw new Error(USAGE);
+		const tarballs = packRelease(options.get('--checkout') ?? repositoryRoot, { tag, repository });
+		return `Packed ${tarballs.length} packages for ${tag} into dist`;
+	}
+	const parsed = parseArguments(normalized);
 	if (parsed.command === 'prepare') {
 		prepareRelease(repositoryRoot, parsed.version);
 		return `Release ${parsed.version} prepared`;

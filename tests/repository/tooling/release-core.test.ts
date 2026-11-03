@@ -1,16 +1,15 @@
 import {
 	existsSync,
 	mkdirSync,
-	mkdtempSync,
 	readFileSync,
 	rmSync,
 	writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
 	checkPreparedRelease,
+	RELEASE_PACKAGES,
 	lockWorkspaceVersion,
 	parseChangeFragment,
 	parseChangeFragments,
@@ -19,74 +18,16 @@ import {
 	prepareRelease,
 } from '../../../tools/release-core.js';
 import { runReleaseCommand } from '../../../tools/release.js';
+import { createReleaseCheckout, type TempCheckout } from './temp-checkout.js';
 
-const scratch: string[] = [];
-const RELEASED_WORKSPACES = [
-	'tokens',
-	'motion',
-	'gates',
-	'seo-kit',
-	'ui',
-	'analytics',
-	'i18n-core',
-	'config',
-] as const;
+const scratch: TempCheckout[] = [];
 
 afterEach(() => {
-	for (const directory of scratch.splice(0)) rmSync(directory, { recursive: true, force: true });
+	for (const checkout of scratch.splice(0)) checkout.dispose();
 });
 
 function manifest(name: string, version: string, indentation: string | number = 2): string {
 	return `${JSON.stringify({ name, version, private: true }, null, indentation)}\n`;
-}
-
-function lockfile(version: string): string {
-	return `{
-  "lockfileVersion": 1,
-  "configVersion": 1,
-  "workspaces": {
-    "": {
-      "name": "yesid-dev-design",
-    },
-    "apps/gallery": {
-      "name": "@yesid/gallery",
-      "version": "0.1.0",
-    },
-    "packages/analytics": {
-      "name": "@yesid/analytics",
-      "version": "${version}",
-    },
-    "packages/i18n-core": {
-      "name": "@yesid/i18n-core",
-      "version": "${version}",
-    },
-    "packages/gates": {
-      "name": "@yesid/gates",
-      "version": "${version}",
-    },
-    "packages/config": {
-      "name": "@yesid/config",
-      "version": "${version}",
-    },
-    "packages/motion": {
-      "name": "@yesid/motion",
-      "version": "${version}",
-    },
-    "packages/seo-kit": {
-      "name": "@yesid/seo-kit",
-      "version": "${version}",
-    },
-    "packages/tokens": {
-      "name": "@yesid/tokens",
-      "version": "${version}",
-    },
-    "packages/ui": {
-      "name": "@yesid/ui",
-      "version": "${version}",
-    },
-  },
-}
-`;
 }
 
 function write(path: string, source: string): void {
@@ -94,24 +35,10 @@ function write(path: string, source: string): void {
 	writeFileSync(path, source);
 }
 
-function createRepository(version = '0.7.0'): string {
-	const root = mkdtempSync(join(tmpdir(), 'yesid-release-core-'));
-	scratch.push(root);
-	write(join(root, 'package.json'), manifest('yesid-dev-design', version, '\t'));
-	for (const workspace of RELEASED_WORKSPACES) {
-		write(
-			join(root, 'packages', workspace, 'package.json'),
-			manifest(`@yesid/${workspace}`, version),
-		);
-		write(
-			join(root, 'packages', workspace, 'README.md'),
-			`[Changelog](https://github.com/mgkdante/yesid.dev-design/blob/v${version}/CHANGELOG.md)\n`,
-		);
-	}
-	write(join(root, 'apps/gallery/package.json'), manifest('@yesid/gallery', '0.1.0', '\t'));
-	write(join(root, 'bun.lock'), lockfile(version));
-	mkdirSync(join(root, '.changes'));
-	return root;
+function createRepository(version = '0.6.0'): string {
+	const checkout = createReleaseCheckout(version);
+	scratch.push(checkout);
+	return checkout.root;
 }
 
 function fragment(
@@ -129,7 +56,7 @@ function versions(root: string): Record<string, string> {
 	return Object.fromEntries(
 		[
 			'package.json',
-			...RELEASED_WORKSPACES.map((workspace) => `packages/${workspace}/package.json`),
+			...RELEASE_PACKAGES.map(({ directory }) => `packages/${directory}/package.json`),
 			'apps/gallery/package.json',
 		].map((path) => [path, JSON.parse(readFileSync(join(root, path), 'utf8')).version as string]),
 	);
@@ -192,7 +119,15 @@ describe('strict release inputs', () => {
 });
 
 describe('deterministic release preparation', () => {
-	it('bootstraps the explicit unreleased 0.7.0 placeholder to rc.1', () => {
+	it('rejects the retired 0.7.0 bootstrap downgrade without writing', () => {
+		const root = createRepository('0.7.0');
+		addFragment(root, 'no-bootstrap');
+		expect(() => prepareRelease(root, '0.7.0-rc.1')).toThrow('must advance from 0.7.0');
+		expect(versions(root)['package.json']).toBe('0.7.0');
+		expect(existsSync(join(root, '.changes/no-bootstrap.md'))).toBe(true);
+	});
+
+	it('advances all released packages with the highest requested bump', () => {
 		const root = createRepository();
 		addFragment(root, 'z-motion', fragment([['@yesid/motion', 'patch']], 'Harden motion.'));
 		addFragment(root, 'm-config', fragment([['@yesid/config', 'patch']], 'Tune config.'));
@@ -204,18 +139,11 @@ describe('deterministic release preparation', () => {
 
 		prepareRelease(root, '0.7.0-rc.1');
 
-		expect(versions(root)).toEqual({
-			'package.json': '0.7.0-rc.1',
-			'packages/analytics/package.json': '0.7.0-rc.1',
-			'packages/i18n-core/package.json': '0.7.0-rc.1',
-			'packages/tokens/package.json': '0.7.0-rc.1',
-			'packages/motion/package.json': '0.7.0-rc.1',
-			'packages/gates/package.json': '0.7.0-rc.1',
-			'packages/seo-kit/package.json': '0.7.0-rc.1',
-			'packages/ui/package.json': '0.7.0-rc.1',
-			'packages/config/package.json': '0.7.0-rc.1',
-			'apps/gallery/package.json': '0.1.0',
-		});
+		expect(versions(root)).toEqual(Object.fromEntries([
+			['package.json', '0.7.0-rc.1'],
+			...RELEASE_PACKAGES.map(({ directory }) => [`packages/${directory}/package.json`, '0.7.0-rc.1']),
+			['apps/gallery/package.json', '0.1.0'],
+		]));
 		expect(readFileSync(join(root, 'bun.lock'), 'utf8')).toContain(
 			'"version": "0.7.0-rc.1"',
 		);
@@ -241,7 +169,7 @@ describe('deterministic release preparation', () => {
 
 	it('moves package README links to the release and rejects stale ones', () => {
 		const root = createRepository();
-		addFragment(root, 'links');
+		addFragment(root, 'links', fragment([['@yesid/ui', 'minor']]));
 		prepareRelease(root, '0.7.0-rc.1');
 		expect(readFileSync(join(root, 'packages/ui/README.md'), 'utf8')).toContain('blob/v0.7.0-rc.1/');
 
@@ -254,10 +182,10 @@ describe('deterministic release preparation', () => {
 	it('produces identical bytes independent of fragment creation order', () => {
 		const left = createRepository();
 		const right = createRepository();
-		addFragment(left, 'z-last', fragment([['@yesid/tokens', 'patch']], 'Last.'));
+		addFragment(left, 'z-last', fragment([['@yesid/tokens', 'minor']], 'Last.'));
 		addFragment(left, 'a-first', fragment([['@yesid/ui', 'patch']], 'First.'));
 		addFragment(right, 'a-first', fragment([['@yesid/ui', 'patch']], 'First.'));
-		addFragment(right, 'z-last', fragment([['@yesid/tokens', 'patch']], 'Last.'));
+		addFragment(right, 'z-last', fragment([['@yesid/tokens', 'minor']], 'Last.'));
 
 		prepareRelease(left, '0.7.0-rc.1');
 		prepareRelease(right, '0.7.0-rc.1');
@@ -265,7 +193,7 @@ describe('deterministic release preparation', () => {
 		for (const path of [
 			'CHANGELOG.md',
 			'package.json',
-			...RELEASED_WORKSPACES.map((workspace) => `packages/${workspace}/package.json`),
+			...RELEASE_PACKAGES.map(({ directory }) => `packages/${directory}/package.json`),
 			'bun.lock',
 		]) {
 			expect(readFileSync(join(left, path))).toEqual(readFileSync(join(right, path)));
@@ -274,9 +202,9 @@ describe('deterministic release preparation', () => {
 
 	it('rejects fragment reuse after the original file was consumed', () => {
 		const root = createRepository();
-		addFragment(root, 'one-use');
+		addFragment(root, 'one-use', fragment([['@yesid/ui', 'minor']]));
 		prepareRelease(root, '0.7.0-rc.1');
-		addFragment(root, 'one-use');
+		addFragment(root, 'one-use', fragment([['@yesid/ui', 'minor']]));
 
 		expect(() => prepareRelease(root, '0.7.0-rc.2')).toThrow(
 			'Release fragment one-use was already consumed',
@@ -285,7 +213,7 @@ describe('deterministic release preparation', () => {
 
 	it('promotes rc.1 to stable without duplicating the fragment or changelog entry', () => {
 		const root = createRepository();
-		addFragment(root, 'one-use');
+		addFragment(root, 'one-use', fragment([['@yesid/ui', 'minor']]));
 		prepareRelease(root, '0.7.0-rc.1');
 		rmSync(join(root, '.changes'), { recursive: true });
 
@@ -315,16 +243,16 @@ describe('deterministic release preparation', () => {
 		write(join(root, 'packages/ui/package.json'), manifest('@yesid/ui', '9.9.9'));
 
 		expect(() => prepareRelease(root, '0.7.0-rc.1')).toThrow(
-			'Lockstep version drift: packages/ui/package.json is 9.9.9; expected 0.7.0',
+			'Lockstep version drift: packages/ui/package.json is 9.9.9; expected 0.6.0',
 		);
-		expect(readFileSync(join(root, 'package.json'), 'utf8')).toContain('"version": "0.7.0"');
+		expect(readFileSync(join(root, 'package.json'), 'utf8')).toContain('"version": "0.6.0"');
 	});
 });
 
 describe('prepared release checks', () => {
 	it('binds synchronized manifests, lockfile, changelog, fragments, version, and tag', () => {
 		const root = createRepository();
-		addFragment(root, 'checked');
+		addFragment(root, 'checked', fragment([['@yesid/ui', 'minor']]));
 		prepareRelease(root, '0.7.0-rc.1');
 		rmSync(join(root, '.changes'), { recursive: true });
 
@@ -338,7 +266,7 @@ describe('prepared release checks', () => {
 
 	it('fails closed on pending fragments and duplicate consumed identities', () => {
 		const root = createRepository();
-		addFragment(root, 'checked');
+		addFragment(root, 'checked', fragment([['@yesid/ui', 'minor']]));
 		prepareRelease(root, '0.7.0-rc.1');
 		addFragment(root, 'pending', fragment([['@yesid/tokens', 'patch']]));
 
@@ -361,7 +289,7 @@ describe('prepared release checks', () => {
 describe('release CLI contract', () => {
 	it('prepares and checks an exact version through the thin command boundary', () => {
 		const root = createRepository();
-		addFragment(root, 'cli');
+		addFragment(root, 'cli', fragment([['@yesid/ui', 'minor']]));
 
 		expect(runReleaseCommand(['prepare', '--version', '0.7.0-rc.1'], root)).toBe(
 			'Release 0.7.0-rc.1 prepared',
@@ -375,7 +303,7 @@ describe('release CLI contract', () => {
 	});
 
 	it.each([
-		[[], 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>'],
+		[[], 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>, or pack --tag <tag> --repository <owner/name> [--checkout <path>]'],
 		[['prepare'], 'prepare requires --version followed by an exact SemVer'],
 		[
 			['prepare', '--version', '0.7.0', '--tag', 'v0.7.0'],
