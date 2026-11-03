@@ -8,7 +8,6 @@ import {
 	mkdirSync,
 	mkdtempSync,
 	readFileSync,
-	readdirSync,
 	rmSync,
 	symlinkSync,
 	writeFileSync,
@@ -20,35 +19,42 @@ import { Extractor, ExtractorConfig, ExtractorLogLevel } from '@microsoft/api-ex
 import { emitDts } from 'svelte2tsx/index.mjs';
 import ts from 'typescript';
 import {
-	RELEASED_PACKAGES,
+	API_PACKAGES,
+	API_REPORT_PATHS,
+	readChangeFragmentInputs,
 	parseChangeFragment,
+	parseChangeFragments,
 	type ParsedChangeFragment,
 	type ReleaseBump,
-	type ReleasedPackageName,
+	type ApiPackageName,
+	type ApiPackage,
 } from './release-core.js';
 
 export {
-	RELEASED_PACKAGES,
+	API_PACKAGES,
+	API_REPORT_PATHS,
+	readChangeFragmentInputs,
 	parseChangeFragment,
 	type ParsedChangeFragment,
 	type ReleaseBump,
-	type ReleasedPackageName,
+	type ApiPackageName,
+	type ApiPackage,
 };
 
 export interface ApiApprovalInput {
-	baseReports: Readonly<Partial<Record<ReleasedPackageName, string>>>;
-	currentReports: Readonly<Partial<Record<ReleasedPackageName, string>>>;
+	baseReports: Readonly<Partial<Record<ApiPackageName, string>>>;
+	currentReports: Readonly<Partial<Record<ApiPackageName, string>>>;
 	baseFragments: Readonly<Record<string, string>>;
 	currentFragments: Readonly<Record<string, string>>;
 }
 
 export interface ApiApprovalResult {
-	changedPackages: ReleasedPackageName[];
+	changedPackages: ApiPackageName[];
 	newFragments: string[];
 }
 
 export interface PublicSymbol {
-	packageName: ReleasedPackageName;
+	packageName: ApiPackageName;
 	subpath: string;
 	name: string;
 	releaseTag: string | undefined;
@@ -68,35 +74,10 @@ export interface DirectAssetTarget {
 	conditions: string[];
 }
 
-interface ReleasedPackage {
-	name: ReleasedPackageName;
-	directory: 'tokens' | 'motion' | 'gates' | 'seo-kit' | 'ui' | 'analytics' | 'i18n-core';
-}
-
 interface PackageManifest {
 	name: string;
 	exports?: Readonly<Record<string, PackageExport>>;
 }
-
-const RELEASED_PACKAGE_CONFIG: readonly ReleasedPackage[] = [
-	{ name: '@yesid/tokens', directory: 'tokens' },
-	{ name: '@yesid/motion', directory: 'motion' },
-	{ name: '@yesid/gates', directory: 'gates' },
-	{ name: '@yesid/seo-kit', directory: 'seo-kit' },
-	{ name: '@yesid/ui', directory: 'ui' },
-	{ name: '@yesid/analytics', directory: 'analytics' },
-	{ name: '@yesid/i18n-core', directory: 'i18n-core' },
-];
-
-export const API_REPORT_PATHS: Readonly<Record<ReleasedPackageName, string>> = {
-	'@yesid/tokens': 'api-reports/tokens.api.md',
-	'@yesid/motion': 'api-reports/motion.api.md',
-	'@yesid/gates': 'api-reports/gates.api.md',
-	'@yesid/seo-kit': 'api-reports/seo-kit.api.md',
-	'@yesid/ui': 'api-reports/ui.api.md',
-	'@yesid/analytics': 'api-reports/analytics.api.md',
-	'@yesid/i18n-core': 'api-reports/i18n-core.api.md',
-};
 
 const DIRECT_ASSET = /\.(?:css|json)$/u;
 
@@ -220,7 +201,7 @@ function emitTypeScriptDeclarations(
 
 async function emitPackageDeclarations(
 	repositoryRoot: string,
-	config: ReleasedPackage,
+	config: ApiPackage,
 	packageOutput: string,
 	targets: readonly string[],
 ): Promise<void> {
@@ -244,7 +225,7 @@ async function emitPackageDeclarations(
 }
 
 function exportedSymbols(
-	packageName: ReleasedPackageName,
+	packageName: ApiPackageName,
 	subpath: string,
 	entrypoint: string,
 	tsconfigPath: string,
@@ -348,7 +329,7 @@ function publicSubpathsForTarget(
 async function createPackageReport(
 	repositoryRoot: string,
 	workspaceRoot: string,
-	config: ReleasedPackage,
+	config: ApiPackage,
 ): Promise<string> {
 	const sourcePackage = join(repositoryRoot, 'packages', config.directory);
 	const manifest = readJson<PackageManifest>(join(sourcePackage, 'package.json'));
@@ -443,10 +424,10 @@ function createApiWorkspace(repositoryRoot: string): string {
 
 export async function createApiReport(
 	repositoryRootInput: string,
-	packageName: ReleasedPackageName,
+	packageName: ApiPackageName,
 ): Promise<string> {
 	const repositoryRoot = resolve(repositoryRootInput);
-	const config = RELEASED_PACKAGE_CONFIG.find((candidate) => candidate.name === packageName);
+	const config = API_PACKAGES.find((candidate) => candidate.name === packageName);
 	if (!config) throw new Error(`Unknown released package ${packageName}`);
 	const workspaceRoot = createApiWorkspace(repositoryRoot);
 	try {
@@ -458,12 +439,12 @@ export async function createApiReport(
 
 export async function createApiReports(
 	repositoryRootInput: string,
-): Promise<Record<ReleasedPackageName, string>> {
+): Promise<Record<ApiPackageName, string>> {
 	const repositoryRoot = resolve(repositoryRootInput);
 	const workspaceRoot = createApiWorkspace(repositoryRoot);
 	try {
-		const reports = {} as Record<ReleasedPackageName, string>;
-		for (const config of RELEASED_PACKAGE_CONFIG) {
+		const reports = {} as Record<ApiPackageName, string>;
+		for (const config of API_PACKAGES) {
 			reports[config.name] = await createPackageReport(repositoryRoot, workspaceRoot, config);
 		}
 		return reports;
@@ -474,10 +455,10 @@ export async function createApiReports(
 
 export function writeApiReports(
 	repositoryRootInput: string,
-	reports: Readonly<Record<ReleasedPackageName, string>>,
+	reports: Readonly<Record<ApiPackageName, string>>,
 ): void {
 	const repositoryRoot = resolve(repositoryRootInput);
-	for (const packageName of RELEASED_PACKAGES) {
+	for (const { name: packageName } of API_PACKAGES) {
 		const path = join(repositoryRoot, API_REPORT_PATHS[packageName]);
 		mkdirSync(dirname(path), { recursive: true });
 		writeFileSync(path, reports[packageName], 'utf8');
@@ -486,13 +467,13 @@ export function writeApiReports(
 
 export function checkApiReports(
 	repositoryRootInput: string,
-	reports: Readonly<Record<ReleasedPackageName, string>>,
+	reports: Readonly<Record<ApiPackageName, string>>,
 ): void {
 	const repositoryRoot = resolve(repositoryRootInput);
-	const stale = RELEASED_PACKAGES.filter((packageName) => {
+	const stale = API_PACKAGES.filter(({ name: packageName }) => {
 		const path = join(repositoryRoot, API_REPORT_PATHS[packageName]);
 		return !existsSync(path) || readFileSync(path, 'utf8') !== reports[packageName];
-	}).map((packageName) => API_REPORT_PATHS[packageName]);
+	}).map(({ name }) => API_REPORT_PATHS[name]);
 	if (stale.length > 0) {
 		throw new Error(`API reports are stale: ${stale.join(', ')}. Run bun run api:report.`);
 	}
@@ -509,38 +490,25 @@ function git(
 	throw new Error(result.stderr.trim() || `git ${args.join(' ')} failed`);
 }
 
-function readCurrentReports(repositoryRoot: string): Partial<Record<ReleasedPackageName, string>> {
+function readCurrentReports(repositoryRoot: string): Partial<Record<ApiPackageName, string>> {
 	return Object.fromEntries(
-		RELEASED_PACKAGES.flatMap((packageName) => {
+		API_PACKAGES.flatMap(({ name: packageName }) => {
 			const path = join(repositoryRoot, API_REPORT_PATHS[packageName]);
 			return existsSync(path) ? [[packageName, readFileSync(path, 'utf8')]] : [];
 		}),
-	) as Partial<Record<ReleasedPackageName, string>>;
+	) as Partial<Record<ApiPackageName, string>>;
 }
 
 function readBaseReports(
 	repositoryRoot: string,
 	base: string,
-): Partial<Record<ReleasedPackageName, string>> {
+): Partial<Record<ApiPackageName, string>> {
 	return Object.fromEntries(
-		RELEASED_PACKAGES.flatMap((packageName) => {
+		API_PACKAGES.flatMap(({ name: packageName }) => {
 			const source = git(repositoryRoot, ['show', `${base}:${API_REPORT_PATHS[packageName]}`], true);
 			return source === undefined ? [] : [[packageName, source]];
 		}),
-	) as Partial<Record<ReleasedPackageName, string>>;
-}
-
-function readCurrentFragments(repositoryRoot: string): Record<string, string> {
-	const directory = join(repositoryRoot, '.changes');
-	if (!existsSync(directory)) return {};
-	return Object.fromEntries(
-		readdirSync(directory, { withFileTypes: true })
-			.filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-			.map((entry) => {
-				const path = `.changes/${entry.name}`;
-				return [path, readFileSync(join(directory, entry.name), 'utf8')];
-			}),
-	);
+	) as Partial<Record<ApiPackageName, string>>;
 }
 
 function readBaseFragments(repositoryRoot: string, base: string): Record<string, string> {
@@ -579,12 +547,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
 	if (command === 'approve') {
 		const base = parseBase(rest);
 		git(repositoryRoot, ['cat-file', '-e', `${base}^{commit}`]);
-		const result = authorizeApiChanges({
-			baseReports: readBaseReports(repositoryRoot, base),
-			currentReports: readCurrentReports(repositoryRoot),
-			baseFragments: readBaseFragments(repositoryRoot, base),
-			currentFragments: readCurrentFragments(repositoryRoot),
-		});
+		const result = approveRepositoryApiChanges(repositoryRoot, base);
 		console.log(
 			result.changedPackages.length === 0
 				? 'API report approval: no post-baseline changes'
@@ -602,21 +565,32 @@ if (import.meta.main) {
 	});
 }
 
+export function approveRepositoryApiChanges(repositoryRoot: string, base: string): ApiApprovalResult {
+	return authorizeApiChanges({
+		baseReports: readBaseReports(repositoryRoot, base),
+		currentReports: readCurrentReports(repositoryRoot),
+		baseFragments: readBaseFragments(repositoryRoot, base),
+		currentFragments: Object.fromEntries(
+			readChangeFragmentInputs(repositoryRoot).map(({ path, source }) => [path, source]),
+		),
+	});
+}
+
 export function authorizeApiChanges(input: ApiApprovalInput): ApiApprovalResult {
-	const firstBaseline = RELEASED_PACKAGES.every(
-		(packageName) => input.baseReports[packageName] === undefined,
+	const firstBaseline = API_PACKAGES.every(
+		({ name: packageName }) => input.baseReports[packageName] === undefined,
 	);
 	const changedPackages = firstBaseline
 		? []
-		: RELEASED_PACKAGES.filter(
+		: API_PACKAGES.map(({ name }) => name).filter(
 				(packageName) => input.currentReports[packageName] !== input.baseReports[packageName],
 			);
 
 	const newFragments = Object.keys(input.currentFragments)
 		.filter((path) => input.baseFragments[path] === undefined)
 		.sort();
-	const parsedFragments = Object.entries(input.currentFragments).map(([path, source]) =>
-		parseChangeFragment(source, path),
+	const parsedFragments = parseChangeFragments(
+		Object.entries(input.currentFragments).map(([path, source]) => ({ path, source })),
 	);
 	const authorizedPackages = new Set(
 		parsedFragments
