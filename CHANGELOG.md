@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.33.0
+
+<!-- release-fragment: deepen-disclosure -->
+- `@yesid/ui` (minor): Replace QuietModeButton with SectionsToggle and quietMode with in-memory sections state.
+  The single expand-all control collapses all content sections whenever any is open, and expands
+  all only when every section is closed. It hides with fewer than two mounted collapsible content
+  sections. The TOC card, filter groups and listing filter panels remain independent; the TOC does
+  not count toward the content-section threshold.
+  Remove remembered open/closed state, the Remember/Forget control, persistence props, quiet-mode
+  classes/marks and remembered-state boot logic. openSection(anchor) opens mounted sections.
+  See docs/migrations/deepen-disclosure.md for the breaking API renames/removals, consumer caller
+  inventory and CSP hash migration. The owner explicitly requested these removals for the next minor
+  on 2026-11-03; the standard deprecation waiting periods have not elapsed.
+
+<!-- release-fragment: deepen-section-jump -->
+- `@yesid/ui` (minor): Replace the public TOC helper cluster with createSectionJump, useSectionJump and SectionJump.
+  One controller owns registration, active id, target opening, the 25% landing line, layout settling,
+  request cancellation, router fragments and reduced motion. TocNav, TocPill and DetailFrame share
+  it through navigation; content opening uses the section interface instead of private classes or
+  trigger clicks. Real-section unit, SSR and Gallery tests cover the integration.
+
+  This owner-directed breaking removal retires TOC_TARGET_SELECTOR, navigateToc, observeActiveToc,
+  onTocNavigate, openCollapsedTocTarget, reconcileActiveToc, revealTocTarget, settleLayout,
+  tocElement and RevealTocTargetOptions from the root and /brand entrypoints. The scoped exception
+  to both waiting gates is recorded in DEPRECATION.md. See docs/migrations/deepen-section-jump.md
+  for replacements, changed selector/landing semantics and the read-only consumer caller inventory.
+
+<!-- release-fragment: navigation-lifecycle -->
+- `@yesid/ui` (minor): Owner-approved breaking transition (2026-11-03, deepen D-c): initialize
+  `createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate })` once in the persistent
+  app layout and pass its result as `SiteHeader.navigation`. The module interrupts Lenis even
+  without a header, waits for menu closure and coordinates locale-switch focus through a native
+  link ref. `LanguageToggle` is a plain link: remove its `onNavigate` prop.
+
+  Copy now belongs entirely to each app's local locale files (Transit i18n messages and yesid.dev
+  local locales, not the CMS): `SiteHeader.labels.menuFooter` and `skipToContent`, plus
+  `LanguageToggle.names` (or `SiteHeader.language.names`), are required. Pass an empty footer
+  explicitly to hide it. No built-in EN/FR/ES copy or language-name fallback remains. See
+  `docs/migrations/navigation-lifecycle.md` for the exact Transit and yesid.dev changes and strings.
+  This is source-stage work for the coordinated minor release, not consumer adoption or release proof.
+
+  Navigation also re-closes a menu reopened during a slow loader, reconciles redirect and superseding
+  events when `beforeNavigate` is skipped, and advances the stale-focus guard for each actual commit.
+  The optional `NavigationEvent.event` preserves native trigger identity through custom adapters.
+  Lenis momentum is canceled through its public stop/start API in both navigation hooks, independently
+  of any header, without leaving input locked after cancellation. The migration includes the Transit
+  unit harness and yesid.dev browser expectation updates required alongside the production calls.
+
+  The router adapter optionally accepts `subscribeNavigation` for redirect continuity: every accepted
+  original link start, including superseding links, carries its native event before loading/redirecting.
+  Transit / Kit 2 can use `$app/stores.navigating.subscribe`. Kit 3 apps omit it and use the safe
+  fallback: direct language switches preserve the menu through matching native hook events, while
+  a language switch that lands on an eventless redirect closes the menu without locale refocus.
+  There is no Kit 3 SDK adoption prerequisite. Partial/late subscriptions are unsupported; hook-only
+  claims are dropped at eventless commits and completed-event replays are ignored. The lifecycle
+  never observes DOM clicks or treats `defaultPrevented` as proof of router interception.
+
 ## 0.32.2
 
 <!-- release-fragment: language-toggle-full-size -->

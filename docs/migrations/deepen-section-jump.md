@@ -4,7 +4,8 @@ One page controller now owns registration, active identity, target opening, the 
 layout settling, reduced motion and fragments. No navigation code queries private section classes
 or clicks disclosure triggers. The controller scopes D-a's openSection(anchor, root?) call to its
 registered page root, so an identical anchor in another scope is left alone. Jumping opens the
-requested content section; it does not collapse or expand other sections. The expand-all label updates from the resulting section state.
+requested content section and any sections enclosing it; unrelated sections keep their state.
+The expand-all label updates from the resulting section state.
 
 ## Page setup
 

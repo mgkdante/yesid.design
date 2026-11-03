@@ -113,7 +113,7 @@ The first `cn` use, including a primitive's first class merge, locks the zero-co
 default. Products with custom vocabulary must initialize before any primitive renders. Use one
 shared initializer imported by both SvelteKit `hooks.client.ts` (`ClientInit`) and
 `hooks.server.ts` (`ServerInit`), not a root layout instance script. See the
-[product guide](https://github.com/mgkdante/yesid.dev-design/blob/v0.32.2/docs/BUILD-A-YESID-PRODUCT.md)
+[product guide](https://github.com/mgkdante/yesid.dev-design/blob/v0.33.0/docs/BUILD-A-YESID-PRODUCT.md)
 for the complete hook pattern.
 
 The state boundary is the loaded ESM module graph. Browser and SSR bundles, separately bundled
@@ -494,7 +494,7 @@ the lifecycle restores focus after landing. Inside SiteHeader this uses a bound 
 standalone links pass their `bind:ref` to the lifecycle's optional `languageLink` getter.
 `reload` asks for a full document load. LanguageToggle registers no router hooks.
 `resetFocusAfterNavigation` is the same reset for `goto(url, { reset: false })`.
-The [migration note](https://github.com/mgkdante/yesid.dev-design/blob/v0.32.2/docs/migrations/navigation-lifecycle.md)
+The [migration note](https://github.com/mgkdante/yesid.dev-design/blob/v0.33.0/docs/migrations/navigation-lifecycle.md)
 lists the exact copy and integration changes for Transit and yesid.dev in the next release.
 
 ## Site footer and error page
@@ -541,10 +541,9 @@ inline. Pass `role` and `aria-live` when the notice reports a change. With a `ro
 
 ## Site root and shared state
 
-`@yesid/ui/layout` exports `SiteRoot`, the app root. Before its children render it restores quiet
-mode, so sections hydrate in the state the head boot script painted (see [Head](#head)). On mount it
-adopts the theme the boot script applied and starts Lenis through `@yesid/motion`; it cleans up on
-unmount and renders no element of its own. Props:
+`@yesid/ui/layout` exports `SiteRoot`, the app root. Disclosure components use their declared
+per-mount defaults. On mount SiteRoot adopts the theme the boot script applied and starts Lenis
+through `@yesid/motion`; it cleans up on unmount and renders no element of its own. Props:
 
 - `smoothScroll` (default `true`): `false` leaves native scrolling.
 - `scroller`: `{ wrapper, content }` selectors for an element scroller. `content` must wrap the
