@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,82 @@ function tarballFile(path: string, entry: string): string {
 	return result.stdout;
 }
 
+function addTargetOnlyPackage(repo: TempCheckout, name = '@yesid/retired-widget'): void {
+	const workspace = 'packages/historic-widget';
+	repo.write(`${workspace}/package.json`, JSON.stringify({
+		name, version: '1.2.3', private: true, files: ['src', 'NOTICE'],
+	}));
+	repo.write(`${workspace}/README.md`, '[contract](https://example.com/blob/v1.2.3/README.md)\n');
+	repo.write(`${workspace}/src/index.ts`, 'export const historical = true;\n');
+	const lock = JSON.parse(repo.read('bun.lock'));
+	lock.workspaces[workspace] = { name, version: '1.2.3' };
+	repo.write('bun.lock', JSON.stringify(lock, null, 2));
+}
+
 describe('release packing', () => {
+	it('recovers a target predating a package added to the runner inventory', () => {
+		const target = checkout();
+		rmSync(join(target.root, 'packages/analytics'), { recursive: true });
+		const lock = JSON.parse(target.read('bun.lock'));
+		delete lock.workspaces['packages/analytics'];
+		target.write('bun.lock', JSON.stringify(lock, null, 2));
+		const paths = packRelease(target.root, { tag: 'v1.2.3', repository: 'example/design' });
+		expect(paths).toHaveLength(RELEASE_PACKAGES.length - 1);
+		expect(readdirSync(join(target.root, 'dist')).sort()).toEqual(
+			RELEASE_PACKAGES.filter(({ name }) => name !== '@yesid/analytics')
+				.map(({ directory }) => `yesid-${directory}-1.2.3.tgz`).sort(),
+		);
+	}, 30_000);
+
+	it('includes a target package removed from the runner inventory instead of accepting an incomplete set', () => {
+		const target = checkout();
+		addTargetOnlyPackage(target);
+		const paths = packRelease(target.root, { tag: 'v1.2.3', repository: 'example/design' });
+		expect(paths).toHaveLength(RELEASE_PACKAGES.length + 1);
+		expect(readdirSync(join(target.root, 'dist')).sort()).toEqual([
+			...RELEASE_PACKAGES.map(({ directory }) => `yesid-${directory}-1.2.3.tgz`),
+			'yesid-retired-widget-1.2.3.tgz',
+		].sort());
+		expect(tarballFile(join(target.root, 'dist/yesid-retired-widget-1.2.3.tgz'), 'src/index.ts'))
+			.toBe('export const historical = true;\n');
+	}, 30_000);
+
+	it.each(['retired-widget', 'retired.widget_2'])('rewrites target-only sibling %s using its manifest name rather than directory name', (suffix) => {
+		const target = checkout();
+		const name = `@yesid/${suffix}`;
+		addTargetOnlyPackage(target, name);
+		const ui = JSON.parse(target.read('packages/ui/package.json'));
+		ui.peerDependencies[name] = 'workspace:*';
+		target.write('packages/ui/package.json', JSON.stringify(ui));
+		packRelease(target.root, { tag: 'v1.2.3', repository: 'example/design' });
+		const manifest = JSON.parse(tarballFile(join(target.root, 'dist/yesid-ui-1.2.3.tgz'), 'package.json'));
+		expect(manifest.peerDependencies[name]).toBe(
+			`https://github.com/example/design/releases/download/v1.2.3/yesid-${suffix}-1.2.3.tgz`,
+		);
+	}, 30_000);
+
+	it('validates the version of target-only packages before creating output', () => {
+		const target = checkout();
+		addTargetOnlyPackage(target);
+		const manifest = JSON.parse(target.read('packages/historic-widget/package.json'));
+		manifest.version = '1.2.4';
+		target.write('packages/historic-widget/package.json', JSON.stringify(manifest));
+		expect(() => packRelease(target.root, { tag: 'v1.2.3', repository: 'example/design' }))
+			.toThrow('Lockstep version drift: packages/historic-widget/package.json is 1.2.4; expected 1.2.3');
+		expect(existsSync(join(target.root, 'dist'))).toBe(false);
+	}, 30_000);
+
+	it('reads target workspace JSONC without confusing comments or quoted URLs with structure', () => {
+		const target = checkout();
+		const lock = JSON.parse(target.read('bun.lock'));
+		lock.workspaces['packages/ui'].dependencies = { example: 'https://example.test/a,}/*literal*/' };
+		target.write('bun.lock', JSON.stringify(lock, null, 2)
+			.replace('"workspaces": {', '"workspaces": { /* closing brace in comment: } */')
+			.replace(/\}\n\}$/u, '},\n}'));
+		expect(packRelease(target.root, { tag: 'v1.2.3', repository: 'example/design' }))
+			.toHaveLength(RELEASE_PACKAGES.length);
+	}, 30_000);
+
 	it('runs the workflow packing command from its own revision against pre-refactor tagged source', () => {
 		const tagged = checkout('0.32.2');
 		const root = fileURLToPath(new URL('../../..', import.meta.url));
