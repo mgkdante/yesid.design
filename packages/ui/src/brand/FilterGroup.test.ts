@@ -37,7 +37,11 @@ describe('FilterGroup', () => {
 			for (const attribute of Array.from(element.attributes)) element.removeAttribute(attribute.name);
 			for (const [name, value] of attributes) element.setAttribute(name, value);
 		}
-		expect(copy.innerHTML.replace(/<!--.*?-->/g, '').replace(/>\s+</g, '><')).toBe(domBaseline[density]);
+		const walker = document.createTreeWalker(copy, NodeFilter.SHOW_COMMENT);
+		const comments: Node[] = [];
+		while (walker.nextNode()) comments.push(walker.currentNode);
+		for (const comment of comments) comment.parentNode?.removeChild(comment);
+		expect(copy.innerHTML.replace(/>\s+</g, '><')).toBe(domBaseline[density]);
 	});
 
 	it('keeps vertical roving focus, keyboard selection and external selection updates', async () => {
