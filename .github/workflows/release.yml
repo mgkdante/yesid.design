@@ -44,8 +44,16 @@ jobs:
           bun run release:check -- --version "${TAG#v}" --tag "$TAG"
       - run: bun run check
       - run: bun run test
+      # Dispatch can target a tag whose CLI predates the packing command.
+      - name: Check out packing runner
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: .release-runner
+          sparse-checkout: tools
+          persist-credentials: false
       - name: Pack
-        run: bun tools/release.ts pack --tag "$TAG" --repository "$GITHUB_REPOSITORY"
+        run: bun .release-runner/tools/release.ts pack --checkout "$GITHUB_WORKSPACE" --tag "$TAG" --repository "$GITHUB_REPOSITORY"
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: dist/*.tgz

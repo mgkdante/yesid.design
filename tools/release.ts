@@ -8,7 +8,7 @@ interface ReleaseArguments {
 	tag?: string;
 }
 
-const USAGE = 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>, or pack --tag <tag> --repository <owner/name>';
+const USAGE = 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>, or pack --tag <tag> --repository <owner/name> [--checkout <path>]';
 
 function parseArguments(args: readonly string[]): ReleaseArguments {
 	const normalized = args.filter((argument) => argument !== '--');
@@ -53,7 +53,7 @@ export function runReleaseCommand(
 		for (let index = 1; index < normalized.length; index += 2) {
 			const key = normalized[index];
 			const value = normalized[index + 1];
-			if ((key !== '--tag' && key !== '--repository') || !value || value.startsWith('--') || options.has(key)) {
+			if ((key !== '--tag' && key !== '--repository' && key !== '--checkout') || !value || value.startsWith('--') || options.has(key)) {
 				throw new Error(USAGE);
 			}
 			options.set(key, value);
@@ -61,7 +61,7 @@ export function runReleaseCommand(
 		const tag = options.get('--tag');
 		const repository = options.get('--repository');
 		if (!tag || !repository) throw new Error(USAGE);
-		const tarballs = packRelease(repositoryRoot, { tag, repository });
+		const tarballs = packRelease(options.get('--checkout') ?? repositoryRoot, { tag, repository });
 		return `Packed ${tarballs.length} packages for ${tag} into dist`;
 	}
 	const parsed = parseArguments(normalized);

@@ -303,7 +303,7 @@ describe('release CLI contract', () => {
 	});
 
 	it.each([
-		[[], 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>, or pack --tag <tag> --repository <owner/name>'],
+		[[], 'usage: bun tools/release.ts <prepare|check> --version <exact SemVer>, or pack --tag <tag> --repository <owner/name> [--checkout <path>]'],
 		[['prepare'], 'prepare requires --version followed by an exact SemVer'],
 		[
 			['prepare', '--version', '0.7.0', '--tag', 'v0.7.0'],
