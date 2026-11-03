@@ -56,7 +56,7 @@ describe('TocPill', () => {
 		expect(items(view)).toHaveLength(0);
 	});
 
-	it('navigates with navigateToc by default', async () => {
+	it('navigates through the section controller by default', async () => {
 		vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList);
 		const target = document.body.appendChild(document.createElement('section'));
 		target.setAttribute('data-toc', 'sources');
@@ -65,7 +65,7 @@ describe('TocPill', () => {
 		const view = show();
 		await fireEvent.click(pillOf(view));
 		await fireEvent.click(items(view)[2]);
-		expect(target.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+		await vi.waitFor(() => expect(target.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' }));
 	});
 
 	it('closes from Escape and from the backdrop, returning focus to the pill', async () => {

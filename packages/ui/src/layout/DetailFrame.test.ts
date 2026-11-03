@@ -1,17 +1,13 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { createRawSnippet, tick } from 'svelte';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TocEntry } from '../brand/toc.js';
 import DetailFrame, { type DetailFrameProps, type DetailFrameToc } from './DetailFrame.svelte';
 
-const toc = vi.hoisted(() => ({ observe: vi.fn(), land: vi.fn() }));
+import SectionsFixture from './test-fixtures/DetailFrameSections.svelte';
+import { createSectionJump } from '../brand/section-jump.js';
 
-vi.mock('../brand/toc.js', async (importOriginal) => ({
-	...(await importOriginal<typeof import('../brand/toc.js')>()),
-	observeActiveToc: toc.observe,
-	landTocFragments: toc.land,
-}));
-
+let observers: { targets: Element[]; report: IntersectionObserverCallback; disconnect: ReturnType<typeof vi.fn> }[];
 const part = (id: string) => createRawSnippet(() => ({ render: () => `<div data-testid="${id}">${id}</div>` }));
 const entry = (id: string, title: string): TocEntry => ({ id, title, level: 2, children: [] });
 
@@ -31,9 +27,15 @@ const pill = (view: View) => view.container.querySelector('[data-testid="toc-pil
 const precedes = (a: Node, b: Node) => a.compareDocumentPosition(b) === Node.DOCUMENT_POSITION_FOLLOWING;
 
 beforeEach(() => {
-	toc.observe.mockReset().mockImplementation(() => vi.fn());
-	toc.land.mockReset().mockImplementation(() => vi.fn());
+	observers = [];
+	vi.stubGlobal('IntersectionObserver', function (report: IntersectionObserverCallback) {
+		const observer = { targets: [] as Element[], report, disconnect: vi.fn() };
+		observers.push(observer);
+		return { observe: (target: Element) => observer.targets.push(target), disconnect: observer.disconnect };
+	});
 });
+afterEach(() => { vi.unstubAllGlobals(); history.replaceState(null, '', '/'); });
+const targets = createRawSnippet(() => ({ render: () => '<div><section id="sec-a" data-target>A</section><section id="sec-b" data-target>B</section></div>' }));
 
 describe('layout order', () => {
 	it('runs from the header through the hazard rule, toolbar, mobile summary and grid to after', () => {
@@ -172,49 +174,75 @@ describe('toc pill', () => {
 });
 
 describe('active toc entry', () => {
-	it('starts from activeId and follows the observer, which gets the selector', async () => {
-		const view = frame({ toc: { ...tocProps, selector: '[data-target]' }, activeId: 'sec-b' });
-		await vi.waitFor(() => expect(toc.observe).toHaveBeenCalledOnce());
-		const [setActive, selector] = toc.observe.mock.calls[0];
-		expect(selector).toBe('[data-target]');
+	it('keeps the initial active id and follows the real controller observer', async () => {
+		const view = frame({ children: targets, toc: { ...tocProps, selector: '[data-target]' }, activeId: 'sec-b' });
+		await vi.waitFor(() => expect(observers.at(-1)?.targets).toHaveLength(2));
 		expect(pill(view)!.getAttribute('aria-label')).toBe('Section B 2/2 · Open contents');
-
-		setActive('sec-a');
+		const observer = observers.at(-1)!;
+		const target = view.container.querySelector('#sec-a')!;
+		const rect = target.getBoundingClientRect();
+		observer.report([{ target, isIntersecting: true, intersectionRatio: 1, boundingClientRect: rect, intersectionRect: rect, rootBounds: rect, time: 0 }], {} as IntersectionObserver);
 		await tick();
 		expect(pill(view)!.getAttribute('aria-label')).toBe('Section A 1/2 · Open contents');
 	});
-
-	it('observes again when the entries change, and stops each observer', async () => {
-		const view = frame({ toc: { ...tocProps, entries: [] } });
-		await vi.waitFor(() => expect(toc.observe).toHaveBeenCalledTimes(1));
-
-		await view.rerender({ toc: tocProps });
-		await vi.waitFor(() => expect(toc.observe).toHaveBeenCalledTimes(2));
-		expect(toc.observe.mock.results[0].value).toHaveBeenCalledOnce();
-
-		view.unmount();
-		expect(toc.observe.mock.results[1].value).toHaveBeenCalledOnce();
-	});
-
-	it('does not observe without toc', async () => {
-		frame();
+	it('registers changed entries and releases the observer on unmount', async () => {
+		const view = frame({ children: targets, toc: { ...tocProps, entries: [] } });
 		await tick();
-		expect(toc.observe).not.toHaveBeenCalled();
+		expect(observers).toHaveLength(0);
+		await view.rerender({ toc: tocProps });
+		await vi.waitFor(() => expect(observers).toHaveLength(1));
+		view.unmount();
+		expect(observers[0].disconnect).toHaveBeenCalled();
+	});
+	it('does not observe without toc', async () => {
+		frame({ children: targets });
+		await tick();
+		expect(observers).toHaveLength(0);
 	});
 });
 
-describe('fragment landing', () => {
-	it('lands fragments with toc.landFragments and cleans up on unmount', () => {
-		const view = frame({ toc: { ...tocProps, landFragments: true } });
-		expect(toc.land).toHaveBeenCalledOnce();
-		const cleanup = toc.land.mock.results[0].value;
-		expect(cleanup).not.toHaveBeenCalled();
-		view.unmount();
-		expect(cleanup).toHaveBeenCalledOnce();
+describe('real section integration', () => {
+	it('keeps the reveal alive when beforeReveal updates the real frame entries', async () => {
+		const navigation = createSectionJump();
+		const first = entry('sec-a', 'Section A');
+		const second = entry('sec-b', 'Section B');
+		const view = render(SectionsFixture, { props: { navigation, entries: [first] } });
+		await tick();
+		const scroll = vi.fn();
+		const landed = await navigation.jump('sec-b', {
+			beforeReveal: async () => {
+				await view.rerender({ entries: [first, second] });
+				view.container.querySelector<HTMLElement>('[data-toc="sec-b"]')!.scrollIntoView = scroll;
+			},
+		});
+		expect(landed).toBe(true);
+		expect(scroll).toHaveBeenCalledOnce();
+		expect(view.getByRole('button', { name: 'Section B' }).getAttribute('aria-expanded')).toBe('true');
+		expect(view.getByRole('button', { name: 'Section A' }).getAttribute('aria-expanded')).toBe('false');
+		expect(view.container.querySelector('[data-toc="sec-b"]')!.closest('[inert], [aria-hidden="true"]')).toBeNull();
 	});
-
-	it.each([undefined, { ...tocProps }])('does not land fragments without landFragments (toc=%j)', (value) => {
-		frame({ toc: value });
-		expect(toc.land).not.toHaveBeenCalled();
+	it('lands a fragment by opening only its target section, with no TOC mock', async () => {
+		history.replaceState(null, '', '/#sec-b');
+		const view = render(SectionsFixture);
+		const target = view.container.querySelector<HTMLElement>('[data-toc="sec-b"]')!;
+		target.scrollIntoView = vi.fn();
+		await tick();
+		await fireEvent.click(view.getByRole('link', { name: 'Jump to B' }));
+		await vi.waitFor(() => expect(target.scrollIntoView).toHaveBeenCalledOnce());
+		expect(view.getByRole('button', { name: 'Section B' }).getAttribute('aria-expanded')).toBe('true');
+		expect(view.getByRole('button', { name: 'Section A' }).getAttribute('aria-expanded')).toBe('false');
+		const observer = observers.at(-1)!;
+		view.unmount();
+		expect(observer.disconnect).toHaveBeenCalled();
+	});
+	it('keeps fragment handling opt-in', async () => {
+		history.replaceState(null, '', '/#sec-b');
+		const view = render(SectionsFixture, { props: { landFragments: false } });
+		const target = view.container.querySelector<HTMLElement>('[data-toc="sec-b"]')!;
+		target.scrollIntoView = vi.fn();
+		await tick();
+		await fireEvent.click(view.getByRole('link', { name: 'Jump to B' }));
+		await new Promise(requestAnimationFrame);
+		expect(target.scrollIntoView).not.toHaveBeenCalled();
 	});
 });

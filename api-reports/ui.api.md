@@ -852,17 +852,10 @@ declare namespace Brand {
         TocPillProps,
         ToggleChip,
         ToggleChipProps,
-        TOC_TARGET_SELECTOR,
-        navigateToc,
-        observeActiveToc,
-        onTocNavigate,
-        openCollapsedTocTarget,
-        reconcileActiveToc,
-        revealTocTarget,
-        settleLayout,
-        tocElement,
-        RevealTocTargetOptions,
         TocEntry,
+        createSectionJump,
+        useSectionJump,
+        SectionJump,
         Wordmark,
         WordmarkProps,
         LanguageToggle,
@@ -1305,6 +1298,9 @@ function createCn(vocab?: {
 // @public (undocumented)
 function createLocaleContext<Locale extends string>(fallback: Locale): LocaleContext<Locale>;
 
+// @public
+function createSectionJump(): SectionJump;
+
 // @public (undocumented)
 function createTwMergeConfig(vocab?: {
     text?: string[];
@@ -1453,6 +1449,7 @@ interface DetailFrameToc {
     // (undocumented)
     entries: TocEntry[];
     landFragments?: boolean;
+    navigation?: SectionJump;
     // (undocumented)
     onNavigate?: (id: string) => void;
     // (undocumented)
@@ -1724,17 +1721,10 @@ declare namespace Index {
         TocPillProps,
         ToggleChip,
         ToggleChipProps,
-        TOC_TARGET_SELECTOR,
-        navigateToc,
-        observeActiveToc,
-        onTocNavigate,
-        openCollapsedTocTarget,
-        reconcileActiveToc,
-        revealTocTarget,
-        settleLayout,
-        tocElement,
-        RevealTocTargetOptions,
         TocEntry,
+        createSectionJump,
+        useSectionJump,
+        SectionJump,
         Wordmark,
         WordmarkProps,
         LanguageToggle,
@@ -1934,9 +1924,6 @@ type MetroStationProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
 };
 
 // @public
-function navigateToc(id: string): void;
-
-// @public
 interface NavigationEvent {
     // (undocumented)
     shallow?: boolean;
@@ -1951,25 +1938,11 @@ interface NavigationEvent {
 // @public (undocumented)
 type NavigationResult = void | (() => void) | Promise<void | (() => void)>;
 
-// @public
-function observeActiveToc(setActive: (id: string) => void, selector?: string): () => void;
-
 // @public (undocumented)
 type OnNavigate = (callback: (navigation: NavigationEvent) => NavigationResult) => void;
 
 // @public
-function onTocNavigate(input: {
-    type: string;
-    to: {
-        url: URL;
-    } | null;
-}): void;
-
-// @public (undocumented)
-function openCollapsedTocTarget(id: string): boolean;
-
-// @public
-function openSection(id: string): boolean;
+function openSection(id: string, root?: Element | Document): boolean;
 
 // @public
 interface Persisted<T extends LocaleFree> {
@@ -2168,9 +2141,6 @@ declare namespace PrimitivesToggleGroup {
     }
 }
 
-// @public (undocumented)
-function reconcileActiveToc(activeId: string, previousIds: readonly string[], nextIds: readonly string[]): string;
-
 // @public
 function resetFocusAfterNavigation(): () => void;
 
@@ -2185,21 +2155,6 @@ const ResizablePaneGroup: Component<$$ComponentProps_5, {}, "ref" | "this">;
 
 // @public (undocumented)
 type ResizablePaneGroup = ReturnType<typeof ResizablePaneGroup>;
-
-// @public (undocumented)
-function revealTocTarget(id: string, input: RevealTocTargetOptions): Promise<boolean>;
-
-// @public (undocumented)
-interface RevealTocTargetOptions {
-    // (undocumented)
-    beforeReveal?: (id: string) => void;
-    // (undocumented)
-    behavior: ScrollBehavior;
-    // (undocumented)
-    block?: ScrollLogicalPosition;
-    // (undocumented)
-    isCurrent?: () => boolean;
-}
 
 // @public (undocumented)
 const Root: Component<AlertDialogRootPropsWithoutHTML, {}, "open">;
@@ -2270,6 +2225,22 @@ type SectionIcon = ReturnType<typeof SectionIcon>;
 // @public (undocumented)
 type SectionIconName = 'toc' | 'image' | 'eye' | 'layers' | 'chart' | 'grid' | 'list' | 'arrow' | 'briefcase' | 'github';
 
+// @public
+interface SectionJump {
+    // (undocumented)
+    readonly activeId: string;
+    jump(id: string, options?: SectionJumpOptions): Promise<boolean>;
+    register(entries: readonly TocEntry[], options?: SectionRegistrationOptions): () => void;
+}
+
+// @public (undocumented)
+interface SectionJumpOptions {
+    // (undocumented)
+    beforeReveal?: (id: string) => void | Promise<void>;
+    // (undocumented)
+    behavior?: ScrollBehavior;
+}
+
 // @public (undocumented)
 const SectionLabel: Component<SectionLabelProps, {}, "">;
 
@@ -2283,6 +2254,29 @@ type SectionLabelProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children' | 'cla
     align?: 'left' | 'center';
     class?: string;
 };
+
+// @public (undocumented)
+interface SectionNavigationEvent {
+    // (undocumented)
+    to: {
+        url: URL;
+    } | null;
+    // (undocumented)
+    type: string;
+}
+
+// @public (undocumented)
+interface SectionRegistrationOptions {
+    // (undocumented)
+    activeId?: string;
+    // (undocumented)
+    landFragments?: boolean;
+    // (undocumented)
+    onActiveChange?: (id: string) => void;
+    // (undocumented)
+    root?: Element | Document;
+    selector?: string;
+}
 
 // @public (undocumented)
 const sections: SectionsState;
@@ -2467,9 +2461,6 @@ type SeparatorProps = SeparatorDefaultProps | SeparatorHazardProps | SeparatorGr
 
 // @public (undocumented)
 type SeparatorVariant = 'default' | 'hazard' | 'gradient';
-
-// @public (undocumented)
-function settleLayout(target: Element | null, maxWaitMs?: number): Promise<void>;
 
 // @public (undocumented)
 type SheetCloseProps = Dialog.CloseProps;
@@ -3021,9 +3012,6 @@ interface ThemeToggleProps {
     label: string;
 }
 
-// @public
-const TOC_TARGET_SELECTOR = "[data-section-index], [data-toc]";
-
 // @public (undocumented)
 const TocBadge: Component<$$ComponentProps_2, {}, "">;
 
@@ -3038,9 +3026,6 @@ type TocBadgeSpec = {
     kind: 'icon';
     name: SectionIconName;
 };
-
-// @public
-function tocElement(id: string): Element | null;
 
 // @public (undocumented)
 interface TocEntry {
@@ -3065,7 +3050,7 @@ type TocNav = ReturnType<typeof TocNav>;
 // @public (undocumented)
 interface TocNavProps {
     // (undocumented)
-    activeId: string;
+    activeId?: string;
     // (undocumented)
     collapsible?: boolean;
     // (undocumented)
@@ -3075,7 +3060,9 @@ interface TocNavProps {
     // (undocumented)
     heading: string;
     // (undocumented)
-    onNavigate: (id: string) => void;
+    navigation?: SectionJump;
+    // (undocumented)
+    onNavigate?: (id: string) => void;
     // (undocumented)
     open?: boolean;
 }
@@ -3089,11 +3076,13 @@ type TocPill = ReturnType<typeof TocPill>;
 // @public (undocumented)
 interface TocPillProps {
     // (undocumented)
-    activeId: string;
+    activeId?: string;
     // (undocumented)
     closeAria: string;
     // (undocumented)
     entries: TocEntry[];
+    // (undocumented)
+    navigation?: SectionJump;
     onNavigate?: (id: string) => void;
     openAria: string;
 }
@@ -3206,6 +3195,9 @@ type UiVocabulary = {
     text?: readonly string[];
     colors?: readonly string[];
 };
+
+// @public
+function useSectionJump(afterNavigate: (callback: (event: SectionNavigationEvent) => void) => void): SectionJump;
 
 // @public
 type Widen<T> = [T] extends [string] ? string : [T] extends [number] ? number : [T] extends [boolean] ? boolean : T;

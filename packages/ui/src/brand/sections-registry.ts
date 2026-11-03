@@ -2,8 +2,28 @@ import { SvelteMap } from 'svelte/reactivity';
 
 interface SectionRegistration {
 	id?: string;
+	element?: () => HTMLElement | null;
 	isOpen(): boolean;
 	setOpen(open: boolean): void;
+}
+
+/** Opens the content-section chain exposing a heading, section anchor or numbered wrapper. */
+export function openSectionContaining(target: Element): boolean {
+	let descendant: SectionRegistration | undefined;
+	for (const section of sections.values()) {
+		const element = section.element?.();
+		if (!element || !target.contains(element)) continue;
+		if (!descendant || element.contains(descendant.element?.() ?? null)) descendant = section;
+	}
+	const sectionTarget = descendant?.element?.() ?? target;
+	let found = false;
+	for (const section of sections.values()) {
+		const element = section.element?.();
+		if (!element || (!element.contains(target) && !element.contains(sectionTarget))) continue;
+		section.setOpen(true);
+		found = true;
+	}
+	return found;
 }
 
 const sections = new SvelteMap<symbol, SectionRegistration>();
@@ -29,11 +49,13 @@ export function setSectionsOpen(open: boolean): void {
 	for (const section of sections.values()) section.setOpen(open);
 }
 
-/** Opens every mounted CollapsibleSection with this anchor. Returns whether any matched. */
-export function openSection(id: string): boolean {
+/** Opens matching content sections, optionally limited to a page's root. Returns whether any matched. */
+export function openSection(id: string, root?: Element | Document): boolean {
 	let found = false;
 	for (const section of sections.values()) {
 		if (section.id !== id) continue;
+		const element = section.element?.();
+		if (root && (!element || !root.contains(element))) continue;
 		section.setOpen(true);
 		found = true;
 	}
