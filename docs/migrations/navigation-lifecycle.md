@@ -40,11 +40,13 @@ analytics, view transitions or locale/URL policy. Keep those app-owned hooks.
 
 `onNavigate` reconciles the actual commit event even when SvelteKit skips `beforeNavigate`
 during an active load. It re-closes an ordinary menu that was reopened while loading, then waits
-for that close. Redirects retain their original locale/ordinary intent; a fresh native trigger
-starts a new intent and advances the stale-focus guard. Pass the hooks directly. A custom router
-wrapper should forward the optional native `NavigationEvent.event`, so a redirected locale link
-can retain its intent even if the destination URL changes. Without trigger metadata, unmatched
-URLs are handled from the actual event rather than dropped.
+for that close. A layout-scoped observer records intercepted internal link clicks, including
+superseding clicks that receive no `beforeNavigate`. Redirects use that latest observed intent;
+an absent native event alone never proves continuity with an earlier loader. The observer ignores
+modified clicks, downloads, other targets/origins and same-document fragments, and is removed
+when the layout unmounts. Pass the hooks directly; custom wrappers should still forward the
+optional native `NavigationEvent.event` when available. Without observed trigger evidence,
+unmatched URLs are handled from the actual event rather than dropped.
 
 Lenis interruption is independent of header attachment and runs in both `beforeNavigate` and
 `onNavigate`, including when only the latter fires. The lifecycle uses Lenis's public `stop()`

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createNavigationLifecycle, type NavigationMenu } from './navigation-lifecycle.js';
+import type { NavigationLifecycle, NavigationMenu } from './navigation-lifecycle.js';
 import { fakeRouter, linkNavigation as link } from './test-fixtures/fake-router.js';
+import { mountLifecycle } from './test-fixtures/mount-lifecycle.js';
 
 const lenis = vi.hoisted(() => ({ current: null as null | {
 	isScrolling: boolean | string; isStopped: boolean; scroll: number; stop: ReturnType<typeof vi.fn>; start: ReturnType<typeof vi.fn>;
@@ -13,11 +14,11 @@ function momentum(scroll: number) {
 
 function setup() {
 	const hooks = fakeRouter();
-	const lifecycle = createNavigationLifecycle(hooks.router);
-	return { hooks, lifecycle };
+	const { lifecycle, unmount } = mountLifecycle(hooks.router);
+	return { hooks, lifecycle, unmount };
 }
 
-function attach(lifecycle: ReturnType<typeof createNavigationLifecycle>) {
+function attach(lifecycle: NavigationLifecycle) {
 	const language = document.createElement('a');
 	language.href = '/fr?q=1#section';
 	language.setAttribute('data-sveltekit-reset', 'false');
@@ -39,6 +40,98 @@ afterEach(() => {
 });
 
 describe('navigation lifecycle', () => {
+	it('uses an ordinary superseding click when its redirect omits the native event', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		hooks.before(await hooks.click(language));
+		const ordinary = document.createElement('a');
+		ordinary.href = '/ordinary-redirect';
+		document.body.append(ordinary);
+		await hooks.click(ordinary);
+		const focusLanguage = vi.spyOn(language, 'focus');
+		const redirected = link('/ordinary-destination');
+		const held = hooks.on(redirected);
+		expect(state.open).toBe(false);
+		expect(lifecycle.pending).toBe(true);
+		expect(hooks.before).toHaveBeenCalledOnce();
+		state.active = false;
+		lifecycle.menuClosed();
+		expect(await held).toBeUndefined();
+		await hooks.after(redirected);
+		expect(focusLanguage).not.toHaveBeenCalled();
+	});
+
+	it('uses a superseding locale click for focus reset when its redirect omits the native event', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		const ordinary = document.createElement('a');
+		ordinary.href = '/slow-ordinary';
+		document.body.append(ordinary);
+		hooks.before(await hooks.click(ordinary));
+		state.active = false;
+		lifecycle.menuClosed();
+		await hooks.click(language);
+		const reset = await hooks.on(link('/fr/redirected?q=1#section'));
+		expect(hooks.before).toHaveBeenCalledOnce();
+		expect(reset).toBeTypeOf('function');
+		reset?.();
+		expect(document.activeElement).toBe(document.body);
+	});
+
+	it('does not infer continuity from an unobserved native event that disappears', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state } = attach(lifecycle);
+		hooks.before({ ...link('/fr?q=1#section'), event: new MouseEvent('click') });
+		const held = hooks.on(link('/unknown-redirect'));
+		expect(state.open).toBe(false);
+		state.active = false;
+		lifecycle.menuClosed();
+		expect(await held).toBeUndefined();
+	});
+
+	it('removes the click observer when its layout unmounts', async () => {
+		const { hooks, lifecycle, unmount } = setup();
+		const { language } = attach(lifecycle);
+		const version = lifecycle.version;
+		unmount();
+		await hooks.click(language);
+		expect(lifecycle.version).toBe(version);
+	});
+
+	it('discards an observed click superseded by a programmatic navigation', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		state.open = state.active = false;
+		hooks.before(await hooks.click(language));
+		const programmatic = { ...link('/programmatic'), type: 'goto' };
+		hooks.on(programmatic);
+		await hooks.after(programmatic);
+		expect(hooks.on(link('/unknown-redirect'))).toBeUndefined();
+	});
+
+	it.each([
+		{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 },
+	])('ignores modified or non-primary clicks: %j', async (init) => {
+		const { hooks, lifecycle } = setup();
+		const { language } = attach(lifecycle);
+		await hooks.click(language, init);
+		expect(lifecycle.version).toBe(0);
+	});
+
+	it('ignores same-document fragments and links opened outside the current page', async () => {
+		const { hooks, lifecycle } = setup();
+		for (const [href, attribute] of [
+			['#section', null], ['/download', 'download'], ['/elsewhere', 'target'], ['https://example.com', null],
+		] as const) {
+			const anchor = document.createElement('a');
+			anchor.href = href;
+			if (attribute) anchor.setAttribute(attribute, attribute === 'target' ? '_blank' : '');
+			document.body.append(anchor);
+			await hooks.click(anchor);
+		}
+		expect(lifecycle.version).toBe(0);
+	});
+
 	it('closes a menu reopened during a slow load before waiting for its second close', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state } = attach(lifecycle);
@@ -113,7 +206,7 @@ describe('navigation lifecycle', () => {
 	it('retains locale intent and focuses its updated link after a redirect with no native event', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state, language } = attach(lifecycle);
-		hooks.before({ ...link('/fr?q=1#section'), event: new MouseEvent('click') });
+		hooks.before(await hooks.click(language));
 		const redirected = link('/fr/canonical?q=1#section');
 		expect(hooks.on(redirected)).toBeUndefined();
 		expect(state.open).toBe(true);
@@ -125,7 +218,10 @@ describe('navigation lifecycle', () => {
 	it('does not turn an ordinary redirect to the locale URL into a locale click', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state } = attach(lifecycle);
-		hooks.before({ ...link('/redirect'), event: new MouseEvent('click') });
+		const ordinary = document.createElement('a');
+		ordinary.href = '/redirect';
+		document.body.append(ordinary);
+		hooks.before(await hooks.click(ordinary));
 		state.open = true;
 		const held = hooks.on(link('/fr?q=1#section'));
 		expect(state.open).toBe(false);
@@ -265,7 +361,7 @@ describe('navigation lifecycle', () => {
 		language.href = '/fr';
 		language.setAttribute('data-sveltekit-reset', 'false');
 		document.body.append(language);
-		createNavigationLifecycle(hooks.router, { languageLink: () => language });
+		mountLifecycle(hooks.router, { languageLink: () => language });
 		language.focus();
 		const event = link('/fr');
 		hooks.before(event);

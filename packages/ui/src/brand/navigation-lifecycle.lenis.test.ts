@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { destroyLenis, getLenis, initLenis } from '@yesid/motion/utils/lenis';
-import { createNavigationLifecycle } from './navigation-lifecycle.js';
+import { mountLifecycle } from './test-fixtures/mount-lifecycle.js';
 import { fakeRouter, linkNavigation } from './test-fixtures/fake-router.js';
 
 // Keep the real shared Lenis instance and animation. Only its GSAP driver/policy are isolated.
@@ -47,7 +47,7 @@ describe.each(['window', 'element'] as const)('header-less navigation with a rea
 		expect(lenis.isScrolling).toBe('smooth');
 		const position = lenis.scroll;
 		const hooks = fakeRouter();
-		createNavigationLifecycle(hooks.router);
+		mountLifecycle(hooks.router);
 		hooks[hook](linkNavigation('/destination'));
 		expect(lenis.isScrolling).toBe(false);
 		expect(lenis.velocity).toBe(0);

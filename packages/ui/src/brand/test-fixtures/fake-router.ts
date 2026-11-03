@@ -22,9 +22,19 @@ export function fakeRouter() {
 	};
 	return {
 		router,
-		before: (event: NavigationEvent) => before!(event),
+		before: vi.fn((event: NavigationEvent) => before!(event)),
 		on: (event: NavigationEvent) => on!(event),
 		after: (event: NavigationEvent) => after!(event),
+		/** Dispatch the native link trigger, allowing the lifecycle to observe it before a redirect drops it. */
+		async click(anchor: HTMLAnchorElement, { handled = true, ...init }: MouseEventInit & { handled?: boolean } = {}): Promise<NavigationEvent> {
+			const href = anchor.href;
+			const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
+			if (handled) anchor.addEventListener('click', (click) => click.preventDefault(), { once: true });
+			anchor.focus();
+			anchor.dispatchEvent(event);
+			await Promise.resolve();
+			return { type: 'link', to: { url: new URL(href) }, event };
+		},
 	};
 }
 

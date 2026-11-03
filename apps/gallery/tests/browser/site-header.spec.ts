@@ -34,6 +34,21 @@ async function delayNextRouteModule(page: Page) {
 	return { loading, release };
 }
 
+async function delayFixtureLoad(page: Page) {
+	let requested!: () => void;
+	let release!: () => void;
+	const loading = new Promise<void>((resolve) => { requested = resolve; });
+	const gate = new Promise<void>((resolve) => { release = resolve; });
+	await page.route('**/navigation-lifecycle-gate.json?*', async (route) => {
+		requested();
+		await gate;
+		await route.fulfill({ contentType: 'application/json', body: '{}' });
+	});
+	return { loading, release };
+}
+
+const routerFixture = (params: Record<string, string>) => `/navigation-lifecycle-fixture?${new URLSearchParams(params)}`;
+
 test('links and search show at the header widths their priority allows', async ({ page }) => {
 	const width = page.viewportSize()!.width;
 	await page.goto(HOME);
@@ -147,6 +162,48 @@ test('a state-preserving language switch from the closed header resets page focu
 
 test.describe('with motion on', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
+
+	test('an ordinary redirect superseding a slow locale switch closes the menu', async ({ page }) => {
+		await page.goto(HOME);
+		const delay = await delayFixtureLoad(page);
+		try {
+			await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ delay: 'locale' }));
+			await toggle(page).click();
+			await language(page).click({ noWaitAfter: true });
+			await delay.loading;
+			await expect(menu(page)).toBeVisible();
+			// The wordmark is an ordinary link without a menu-item close handler.
+			const ordinary = header(page).getByRole('link').first();
+			await ordinary.evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ redirect: 'ordinary' }));
+			await ordinary.click({ noWaitAfter: true });
+			await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('landed') === 'ordinary');
+			await expect(menu(page)).toBeHidden();
+			await expect(language(page)).not.toBeFocused();
+		} finally {
+			delay.release();
+			await page.unrouteAll({ behavior: 'wait' });
+		}
+	});
+
+	test('a redirected locale switch superseding a slow ordinary navigation resets focus', async ({ page }) => {
+		await page.goto(HOME);
+		const delay = await delayFixtureLoad(page);
+		try {
+			await toggle(page).click();
+			const ordinary = header(page).getByRole('link').first();
+			await ordinary.evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ delay: 'ordinary' }));
+			await ordinary.click({ noWaitAfter: true });
+			await delay.loading;
+			await expect(menu(page)).toBeHidden();
+			await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ redirect: 'locale' }));
+			await language(page).click({ noWaitAfter: true });
+			await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('lang') === LOCALES[1] && url.searchParams.get('landed') === 'locale');
+			await expect(page.locator('body')).toBeFocused();
+		} finally {
+			delay.release();
+			await page.unrouteAll({ behavior: 'wait' });
+		}
+	});
 
 	test('a slow navigation re-closes a menu reopened after its first close completes', async ({ page }) => {
 		await page.goto(HOME);

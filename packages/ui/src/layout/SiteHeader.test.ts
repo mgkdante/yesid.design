@@ -13,7 +13,7 @@ const lenis = vi.hoisted(() => ({ current: null as null | { isScrolling: false |
 vi.mock('@yesid/motion/utils/lenis', () => ({ getLenis: () => lenis.current }));
 
 import SiteHeader, { type SiteHeaderProps } from './SiteHeader.svelte';
-import { createNavigationLifecycle } from '../brand/navigation-lifecycle.js';
+import { mountLifecycle } from '../brand/test-fixtures/mount-lifecycle.js';
 import { fakeRouter, linkNavigation as link } from '../brand/test-fixtures/fake-router.js';
 
 const LABELS = { openMenu: 'Open menu', closeMenu: 'Close menu', menu: 'Site menu', theme: 'Dark theme', menuFooter: 'All destinations', skipToContent: 'Jump to the page' };
@@ -21,7 +21,7 @@ const NAMES = { en: 'English', fr: 'Français' };
 
 function setup(overrides: Partial<SiteHeaderProps> = {}) {
 	const hooks = fakeRouter();
-	const navigation = createNavigationLifecycle(hooks.router);
+	const navigation = mountLifecycle(hooks.router).lifecycle;
 	const view = render(SiteHeader, {
 		props: {
 			navigation,
