@@ -409,8 +409,9 @@ caller's own element, such as a rail that becomes a sheet on mobile. `railScroll
 viewport with internal scrolling; `paneOwnedRail` stacks the left rail above the center. With
 both rails the grid is `1fr 2fr 1fr`, or uses `measure` as the center maximum. With `toc` the
 frame tracks the active entry (bind `activeId`), lands same-page fragments when `landFragments` is
-set, and shows `TocPill` below 1024px unless `rail` is set. Keep `afterNavigate(onTocNavigate)` in
-the app. The root takes ordinary attributes such as `class`, `style` and `data-testid`.
+set, and shows `TocPill` below 1024px unless `rail` is set. Create one controller with
+`useSectionJump(afterNavigate)` and pass it as `toc.navigation`, sharing it with `TocNav` where both
+appear. The root takes ordinary attributes such as `class`, `style` and `data-testid`.
 
 `ArticleHeader` is the header those pages share: back link, optional `category`, the `title` with
 its `highlight` keyword in the accent, `subtitle`, `meta` (pending state included), and `actions`
