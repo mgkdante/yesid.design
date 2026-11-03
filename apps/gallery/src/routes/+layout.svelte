@@ -3,6 +3,7 @@
 	import { createNavigationLifecycle } from '@yesid/ui/brand';
 	import { setContext } from 'svelte';
 	import { page } from '$app/state';
+	import { navigating } from '$app/stores';
 	import '@yesid/motion/ripple.css';
 	import { initGlobalRipple } from '@yesid/motion/utils/globalRipple';
 	import { SiteRoot } from '@yesid/ui/layout';
@@ -12,7 +13,7 @@
 	import '../gallery.css';
 
 	let { children } = $props();
-	const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate });
+	const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate, subscribeNavigation: navigating.subscribe });
 	setContext('gallery-navigation', navigation);
 
 	onMount(() => initGlobalRipple());

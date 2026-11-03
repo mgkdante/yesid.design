@@ -163,6 +163,64 @@ test('a state-preserving language switch from the closed header resets page focu
 test.describe('with motion on', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
 
+	// Reuses the independent review's review-146.spec.ts reproduction.
+	for (const variant of [
+		{ name: 'preventDefault', stopped: false, reload: false },
+		{ name: 'preventDefault+stopPropagation', stopped: true, reload: false },
+		{ name: 'cancelled reload link', stopped: true, reload: true },
+	]) {
+		test(`an app-cancelled trusted locale click cannot poison an ordinary redirect: ${variant.name}`, async ({ page }) => {
+			await page.goto(HOME);
+			const delay = await delayFixtureLoad(page);
+			try {
+				await toggle(page).click();
+				const ordinary = header(page).getByRole('link').first();
+				await ordinary.evaluate((node, href) => node.setAttribute('href', href), routerFixture({ delay: 'ordinary', redirect: 'ordinary' }));
+				await ordinary.click({ noWaitAfter: true });
+				await delay.loading;
+				await expect(menu(page)).toBeHidden();
+				await toggle(page).click();
+				await expect(menu(page)).toBeVisible();
+				await language(page).evaluate((node, { stopped, reload }) => {
+					if (reload) node.setAttribute('data-sveltekit-reload', 'true');
+					node.addEventListener('click', (event) => {
+						event.preventDefault();
+						if (stopped) event.stopPropagation();
+					}, { once: true });
+				}, variant);
+				await page.evaluate(() => {
+					window.addEventListener('click', (event) => { document.documentElement.dataset.nativeClickTrusted = String(event.isTrusted); }, { once: true, capture: true });
+				});
+				await language(page).click();
+				await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
+				delay.release();
+				await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('landed') === 'ordinary');
+				await expect(menu(page)).toBeHidden();
+				await expect(language(page)).not.toBeFocused();
+			} finally {
+				delay.release();
+				await page.unrouteAll({ behavior: 'wait' });
+			}
+		});
+	}
+
+	test('keyboard Enter on a locale redirect keeps the menu open', async ({ page }) => {
+		await page.goto(HOME);
+		await toggle(page).click();
+		await language(page).evaluate((node, href) => {
+			node.setAttribute('href', href);
+			node.focus();
+		}, routerFixture({ redirect: 'locale' }));
+		await page.evaluate(() => {
+			window.addEventListener('click', (event) => { document.documentElement.dataset.nativeClickTrusted = String(event.isTrusted); }, { once: true, capture: true });
+		});
+		await page.keyboard.press('Enter');
+		await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
+		await expect(page).toHaveURL((url) => url.searchParams.get('landed') === 'locale');
+		await expect(menu(page)).toBeVisible();
+		await expect(language(page)).toBeFocused();
+	});
+
 	test('a trusted locale redirect keeps the menu open and focuses the updated language link', async ({ page }) => {
 		await page.goto(HOME);
 		await toggle(page).click();

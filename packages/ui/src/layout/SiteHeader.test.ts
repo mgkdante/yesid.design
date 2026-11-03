@@ -106,9 +106,9 @@ describe('SiteHeader', () => {
 	});
 
 	it('closes for a navigation but stays open for its own language switch', async () => {
-		const { hooks, menu, open } = setup();
+		const { hooks, menu, open, getByRole } = setup();
 		await open();
-		hooks.before!(link('/fr'));
+		hooks.before(await hooks.click(getByRole('link', { name: 'Language: English (EN FR)' })));
 		await tick();
 		expect(menu()).not.toBeNull();
 
@@ -164,7 +164,7 @@ describe('SiteHeader', () => {
 		const language = view.getByRole('link', { name: 'Language: English (EN FR)' });
 		language.removeAttribute('data-testid');
 		await view.open();
-		const event = link('/fr');
+		const event = await view.hooks.click(language);
 		view.hooks.before(event);
 		expect(view.hooks.on(event)).toBeUndefined();
 		await view.rerender({ language: {

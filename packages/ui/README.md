@@ -430,12 +430,15 @@ the chrome. The back link sits midway between the chrome and the next line; an a
 `SiteHeader` is the floating pill header with a full-screen metro-line menu on a bits-ui Dialog.
 The pill renders inside the dialog, so it stays above the open menu and inside its focus trap.
 Call `createNavigationLifecycle` from `@yesid/ui/brand` once during the persistent app layout's
-initialization with `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation`.
+initialization with `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation`,
+plus the required `subscribeNavigation` adapter method.
 Pass its result as `navigation`: the menu closes before a navigation lands, and a language switch
 from the open menu keeps it open. The lifecycle interrupts Lenis momentum even without a header.
 It reconciles redirect and superseding events in `onNavigate` when `beforeNavigate` was skipped,
 and re-closes a menu reopened during loading before waiting for its animation and focus trap.
-Custom adapters forward the optional native `NavigationEvent.event` for redirect intent continuity.
+The subscription publishes every accepted start with its original native `NavigationEvent.event`,
+including superseding links whose before hook is skipped. Cancelled clicks are never published.
+Kit 3 needs a separate bridge/SDK change exposing that event before adoption; see the migration note.
 Momentum cancellation uses Lenis stop/start in the same callback, preserving an existing external
 stop and leaving input available if navigation is canceled.
 
@@ -443,7 +446,11 @@ stop and leaving input available if navigation is canceled.
 <script lang="ts">
 	import { beforeNavigate, onNavigate, afterNavigate } from '$app/navigation';
 	import { createNavigationLifecycle } from '@yesid/ui/brand';
-	const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate });
+	import { navigating } from '$app/stores'; // SvelteKit 2 adapter only
+	const navigation = createNavigationLifecycle({
+		beforeNavigate, onNavigate, afterNavigate,
+		subscribeNavigation: navigating.subscribe,
+	});
 </script>
 
 <SiteHeader

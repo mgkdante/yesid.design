@@ -6,7 +6,15 @@ export function fakeRouter() {
 	let before: Parameters<SiteNavigation['beforeNavigate']>[0] | undefined;
 	let on: Parameters<OnNavigate>[0] | undefined;
 	let after: Parameters<SiteNavigation['afterNavigate']>[0] | undefined;
+	let subscriber: ((event: NavigationEvent | null) => void) | undefined;
+	const unsubscribe = vi.fn(() => { subscriber = undefined; });
 	const router: SiteNavigation = {
+		subscribeNavigation: vi.fn((callback) => {
+			if (subscriber) throw new Error('navigation start subscribed twice');
+			subscriber = callback;
+			callback(null);
+			return unsubscribe;
+		}),
 		beforeNavigate: vi.fn((callback) => {
 			if (before) throw new Error('beforeNavigate registered twice');
 			before = callback;
@@ -22,18 +30,27 @@ export function fakeRouter() {
 	};
 	return {
 		router,
+		unsubscribe,
+		start: (event: NavigationEvent | null) => subscriber?.(event),
 		before: vi.fn((event: NavigationEvent) => before!(event)),
 		on: (event: NavigationEvent) => on!(event),
 		after: (event: NavigationEvent) => after!(event),
-		/** Dispatch the native link trigger, allowing the lifecycle to observe it before a redirect drops it. */
-		async click(anchor: HTMLAnchorElement, { handled = true, onIntercept, ...init }: MouseEventInit & {
+		/** Dispatch a link and publish only a router-accepted start, before a redirect drops its event. */
+		async click(element: HTMLElement, { handled = true, onIntercept, ...init }: MouseEventInit & {
 			handled?: boolean;
 			onIntercept?: (navigation: NavigationEvent) => void;
 		} = {}): Promise<NavigationEvent> {
+			if (!(element instanceof HTMLAnchorElement)) throw new Error('The fake router requires a link');
+			const anchor = element;
 			const href = anchor.href;
 			const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
 			const intercept = (click: MouseEvent) => {
+				if (click.defaultPrevented || click.button !== 0 || click.ctrlKey || click.metaKey || click.shiftKey || click.altKey ||
+					anchor.hasAttribute('download') || anchor.hasAttribute('data-sveltekit-reload') ||
+					(anchor.target && anchor.target !== '_self') || anchor.origin !== location.origin ||
+					(anchor.hash && anchor.pathname === location.pathname && anchor.search === location.search)) return;
 				click.preventDefault();
+				subscriber?.({ type: 'link', to: { url: new URL(href) }, event: click });
 				onIntercept?.({ type: 'link', to: { url: new URL(href) }, event: click });
 			};
 			if (handled) document.addEventListener('click', intercept, { once: true });

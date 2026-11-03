@@ -98,10 +98,10 @@ describe('navigation lifecycle', () => {
 		expect(document.activeElement).toBe(document.body);
 	});
 
-	it('does not infer continuity from an unobserved native event that disappears', async () => {
+	it('does not infer locale intent from an eventless navigation', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state } = attach(lifecycle);
-		hooks.before({ ...link('/fr?q=1#section'), event: new MouseEvent('click') });
+		hooks.before(link('/fr?q=1#section'));
 		const held = hooks.on(link('/unknown-redirect'));
 		expect(state.open).toBe(false);
 		state.active = false;
@@ -109,23 +109,32 @@ describe('navigation lifecycle', () => {
 		expect(await held).toBeUndefined();
 	});
 
-	it('removes the click observer when its layout unmounts', async () => {
-		const addCapture = vi.spyOn(document, 'addEventListener');
-		const removeCapture = vi.spyOn(document, 'removeEventListener');
-		const addBubble = vi.spyOn(window, 'addEventListener');
-		const removeBubble = vi.spyOn(window, 'removeEventListener');
+	it('unsubscribes from router starts when its layout unmounts', async () => {
 		const { hooks, lifecycle, unmount } = setup();
 		const { language } = attach(lifecycle);
-		const capture = addCapture.mock.calls.find(([type, , options]) => type === 'click' && options === true);
-		const bubble = addBubble.mock.calls.find(([type]) => type === 'click');
-		expect(capture).toBeTruthy();
-		expect(bubble).toBeTruthy();
 		const version = lifecycle.version;
 		unmount();
-		expect(removeCapture).toHaveBeenCalledWith('click', capture![1], true);
-		expect(removeBubble).toHaveBeenCalledWith('click', bubble![1]);
+		expect(hooks.unsubscribe).toHaveBeenCalledOnce();
 		await hooks.click(language);
 		expect(lifecycle.version).toBe(version);
+	});
+
+	it.each(['preventDefault', 'stopPropagation', 'reload'])('ignores an app-cancelled %s click during an ordinary redirect', async (variant) => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		hooks.before(link('/ordinary'));
+		state.open = true;
+		if (variant === 'reload') language.setAttribute('data-sveltekit-reload', '');
+		language.addEventListener('click', (event) => {
+			event.preventDefault();
+			if (variant !== 'preventDefault') event.stopPropagation();
+		}, { once: true });
+		await hooks.click(language);
+		const held = hooks.on(link('/ordinary-redirected'));
+		expect(state.open).toBe(false);
+		state.active = false;
+		lifecycle.menuClosed();
+		expect(await held).toBeUndefined();
 	});
 
 	it('discards an observed click superseded by a programmatic navigation', async () => {
@@ -216,13 +225,28 @@ describe('navigation lifecycle', () => {
 		const { state, language } = attach(lifecycle);
 		state.open = state.active = false;
 		language.focus();
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		const reset = await hooks.on(event);
 		expect(reset).toBeTypeOf('function');
 		hooks.on(link('/superseding'));
 		reset?.();
 		expect(document.activeElement).toBe(language);
+	});
+
+	it('invalidates an earlier focus callback at an accepted superseding start before its commit', async () => {
+		const { hooks, lifecycle } = setup();
+		const { state, language } = attach(lifecycle);
+		state.open = state.active = false;
+		const event = await hooks.click(language);
+		hooks.before(event);
+		const reset = await hooks.on(event);
+		expect(reset).toBeTypeOf('function');
+		const version = lifecycle.version;
+		hooks.start({ ...link('/next'), type: 'goto' });
+		reset?.();
+		expect(document.activeElement).toBe(language);
+		expect(lifecycle.version).toBeGreaterThan(version);
 	});
 
 	it('interrupts header-less momentum in onNavigate when beforeNavigate was skipped', () => {
@@ -348,7 +372,7 @@ describe('navigation lifecycle', () => {
 	it('keeps an open menu on its exact locale link and focuses the updated link after landing', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state, language, menu } = attach(lifecycle);
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		expect(hooks.on(event)).toBeUndefined();
 		expect(menu.close).not.toHaveBeenCalled();
@@ -377,7 +401,7 @@ describe('navigation lifecycle', () => {
 		const { state, language } = attach(lifecycle);
 		state.open = state.active = false;
 		language.focus();
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		const reset = await hooks.on(event);
 		expect(reset).toBeTypeOf('function');
@@ -393,7 +417,7 @@ describe('navigation lifecycle', () => {
 		document.body.append(language);
 		mountLifecycle(hooks.router, { languageLink: () => language });
 		language.focus();
-		const event = link('/fr');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		const reset = await hooks.on(event);
 		reset?.();
@@ -405,7 +429,7 @@ describe('navigation lifecycle', () => {
 		const { state, language } = attach(lifecycle);
 		state.open = false;
 		language.focus();
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		const held = hooks.on(event);
 		state.active = false;
@@ -416,12 +440,12 @@ describe('navigation lifecycle', () => {
 		expect(document.activeElement).toBe(document.body);
 	});
 
-	it('leaves focus reset to the router for a language link without preserveState', () => {
+	it('leaves focus reset to the router for a language link without preserveState', async () => {
 		const { hooks, lifecycle } = setup();
 		const { state, language } = attach(lifecycle);
 		state.open = state.active = false;
 		language.removeAttribute('data-sveltekit-reset');
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		expect(hooks.on(event)).toBeUndefined();
 	});
@@ -431,7 +455,7 @@ describe('navigation lifecycle', () => {
 		const { state, language } = attach(lifecycle);
 		state.open = state.active = false;
 		language.focus();
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		const reset = await hooks.on(event);
 		hooks.before(link('/next'));
@@ -452,9 +476,10 @@ describe('navigation lifecycle', () => {
 	it('does not refocus a locale link after another navigation starts', async () => {
 		const { hooks, lifecycle } = setup();
 		const { language } = attach(lifecycle);
-		const event = link('/fr?q=1#section');
+		const event = await hooks.click(language);
 		hooks.before(event);
 		hooks.on(event);
+		language.blur();
 		const landed = hooks.after(event);
 		hooks.before(link('/next'));
 		await landed;

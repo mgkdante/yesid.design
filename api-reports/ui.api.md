@@ -2713,6 +2713,7 @@ interface SiteNavigation {
     beforeNavigate(callback: (navigation: NavigationEvent) => void): void;
     // (undocumented)
     onNavigate: OnNavigate;
+    subscribeNavigation(callback: (navigation: NavigationEvent | null) => void): () => void;
 }
 
 // @public (undocumented)

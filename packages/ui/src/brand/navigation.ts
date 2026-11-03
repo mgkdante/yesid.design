@@ -3,12 +3,18 @@ export interface NavigationEvent {
 	type: string;
 	to: { url: URL } | null;
 	shallow?: boolean;
-	/** Native navigation trigger when provided by the router; retained to distinguish new clicks from redirects. */
+	/** Exact native trigger, required on original accepted link starts; redirect hops may omit it. */
 	event?: Event;
 }
 type NavigationResult = void | (() => void) | Promise<void | (() => void)>;
 export type OnNavigate = (callback: (navigation: NavigationEvent) => NavigationResult) => void;
 export interface SiteNavigation {
+	/**
+	 * Subscribe to every router-accepted start, including superseding links and redirects.
+	 * Original link starts must carry the exact native event, before loading or redirecting.
+	 * Never emit app-cancelled clicks. Null denotes idle. Returns subscription cleanup.
+	 */
+	subscribeNavigation(callback: (navigation: NavigationEvent | null) => void): () => void;
 	beforeNavigate(callback: (navigation: NavigationEvent) => void): void;
 	onNavigate: OnNavigate;
 	afterNavigate(callback: (navigation: NavigationEvent) => void): void;

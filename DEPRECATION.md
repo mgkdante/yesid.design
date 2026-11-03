@@ -64,8 +64,10 @@ consumer or clean-room verification.
   `SiteHeader.labels.skipToContent` and `LanguageToggle.names` become required with no built-in
   translated defaults. The owner explicitly requested this breaking migration without a
   deprecation window for the two coordinated consumers, waiving both normal removal gates for
-  these contracts. The release fragment and API report travel with the source change;
-  [the migration](docs/migrations/navigation-lifecycle.md) names both consumers' props and strings.
+  these contracts. The release fragment and API report travel with the source change.
+  The lifecycle adapter also requires `subscribeNavigation` to claim every accepted original
+  link event before loading or redirecting. Kit 3's event bridge is a separate adoption prerequisite.
+  [The migration](docs/migrations/navigation-lifecycle.md) names both consumers' props and strings.
   This entry records approval, not a published release or consumer adoption.
 
 - **Upcoming minor release (section-jump owner exception, 2026-11-03):** the owner-directed

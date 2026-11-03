@@ -30,7 +30,7 @@ export interface NavigationLifecycle {
 
 /**
  * Call once during the persistent app layout's initialization, even on routes without a header.
- * Pass the three hooks from `$app/navigation`; their lifetime follows that layout, not the header.
+ * Pass router hooks and an accepted-start subscription; their lifetime follows that layout, not the header.
  */
 export function createNavigationLifecycle(
 	router: SiteNavigation,
@@ -39,13 +39,11 @@ export function createNavigationLifecycle(
 	let menu: NavigationMenu | undefined;
 	let version = 0;
 	type LinkIntent = {
-		event: MouseEvent;
-		href: string;
+		event: Event;
 		localeSwitch: boolean;
 		resetFocus: boolean;
 	};
 	let observedLink: LinkIntent | undefined;
-	let candidateLink: LinkIntent | undefined;
 	let transition: {
 		version: number;
 		href: string | undefined;
@@ -59,41 +57,34 @@ export function createNavigationLifecycle(
 	} | undefined;
 	const waiting = new Set<() => void>();
 	const shallow = (event: NavigationEvent) => event.shallow && event.type === 'goto';
-	function confirmLink(event?: Event) {
-		if (!candidateLink || (event && candidateLink.event !== event) || !candidateLink.event.defaultPrevented) return;
-		observedLink = candidateLink;
-		candidateLink = undefined;
-		version++;
+	function claim(event: NavigationEvent) {
+		if (event.type !== 'link') {
+			observedLink = undefined;
+			return;
+		}
+		// Only a router-supplied native trigger claims intent. An eventless redirect
+		// retains the last accepted start; DOM cancellation is never router evidence.
+		if (!event.event || observedLink?.event === event.event) return;
+		const language = menu?.languageLink() ?? options.languageLink?.();
+		const target = event.event.target;
+		const localeSwitch = !!language && (target instanceof Node
+			? language.contains(target) : event.to?.url.href === language.href);
+		observedLink = {
+			event: event.event,
+			localeSwitch,
+			resetFocus: localeSwitch && language?.getAttribute('data-sveltekit-reset') === 'false',
+		};
 	}
 	onMount(() => {
-		function observeLink(event: MouseEvent) {
-			if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-			const anchor = event.composedPath().find((node): node is HTMLAnchorElement => node instanceof HTMLAnchorElement);
-			if (!anchor?.hasAttribute('href') || anchor.hasAttribute('download') ||
-				(anchor.target && anchor.target.toLowerCase() !== '_self') || anchor.origin !== location.origin) return;
-			if (anchor.href.includes('#') && anchor.pathname === location.pathname && anchor.search === location.search) return;
-			const language = menu?.languageLink() ?? options.languageLink?.();
-			candidateLink = {
-				event,
-				href: anchor.href,
-				localeSwitch: anchor === language,
-				resetFocus: anchor === language && language.getAttribute('data-sveltekit-reset') === 'false',
-			};
-		}
-		function confirmAtWindow(event: MouseEvent) {
-			// Window bubble follows the router's document bubble listener. A capture-time
-			// microtask can run before that listener for a trusted native click.
-			confirmLink(event);
-			if (candidateLink?.event === event) candidateLink = undefined;
-		}
-		document.addEventListener('click', observeLink, true);
-		window.addEventListener('click', confirmAtWindow);
-		return () => {
-			candidateLink = undefined;
-			observedLink = undefined;
-			document.removeEventListener('click', observeLink, true);
-			window.removeEventListener('click', confirmAtWindow);
-		};
+		const unsubscribe = router.subscribeNavigation((event) => {
+			if (!event || event.type === 'enter' || shallow(event)) return;
+			const previous = observedLink?.event;
+			claim(event);
+			// Superseding starts invalidate focus work even when beforeNavigate is skipped.
+			if (event.type !== 'link' || observedLink?.event !== previous) version++;
+			interruptScroll();
+		});
+		return () => { unsubscribe(); observedLink = undefined; };
 	});
 	function interruptScroll() {
 		const lenis = getLenis();
@@ -104,38 +95,20 @@ export function createNavigationLifecycle(
 		lenis.start();
 	}
 	function reconcile(event: NavigationEvent, stage: 'loading' | 'committing') {
-		const previous = transition;
-		// Cached routing can reach its hooks before window bubbling. The router has
-		// already intercepted the click here, so it can confirm the captured candidate too.
-		if (event.type === 'link') confirmLink(event.event);
-		else candidateLink = undefined;
-		if (event.type !== 'link' || (event.event && observedLink?.event !== event.event) ||
-			(stage === 'loading' && (!event.event && (event.type !== 'link' || observedLink?.href !== event.to?.url.href)))) {
-			observedLink = undefined;
-		}
-		const observed = event.type === 'link' && observedLink &&
-			(!event.event || event.event === observedLink.event) ? observedLink : undefined;
-		// A redirect may omit its event, but absence cannot prove continuity: a second
-		// click may have superseded the loader without receiving beforeNavigate.
-		const continuing = stage === 'committing' && previous?.stage === 'loading' &&
-			previous.type === event.type && (event.event
-				? previous.event === event.event
-				: observed ? previous.event === observed.event
-					: !previous.event && previous.href === event.to?.url.href);
-		const language = menu?.languageLink() ?? options.languageLink?.();
-		const localeSwitch = observed?.localeSwitch ?? (continuing ? previous.localeSwitch :
-			event.type === 'link' && !!language && event.to?.url.href === language.href);
+		if (stage === 'loading' && !event.event) observedLink = undefined;
+		claim(event);
+		const observed = event.type === 'link' ? observedLink : undefined;
+		const localeSwitch = observed?.localeSwitch ?? false;
 		return transition = {
 			version: ++version,
 			href: event.to?.url.href,
 			type: event.type,
-			event: observed?.event ?? (continuing ? previous.event : event.event),
+			event: observed?.event ?? event.event,
 			stage,
 			menu,
 			localeSwitch,
 			keepMenu: localeSwitch && !!menu?.open,
-			resetFocus: observed?.resetFocus ?? (continuing ? previous.resetFocus :
-				localeSwitch && language?.getAttribute('data-sveltekit-reset') === 'false'),
+			resetFocus: observed?.resetFocus ?? false,
 		};
 	}
 	function menuClosed() {
