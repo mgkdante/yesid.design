@@ -7,20 +7,23 @@ interface SectionRegistration {
 	setOpen(open: boolean): void;
 }
 
-/** Internal identity-based fallback for nested headings and numbered section wrappers. */
+/** Opens the content-section chain exposing a heading, section anchor or numbered wrapper. */
 export function openSectionContaining(target: Element): boolean {
-	let owner: SectionRegistration | undefined;
+	let descendant: SectionRegistration | undefined;
 	for (const section of sections.values()) {
 		const element = section.element?.();
-		if (!element?.contains(target)) continue;
-		if (!owner || owner.element?.()?.contains(element)) owner = section;
+		if (!element || !target.contains(element)) continue;
+		if (!descendant || element.contains(descendant.element?.() ?? null)) descendant = section;
 	}
-	owner ??= [...sections.values()].find((section) => {
+	const sectionTarget = descendant?.element?.() ?? target;
+	let found = false;
+	for (const section of sections.values()) {
 		const element = section.element?.();
-		return element !== undefined && element !== null && target.contains(element);
-	});
-	owner?.setOpen(true);
-	return owner !== undefined;
+		if (!element || (!element.contains(target) && !element.contains(sectionTarget))) continue;
+		section.setOpen(true);
+		found = true;
+	}
+	return found;
 }
 
 const sections = new SvelteMap<symbol, SectionRegistration>();

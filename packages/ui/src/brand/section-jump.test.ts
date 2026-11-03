@@ -6,11 +6,101 @@ import SectionsToggle from './SectionsToggle.svelte';
 import TocNav from './TocNav.svelte';
 import { createSectionJump, useSectionJump } from './section-jump.js';
 import type { TocEntry } from './toc.js';
+import NestedSections from './test-fixtures/NestedSections.svelte';
+import { sections } from '../state/sections.svelte.js';
 
 const entries = (...ids: string[]): TocEntry[] => ids.map((id) => ({ id, title: id, level: 2, children: [] }));
 const cleanups: (() => void)[] = [];
 let reduced = true;
 let observers: { targets: Element[]; report: IntersectionObserverCallback; disconnect: ReturnType<typeof vi.fn>; margin?: string }[];
+
+it.each(['nested-heading', 'inner', 'section-2'])('opens the ancestor chain for %s after Collapse all, leaving siblings closed', async (id) => {
+	const view = render(NestedSections);
+	const outer = within(view.container).getByRole('button', { name: 'Outer' });
+	const inner = within(view.container).getByRole('button', { name: 'Inner' });
+	const sibling = within(view.container).getByRole('button', { name: 'Nested sibling' });
+	const unrelated = within(view.container).getByRole('button', { name: 'Unrelated' });
+	sections.collapseAll();
+	await tick();
+	const target = id === 'inner'
+		? view.container.querySelector<HTMLElement>('[data-toc="inner"]')!
+		: id === 'section-2'
+			? view.container.querySelector<HTMLElement>('[data-section-index="2"]')!
+			: view.container.querySelector<HTMLElement>('#nested-heading')!;
+	target.scrollIntoView = vi.fn();
+	expect(target.closest('[inert], [aria-hidden="true"]')).not.toBeNull();
+	const navigation = createSectionJump();
+	register(navigation, ['outer', 'inner', 'section-2', 'nested-heading', 'nested-sibling', 'unrelated']);
+	expect(await navigation.jump(id)).toBe(true);
+	expect(target.scrollIntoView).toHaveBeenCalledOnce();
+	expect(outer.getAttribute('aria-expanded')).toBe('true');
+	expect(inner.getAttribute('aria-expanded')).toBe('true');
+	expect(sibling.getAttribute('aria-expanded')).toBe('false');
+	expect(unrelated.getAttribute('aria-expanded')).toBe('false');
+	expect(target.closest('[inert], [aria-hidden="true"]')).toBeNull();
+});
+
+it('opening the outer section leaves nested descendants collapsed', async () => {
+	const view = render(NestedSections);
+	const outer = within(view.container).getByRole('button', { name: 'Outer' });
+	const inner = within(view.container).getByRole('button', { name: 'Inner' });
+	const sibling = within(view.container).getByRole('button', { name: 'Nested sibling' });
+	sections.collapseAll();
+	await tick();
+	view.container.querySelector<HTMLElement>('[data-toc="outer"]')!.scrollIntoView = vi.fn();
+	const navigation = createSectionJump();
+	register(navigation, ['outer', 'inner']);
+	expect(await navigation.jump('outer')).toBe(true);
+	expect(outer.getAttribute('aria-expanded')).toBe('true');
+	expect(inner.getAttribute('aria-expanded')).toBe('false');
+	expect(sibling.getAttribute('aria-expanded')).toBe('false');
+});
+
+it('preserves a reveal when the same root gets new entries and options', async () => {
+	const view = section('updated');
+	const navigation = createSectionJump();
+	register(navigation, ['old'], { root: view.container, landFragments: true });
+	await tick();
+	const landed = await navigation.jump('updated', {
+		beforeReveal: () => {
+			register(navigation, ['updated'], { root: view.container, selector: 'h3', landFragments: false });
+		},
+	});
+	expect(landed).toBe(true);
+	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
+});
+
+it('cancels a reveal when registration moves to a different root', async () => {
+	const first = section('first-root');
+	const second = section('second-root');
+	const navigation = createSectionJump();
+	register(navigation, ['first-root'], { root: first.container });
+	const landed = await navigation.jump('second-root', {
+		beforeReveal: () => {
+			register(navigation, ['second-root'], { root: second.container });
+		},
+	});
+	expect(landed).toBe(false);
+	expect(second.target.scrollIntoView).not.toHaveBeenCalled();
+});
+
+it('does not land after disposal even if settlement has already queued its continuation', async () => {
+	const view = section('disposed-after-settle');
+	const navigation = createSectionJump();
+	const stop = register(navigation, ['disposed-after-settle']);
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
+		frames.push(callback);
+		return frames.length;
+	});
+	const landed = navigation.jump('disposed-after-settle');
+	await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0));
+	while (frames.length) frames.shift()!(performance.now());
+	stop();
+	expect(await landed).toBe(false);
+	expect(view.target.scrollIntoView).not.toHaveBeenCalled();
+});
 
 beforeEach(() => {
 	reduced = true;

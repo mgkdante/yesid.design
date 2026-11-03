@@ -5,6 +5,7 @@ import type { TocEntry } from '../brand/toc.js';
 import DetailFrame, { type DetailFrameProps, type DetailFrameToc } from './DetailFrame.svelte';
 
 import SectionsFixture from './test-fixtures/DetailFrameSections.svelte';
+import { createSectionJump } from '../brand/section-jump.js';
 
 let observers: { targets: Element[]; report: IntersectionObserverCallback; disconnect: ReturnType<typeof vi.fn> }[];
 const part = (id: string) => createRawSnippet(() => ({ render: () => `<div data-testid="${id}">${id}</div>` }));
@@ -201,6 +202,25 @@ describe('active toc entry', () => {
 });
 
 describe('real section integration', () => {
+	it('keeps the reveal alive when beforeReveal updates the real frame entries', async () => {
+		const navigation = createSectionJump();
+		const first = entry('sec-a', 'Section A');
+		const second = entry('sec-b', 'Section B');
+		const view = render(SectionsFixture, { props: { navigation, entries: [first] } });
+		await tick();
+		const scroll = vi.fn();
+		const landed = await navigation.jump('sec-b', {
+			beforeReveal: async () => {
+				await view.rerender({ entries: [first, second] });
+				view.container.querySelector<HTMLElement>('[data-toc="sec-b"]')!.scrollIntoView = scroll;
+			},
+		});
+		expect(landed).toBe(true);
+		expect(scroll).toHaveBeenCalledOnce();
+		expect(view.getByRole('button', { name: 'Section B' }).getAttribute('aria-expanded')).toBe('true');
+		expect(view.getByRole('button', { name: 'Section A' }).getAttribute('aria-expanded')).toBe('false');
+		expect(view.container.querySelector('[data-toc="sec-b"]')!.closest('[inert], [aria-hidden="true"]')).toBeNull();
+	});
 	it('lands a fragment by opening only its target section, with no TOC mock', async () => {
 		history.replaceState(null, '', '/#sec-b');
 		const view = render(SectionsFixture);

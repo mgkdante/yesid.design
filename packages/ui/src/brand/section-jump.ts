@@ -156,7 +156,8 @@ function fragmentLinks(root: Element | Document, jump: (id: string) => void, can
 		root.removeEventListener('click', clicked as EventListener);
 		document.removeEventListener('click', cancel, true);
 		window.removeEventListener('popstate', historyChanged);
-		cancel();
+		cancelAnimationFrame(frame);
+		pendingHref = '';
 	};
 }
 
@@ -168,6 +169,7 @@ function createNavigation() {
 	let pending: AbortController | undefined;
 	let route = 0;
 	let lifetime = 0;
+	let pageDisposed = false;
 	let notify: ((id: string) => void) | undefined;
 	let stopCurrent = () => {};
 	let refreshCurrent = () => {};
@@ -184,11 +186,13 @@ function createNavigation() {
 	const controller: SectionJump = {
 		get activeId() { return active.current; },
 		register(entries, options = {}) {
-			stopCurrent();
 			if (typeof document === 'undefined') return () => {};
-			const epoch = ++lifetime;
 			const scope = options.root ?? document;
+			if (root && root !== scope) cancelRequest();
+			stopCurrent();
+			const epoch = ++lifetime;
 			root = scope;
+			pageDisposed = false;
 			notify = options.onActiveChange;
 			const ids = flattenToc([...entries]).map((entry) => entry.id);
 			setActive(reconcile(options.activeId ?? untrack(() => active.current), previousIds, ids));
@@ -231,9 +235,14 @@ function createNavigation() {
 				window.removeEventListener('resize', refresh);
 				stopLinks?.();
 				if (lifetime === epoch) {
-					cancelRequest();
+					pageDisposed = true;
 					refreshCurrent = () => {};
 					notify = undefined;
+					// A reactive effect cleans up immediately before registering its updated entries.
+					// A same-root replacement in this flush keeps the reveal; real disposal cancels it.
+					void Promise.resolve().then(() => {
+						if (lifetime === epoch) cancelRequest();
+					});
 				}
 			};
 			stopCurrent = stop;
@@ -241,24 +250,26 @@ function createNavigation() {
 		},
 		async jump(id, options = {}) {
 			cancelRequest();
+			if (pageDisposed) return false;
 			const generation = request;
 			const abort = new AbortController();
 			pending = abort;
 			try {
 				await options.beforeReveal?.(id);
 				await tick();
-				if (generation !== request || typeof document === 'undefined') return false;
+				if (pageDisposed || generation !== request || typeof document === 'undefined') return false;
 				const scope = root ?? document;
 				let target = targetFor(scope, id);
 				if (!target?.isConnected) return false;
-				if (!openSection(id, scope)) openSectionContaining(target);
+				openSection(id, scope);
+				openSectionContaining(target);
 				await tick();
-				if (generation !== request) return false;
+				if (pageDisposed || generation !== request) return false;
 				target = targetFor(scope, id);
 				if (!target?.isConnected) return false;
 				refreshCurrent();
 				await settle(target, abort.signal);
-				if (generation !== request || !target.isConnected) return false;
+				if (pageDisposed || generation !== request || !target.isConnected) return false;
 				land(target, reducedMotion() ? 'auto' : options.behavior ?? 'smooth');
 				setActive(id);
 				return true;
