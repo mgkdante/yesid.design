@@ -98,18 +98,6 @@
 - `svelte` → `./src/primitives/tabs/index.ts`
 - `default` → `./src/primitives/tabs/index.ts`
 
-### `./toggle`
-
-- `types` → `./src/primitives/toggle/index.ts`
-- `svelte` → `./src/primitives/toggle/index.ts`
-- `default` → `./src/primitives/toggle/index.ts`
-
-### `./toggle-group`
-
-- `types` → `./src/primitives/toggle-group/index.ts`
-- `svelte` → `./src/primitives/toggle-group/index.ts`
-- `default` → `./src/primitives/toggle-group/index.ts`
-
 ### `./layout`
 
 - `types` → `./src/layout/index.ts`
@@ -171,8 +159,6 @@
 - `PrimitivesSheet` → `./src/primitives/sheet/index.ts` (`./sheet`)
 - `PrimitivesSkeleton` → `./src/primitives/skeleton/index.ts` (`./skeleton`)
 - `PrimitivesTabs` → `./src/primitives/tabs/index.ts` (`./tabs`)
-- `PrimitivesToggle` → `./src/primitives/toggle/index.ts` (`./toggle`)
-- `PrimitivesToggleGroup` → `./src/primitives/toggle-group/index.ts` (`./toggle-group`)
 - `Layout` → `./src/layout/index.ts` (`./layout`)
 - `State` → `./src/state/index.ts` (`./state`)
 - `Head` → `./src/head/index.ts` (`./head`)
@@ -205,8 +191,6 @@ import type { Snippet } from 'svelte';
 import { SvelteComponent } from 'svelte';
 import type { SVGAttributes } from 'svelte/elements';
 import { Tabs as Tabs_2 } from 'bits-ui';
-import { Toggle as Toggle_2 } from 'bits-ui';
-import { ToggleGroup } from 'bits-ui';
 import { TVReturnType } from 'tailwind-variants';
 import { VariantProps } from 'tailwind-variants';
 
@@ -254,12 +238,6 @@ type $$ComponentProps_7 = WithoutChild<ScrollArea_2.RootProps> & {
 // @public (undocumented)
 type $$ComponentProps_8 = Tabs_2.ListProps & {
     variant?: TabsListVariant;
-};
-
-// @public (undocumented)
-type $$ComponentProps_9 = Toggle_2.RootProps & {
-    variant?: ToggleVariant;
-    size?: ToggleSize;
 };
 
 // @public (undocumented)
@@ -421,11 +399,8 @@ type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
 const badgeVariants: TVReturnType<    {
 variant: {
 default: string;
-secondary: string;
 destructive: string;
 outline: string;
-ghost: string;
-link: string;
 tag: string;
 'tag-active': string;
 number: string;
@@ -435,14 +410,11 @@ default: string;
 xs: string;
 sm: string;
 };
-}, undefined, "gap-1 rounded-4xl border border-transparent font-mono font-medium transition-all has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none", {
+}, undefined, "gap-1 rounded-4xl border border-transparent font-mono font-medium transition-all [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none", {
 variant: {
 default: string;
-secondary: string;
 destructive: string;
 outline: string;
-ghost: string;
-link: string;
 tag: string;
 'tag-active': string;
 number: string;
@@ -455,11 +427,8 @@ sm: string;
 }, undefined, TVReturnType<    {
 variant: {
 default: string;
-secondary: string;
 destructive: string;
 outline: string;
-ghost: string;
-link: string;
 tag: string;
 'tag-active': string;
 number: string;
@@ -469,7 +438,7 @@ default: string;
 xs: string;
 sm: string;
 };
-}, undefined, "gap-1 rounded-4xl border border-transparent font-mono font-medium transition-all has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none", unknown, unknown, undefined>>;
+}, undefined, "gap-1 rounded-4xl border border-transparent font-mono font-medium transition-all [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none", unknown, unknown, undefined>>;
 
 // @public (undocumented)
 const BlueprintAccessibleBusCurbSection: Component<BlueprintProps, {}, "">;
@@ -937,44 +906,26 @@ variant: {
 default: string;
 conversion: string;
 outline: string;
-secondary: string;
 ghost: string;
-destructive: string;
-link: string;
 };
 size: {
 default: string;
-xs: string;
 sm: string;
-lg: string;
-icon: string;
-'icon-xs': string;
-'icon-sm': string;
-'icon-lg': string;
 'icon-tap': string;
 'cta-sm': string;
 cta: string;
 'cta-lg': string;
 };
-}, undefined, "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", {
+}, undefined, "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", {
 variant: {
 default: string;
 conversion: string;
 outline: string;
-secondary: string;
 ghost: string;
-destructive: string;
-link: string;
 };
 size: {
 default: string;
-xs: string;
 sm: string;
-lg: string;
-icon: string;
-'icon-xs': string;
-'icon-sm': string;
-'icon-lg': string;
 'icon-tap': string;
 'cta-sm': string;
 cta: string;
@@ -985,26 +936,17 @@ variant: {
 default: string;
 conversion: string;
 outline: string;
-secondary: string;
 ghost: string;
-destructive: string;
-link: string;
 };
 size: {
 default: string;
-xs: string;
 sm: string;
-lg: string;
-icon: string;
-'icon-xs': string;
-'icon-sm': string;
-'icon-lg': string;
 'icon-tap': string;
 'cta-sm': string;
 cta: string;
 'cta-lg': string;
 };
-}, undefined, "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", unknown, unknown, undefined>>;
+}, undefined, "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", unknown, unknown, undefined>>;
 
 // @public (undocumented)
 const Card: Component<$$ComponentProps_4, {}, "ref">;
@@ -2154,28 +2096,6 @@ declare namespace PrimitivesTabs {
     }
 }
 
-declare namespace PrimitivesToggle {
-    export {
-        toggleVariants,
-        ToggleSize,
-        ToggleVariant,
-        ToggleVariants,
-        Toggle as Root,
-        Toggle
-    }
-}
-
-declare namespace PrimitivesToggleGroup {
-    export {
-        ToggleGroupItemProps,
-        ToggleGroupProps,
-        ToggleGroup_2 as Root,
-        ToggleGroupItem as Item,
-        ToggleGroup_2 as ToggleGroup,
-        ToggleGroupItem
-    }
-}
-
 // @public
 function resetFocusAfterNavigation(): () => void;
 
@@ -2575,19 +2495,16 @@ type SheetTriggerProps = Dialog.TriggerProps;
 // @public (undocumented)
 const sheetVariants: TVReturnType<    {
 side: {
-left: string;
 right: string;
 bottom: string;
 };
 }, undefined, "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none", {
 side: {
-left: string;
 right: string;
 bottom: string;
 };
 }, undefined, TVReturnType<    {
 side: {
-left: string;
 right: string;
 bottom: string;
 };
@@ -3124,12 +3041,6 @@ interface TocPillProps {
 }
 
 // @public (undocumented)
-const Toggle: Component<$$ComponentProps_9, {}, "ref" | "pressed">;
-
-// @public (undocumented)
-type Toggle = ReturnType<typeof Toggle>;
-
-// @public (undocumented)
 const ToggleChip: Component<ToggleChipProps, {}, "">;
 
 // @public (undocumented)
@@ -3142,71 +3053,6 @@ interface ToggleChipProps extends Omit<HTMLButtonAttributes, 'aria-pressed'> {
     // (undocumented)
     pressed: boolean;
 }
-
-// @public (undocumented)
-const ToggleGroup_2: Component<ToggleGroupProps, {}, "ref" | "value">;
-
-// @public (undocumented)
-type ToggleGroup_2 = ReturnType<typeof ToggleGroup_2>;
-
-// @public (undocumented)
-const ToggleGroupItem: Component<ToggleGroupItemProps, {}, "ref">;
-
-// @public (undocumented)
-type ToggleGroupItem = ReturnType<typeof ToggleGroupItem>;
-
-// @public (undocumented)
-type ToggleGroupItemProps = ToggleGroup.ItemProps & ToggleVariants;
-
-// @public (undocumented)
-type ToggleGroupProps = ToggleGroup.RootProps & ToggleVariants_2 & {
-    spacing?: number;
-};
-
-// @public (undocumented)
-type ToggleSize = VariantProps<typeof toggleVariants>['size'];
-
-// @public (undocumented)
-type ToggleVariant = VariantProps<typeof toggleVariants>['variant'];
-
-// @public (undocumented)
-type ToggleVariants = VariantProps<typeof toggleVariants>;
-
-// @public (undocumented)
-const toggleVariants: TVReturnType<    {
-variant: {
-default: string;
-outline: string;
-};
-size: {
-default: string;
-sm: string;
-lg: string;
-};
-}, undefined, "hover:text-foreground hover:bg-muted aria-pressed:bg-primary/10 aria-pressed:text-primary aria-pressed:border-primary/30 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:border-primary/30 focus-visible:border-ring focus-visible:ring-ring/50 group/toggle inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full font-mono text-small font-medium text-muted-foreground outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4", {
-variant: {
-default: string;
-outline: string;
-};
-size: {
-default: string;
-sm: string;
-lg: string;
-};
-}, undefined, TVReturnType<    {
-variant: {
-default: string;
-outline: string;
-};
-size: {
-default: string;
-sm: string;
-lg: string;
-};
-}, undefined, "hover:text-foreground hover:bg-muted aria-pressed:bg-primary/10 aria-pressed:text-primary aria-pressed:border-primary/30 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:border-primary/30 focus-visible:border-ring focus-visible:ring-ring/50 group/toggle inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full font-mono text-small font-medium text-muted-foreground outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4", unknown, unknown, undefined>>;
-
-// @public (undocumented)
-type ToggleVariants_2 = VariantProps<typeof toggleVariants>;
 
 // @public (undocumented)
 const Trigger: Component<Dialog.TriggerProps, {}, "ref">;

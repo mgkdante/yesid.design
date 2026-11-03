@@ -48,9 +48,9 @@ describe('anatomy', () => {
 	});
 
 	it('puts testId and the accent on the root', () => {
-		const view = header({ testId: 'article-header', accent: 'var(--secondary)' });
+		const view = header({ testId: 'article-header', accent: 'var(--popover)' });
 		expect(view.getByTestId('article-header')).toBe(root(view));
-		expect(root(view).style.getPropertyValue('--article-accent')).toBe('var(--secondary)');
+		expect(root(view).style.getPropertyValue('--article-accent')).toBe('var(--popover)');
 		expect(root(header()).style.getPropertyValue('--article-accent')).toBe('var(--primary)');
 	});
 });

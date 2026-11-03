@@ -12,8 +12,6 @@ export const GALLERY_COVERAGE = {
 		'sheet',
 		'skeleton',
 		'tabs',
-		'toggle',
-		'toggle-group',
 	],
 	brand: [
 		'BlueprintShell',

@@ -3,6 +3,7 @@ import { createRawSnippet } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FilterGroup, { type FilterGroupProps } from './FilterGroup.svelte';
 import FilterSection from './FilterSection.svelte';
+import domBaseline from './test-fixtures/FilterGroup.dom.json';
 
 const items = [
 	{ key: 'lines', label: 'Lines' },
@@ -22,6 +23,41 @@ const click = fireEvent.click;
 afterEach(() => sessionStorage.clear());
 
 describe('FilterGroup', () => {
+	it.each(['compact', 'spacious'] as const)('preserves the rendered DOM contract at %s density', (density) => {
+		const view = group({ density, activeKey: 'stops', testIdPrefix: 'affects', collapsible: true });
+		const copy = view.container.cloneNode(true) as HTMLElement;
+		const ids = new Map(Array.from(copy.querySelectorAll('[id]'), (element, index) => [element.id, `stable-${index}`]));
+		for (const element of copy.querySelectorAll('*')) {
+			for (const attribute of ['id', 'aria-labelledby', 'aria-controls']) {
+				const value = element.getAttribute(attribute);
+				if (value && ids.has(value)) element.setAttribute(attribute, ids.get(value)!);
+			}
+			if (element.hasAttribute('class')) element.setAttribute('class', element.className.split(' ').filter((token) => !token.startsWith('svelte-')).join(' '));
+			const attributes = Array.from(element.attributes, ({ name, value }) => [name, value] as const).sort(([a], [b]) => a.localeCompare(b));
+			for (const attribute of Array.from(element.attributes)) element.removeAttribute(attribute.name);
+			for (const [name, value] of attributes) element.setAttribute(name, value);
+		}
+		expect(copy.innerHTML.replace(/<!--.*?-->/g, '').replace(/>\s+</g, '><')).toBe(domBaseline[density]);
+	});
+
+	it('keeps vertical roving focus, keyboard selection and external selection updates', async () => {
+		const onSelect = vi.fn();
+		const view = group({ activeKey: 'lines', onSelect });
+		const lines = radio(view, 'Lines');
+		const stops = radio(view, 'Stops');
+		lines.focus();
+		await fireEvent.keyDown(lines, { key: 'ArrowDown' });
+		expect(document.activeElement).toBe(stops);
+		expect(onSelect).not.toHaveBeenCalled();
+		await fireEvent.keyDown(stops, { key: ' ' });
+		expect(onSelect).toHaveBeenLastCalledWith('stops');
+		await view.rerender({ activeKey: 'stops' });
+		expect(checked(view, 'Stops')).toBe('true');
+		await fireEvent.keyDown(stops, { key: 'Home' });
+		expect(document.activeElement).toBe(radio(view, 'All'));
+		await fireEvent.keyDown(radio(view, 'All'), { key: 'Enter' });
+		expect(onSelect).toHaveBeenLastCalledWith(null);
+	});
 	it('renders the label, the supplied allLabel and one radio per item', () => {
 		const view = group({ allLabel: 'Any' });
 		const radios = within(view.getByRole('group', { name: 'Affects' })).getAllByRole('radio');

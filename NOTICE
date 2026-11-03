@@ -4,7 +4,7 @@ Copyright (c) 2026 Yesid Otalora
 Repository code
 ---------------
 
-Except for the third-party component identified below, the software authored
+Except for the third-party components identified below, the software authored
 in this repository is licensed under the MIT License. See LICENSE for the
 complete grant and conditions.
 
@@ -13,6 +13,18 @@ That notice is not an additional restriction on the software license.
 
 Third-party software
 --------------------
+
+The owned primitives in packages/ui/src/primitives/ are derived from
+shadcn-svelte (https://github.com/huntabyte/shadcn-svelte), under the MIT License.
+Upstream LICENSE.md copyright notices, preserved verbatim:
+
+Copyright (c) 2023 Hunter Johnston <https://github.com/huntabyte>
+Copyright (c) 2023 CokaKoala <https://github.com/adriangonz97>
+Copyright (c) 2023 shadcn
+
+The MIT grant and conditions are in LICENSE; they apply to this derived code
+with the upstream copyright notices above. There is no shadcn CLI, registry
+or package dependency.
 
 The current lockfile resolves GSAP 3.15.0.
 GSAP is not covered by this repository's MIT License.

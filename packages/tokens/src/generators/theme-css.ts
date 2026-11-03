@@ -17,7 +17,6 @@ const COLOR_MAP = `/* Semantic color utilities (bg-primary, text-muted-foregroun
 	--color-primary-foreground: var(--primary-foreground);
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
-	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
@@ -26,15 +25,6 @@ const COLOR_MAP = `/* Semantic color utilities (bg-primary, text-muted-foregroun
 	--color-input: var(--input);
 	--color-destructive: var(--destructive);
 	--color-destructive-foreground: var(--destructive-foreground);
-
-	--color-sidebar: var(--background);
-	--color-sidebar-foreground: var(--foreground);
-	--color-sidebar-accent: var(--accent);
-	--color-sidebar-accent-foreground: var(--accent-foreground);
-	--color-sidebar-border: var(--border);
-	--color-sidebar-ring: var(--ring);
-	--color-sidebar-primary: var(--primary);
-	--color-sidebar-primary-foreground: var(--primary-foreground);
 
 	--color-terminal: var(--terminal);
 	--color-manifesto: var(--manifesto);

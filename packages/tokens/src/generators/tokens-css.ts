@@ -18,7 +18,6 @@ const PAIRED_DEFS: ReadonlyArray<{ name: string; line: string }> = [
   { name: 'popover-foreground', line: '--popover-foreground: var(--foreground);' },
   { name: 'primary-foreground', line: '--primary-foreground: var(--background);' },
   { name: 'accent-foreground', line: '--accent-foreground: var(--background);' },
-  { name: 'secondary', line: '--secondary: var(--popover);' },
   { name: 'ring', line: '--ring: var(--primary);' },
   { name: 'input', line: '--input: var(--border);' },
 ];
@@ -152,8 +151,6 @@ export function generateTokensCss(tree: TokenTree): string {
     }
   }
 
-  const rootExtra = '  /* shadcn alias — components reference --radius */\n  --radius: var(--radius-md);';
-
   const darkBlock = emitBlock('[data-theme="dark"], .theme-dark', 'dark', darkItems, pairedBlock(darkItems, '  '));
   const lightBlock = emitBlock('[data-theme="light"], .theme-light', 'light', lightItems, pairedBlock(lightItems, '  '));
 
@@ -168,7 +165,7 @@ export function generateTokensCss(tree: TokenTree): string {
   return (
     HEADER + '\n' +
     (breakpointMedia ? breakpointMedia + '\n\n' : '') +
-    emitBlock(':root', null, rootItems, rootExtra) + '\n' +
+    emitBlock(':root', null, rootItems) + '\n' +
     darkBlock + '\n' +
     lightBlock + '\n' +
     darkMedia + '\n' +

@@ -142,9 +142,6 @@
   --breakpoint-desktop-max: 1023px;
   --container-content: 64rem;
   --container-wide: 72rem;
-
-  /* shadcn alias — components reference --radius */
-  --radius: var(--radius-md);
 }
 
 [data-theme="dark"], .theme-dark {
@@ -210,7 +207,6 @@
   --card-foreground: var(--foreground);
   --popover-foreground: var(--foreground);
   --primary-foreground: var(--background);
-  --secondary: var(--popover);
   --ring: var(--primary);
 }
 
@@ -277,7 +273,6 @@
   --card-foreground: var(--foreground);
   --popover-foreground: var(--foreground);
   --primary-foreground: var(--background);
-  --secondary: var(--popover);
   --ring: var(--primary);
 }
 
@@ -345,7 +340,6 @@
     --card-foreground: var(--foreground);
     --popover-foreground: var(--foreground);
     --primary-foreground: var(--background);
-    --secondary: var(--popover);
     --ring: var(--primary);
   }
 }
@@ -414,7 +408,6 @@
     --card-foreground: var(--foreground);
     --popover-foreground: var(--foreground);
     --primary-foreground: var(--background);
-    --secondary: var(--popover);
     --ring: var(--primary);
   }
 }

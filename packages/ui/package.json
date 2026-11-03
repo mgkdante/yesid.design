@@ -87,16 +87,6 @@
       "svelte": "./src/primitives/tabs/index.ts",
       "default": "./src/primitives/tabs/index.ts"
     },
-    "./toggle": {
-      "types": "./src/primitives/toggle/index.ts",
-      "svelte": "./src/primitives/toggle/index.ts",
-      "default": "./src/primitives/toggle/index.ts"
-    },
-    "./toggle-group": {
-      "types": "./src/primitives/toggle-group/index.ts",
-      "svelte": "./src/primitives/toggle-group/index.ts",
-      "default": "./src/primitives/toggle-group/index.ts"
-    },
     "./layout": {
       "types": "./src/layout/index.ts",
       "svelte": "./src/layout/index.ts",

@@ -4,7 +4,8 @@ Source-shipped Svelte 5 primitives and promoted brand components. The package ow
 rendering mechanics and shared theme, content-section actions and tab-scoped state in `@yesid/ui/state`.
 Consumers choose what to persist and own product copy, policy, data, routing and every recorded
 compatibility seam. Consumers import individual families so unused primitives stay out of their
-bundle.
+bundle. The primitives are owned code derived from shadcn-svelte under MIT;
+there is no shadcn CLI, registry or package dependency.
 
 ```svelte
 <script lang="ts">
@@ -79,13 +80,6 @@ Title, and Description. `SheetContentProps.portalProps` excludes portal children
 owns the portal body. `closeLabel` owns the close button's accessible copy and defaults to
 `"Close"`; callers supply localized copy where required.
 
-### Toggle Group
-
-`ToggleGroupProps` preserves bits-ui's `type="single"`/string and
-`type="multiple"`/string-array discrimination while keeping `value` bindable and forwarding the
-correct callback type. `ToggleGroupItemProps.value` is a required input; only the element ref is
-bindable, and snippet children remain supported.
-
 ## UI configuration
 
 Primitives merge package classes with the caller's `class` prop. The package uses one
@@ -133,6 +127,9 @@ must keep locally to avoid an unreviewed visual or behavior change.
 
 ### Badge
 
+Variants are `default`, `destructive`, `outline`, `tag`, `tag-active` and `number`; sizes
+remain `default`, `xs` and `sm`.
+
 The package owns the shared variants, sizes, rendered-element split, and merge configuration.
 Consumer typography may still resolve named tokens differently. In particular, a product that
 must preserve its existing number-badge size keeps the relevant class or adapter locally.
@@ -140,6 +137,9 @@ must preserve its existing number-badge size keeps the relevant class or adapter
 general Badge token contract.
 
 ### Button
+
+Variants are `default`, `conversion`, `outline` and `ghost`. Sizes are `default`, `sm`,
+`icon-tap`, `cta-sm`, `cta` and `cta-lg`.
 
 The package owns the variants, the element split, disabled-link behavior and the touch
 `pressBounce`. `conversion` is the yellow signage CTA (at most one per view); the `cta` sizes
@@ -175,16 +175,9 @@ The package targets bits-ui's real `data-state="active"` selector and rejects th
 position, and typography locally. Adoption requires visual comparison of those geometry and
 active-state details rather than treating the import replacement as sufficient proof.
 
-### Toggle
-
-The package owns the shared pressed state, geometry, icons, disabled behavior, and merge
-configuration. Consumer-specific resting foreground, typography, and invalid-state border/ring
-rules remain local when required. Toggle Group inherits those Toggle styling decisions while
-retaining the typed value contract above.
-
 ### Sheet and Skeleton
 
-Sheet's bottom side is the mobile-first default; its overlay, focusable close control, animation,
+Sheet supports `bottom` and `right`. Its bottom side is the mobile-first default; its overlay, focusable close control, animation,
 and side geometry are package-owned. Skeleton is decorative (`aria-hidden="true"`) and its pulse
 stops under reduced motion. A product with no prior local family treats first use as a new
 product-level visual and accessibility decision, not proof supplied by the package.

@@ -39,6 +39,10 @@ describe('license and notices', () => {
 		expect(resolvedGsapVersion).toBeDefined();
 		expect(notice).toContain('Copyright (c) 2026 Yesid Otalora');
 		expect(notice).toContain('TRADEMARK.md');
+		expect(notice).toContain('Copyright (c) 2023 Hunter Johnston <https://github.com/huntabyte>');
+		expect(notice).toContain('Copyright (c) 2023 CokaKoala <https://github.com/adriangonz97>');
+		expect(notice).toContain('Copyright (c) 2023 shadcn');
+		expect(notice).toContain('shadcn-svelte');
 		expect(notice).toContain(`GSAP ${resolvedGsapVersion}`);
 		expect(notice).toContain('Standard "No Charge" GSAP License');
 		expect(notice).toContain('https://gsap.com/community/standard-license/');
