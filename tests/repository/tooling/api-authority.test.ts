@@ -1,19 +1,17 @@
 import {
 	cpSync,
 	mkdirSync,
-	mkdtempSync,
 	readdirSync,
 	readFileSync,
-	rmSync,
 	symlinkSync,
 	writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
 	authorizeApiChanges,
+	approveRepositoryApiChanges,
 	checkApiReports,
 	collectDirectAssetTargets,
 	createApiReport,
@@ -24,23 +22,19 @@ import {
 	writeApiReports,
 	type PublicSymbol,
 } from '../../../tools/api-authority.js';
+import { API_PACKAGES, type ApiPackageName, prepareRelease } from '../../../tools/release-core.js';
+import { createReleaseCheckout, TempCheckout } from './temp-checkout.js';
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
-const scratch: string[] = [];
+const scratch: TempCheckout[] = [];
 
 afterEach(() => {
-	for (const directory of scratch.splice(0)) rmSync(directory, { recursive: true, force: true });
+	for (const checkout of scratch.splice(0)) checkout.dispose();
 });
 
-const BASE_REPORTS = {
-	'@yesid/analytics': 'analytics-v1',
-	'@yesid/tokens': 'tokens-v1',
-	'@yesid/motion': 'motion-v1',
-	'@yesid/gates': 'gates-v1',
-	'@yesid/seo-kit': 'seo-kit-v1',
-	'@yesid/ui': 'ui-v1',
-	'@yesid/i18n-core': 'i18n-core-v1',
-} as const;
+const BASE_REPORTS = Object.fromEntries(
+	API_PACKAGES.map(({ name, directory }) => [name, `${directory}-v1`]),
+) as Record<ApiPackageName, string>;
 
 function fragment(packages: Readonly<Record<string, 'patch' | 'minor' | 'major'>>) {
 	const declarations = Object.entries(packages).map(
@@ -50,8 +44,9 @@ function fragment(packages: Readonly<Record<string, 'patch' | 'minor' | 'major'>
 }
 
 function createPackageScratch(directory: 'tokens' | 'ui'): string {
-	const root = mkdtempSync(join(tmpdir(), `yesid-${directory}-mutation-`));
-	scratch.push(root);
+	const checkout = new TempCheckout();
+	const root = checkout.root;
+	scratch.push(checkout);
 	mkdirSync(join(root, 'packages'), { recursive: true });
 	cpSync(join(REPOSITORY_ROOT, 'packages', directory), join(root, 'packages', directory), {
 		recursive: true,
@@ -73,6 +68,21 @@ function replaceInFile(path: string, before: string, after: string): void {
 }
 
 describe('API report approval', () => {
+	it.each(['stray.txt', 'nested', 'UPPER.md'])('rejects %s consistently with release preparation', (name) => {
+		const checkout = createReleaseCheckout();
+		scratch.push(checkout);
+		checkout.git('init');
+		checkout.git('add', '.');
+		checkout.git('-c', 'user.name=Release Test', '-c', 'user.email=release@example.test', 'commit', '-m', 'fixture');
+		const base = checkout.git('rev-parse', 'HEAD');
+		if (name === 'nested') checkout.write(`.changes/${name}/fragment.md`, fragment({ '@yesid/ui': 'patch' }));
+		else checkout.write(`.changes/${name}`, fragment({ '@yesid/ui': 'patch' }));
+		let approvalError: unknown;
+		try { approveRepositoryApiChanges(checkout.root, base); } catch (error) { approvalError = error; }
+		expect(approvalError).toBeInstanceOf(Error);
+		expect(() => prepareRelease(checkout.root, '0.6.1')).toThrow((approvalError as Error).message);
+	});
+
 	it('requires a newly added release fragment for every changed package report', () => {
 		expect(() =>
 			authorizeApiChanges({
@@ -131,14 +141,7 @@ describe('API report approval', () => {
 	});
 
 	it('requires a release fragment when a package joins an existing API baseline', () => {
-		const baseReports = {
-			'@yesid/analytics': BASE_REPORTS['@yesid/analytics'],
-			'@yesid/tokens': BASE_REPORTS['@yesid/tokens'],
-			'@yesid/motion': BASE_REPORTS['@yesid/motion'],
-			'@yesid/gates': BASE_REPORTS['@yesid/gates'],
-			'@yesid/ui': BASE_REPORTS['@yesid/ui'],
-			'@yesid/i18n-core': BASE_REPORTS['@yesid/i18n-core'],
-		};
+		const { '@yesid/seo-kit': _omitted, ...baseReports } = BASE_REPORTS;
 
 		expect(() =>
 			authorizeApiChanges({
@@ -268,15 +271,7 @@ describe('deterministic package API reports', () => {
 	it('renders every conditioned surface, declaration, and direct public asset', async () => {
 		const first = await createApiReports(REPOSITORY_ROOT);
 
-		expect(Object.keys(first)).toEqual([
-			'@yesid/tokens',
-			'@yesid/motion',
-			'@yesid/gates',
-			'@yesid/seo-kit',
-			'@yesid/ui',
-			'@yesid/analytics',
-			'@yesid/i18n-core',
-		]);
+		expect(Object.keys(first)).toEqual(API_PACKAGES.map(({ name }) => name));
 		for (const report of Object.values(first)) {
 			expect(report).toMatch(/^<!-- GENERATED: bun run api:report/u);
 			expect(report).not.toContain(REPOSITORY_ROOT);
@@ -407,15 +402,14 @@ describe('deterministic package API reports', () => {
 	}, 0);
 
 	it('writes exact report paths and fails closed on stale committed bytes', () => {
-		const root = mkdtempSync(join(tmpdir(), 'yesid-api-report-test-'));
-		scratch.push(root);
+		const checkout = new TempCheckout();
+		const root = checkout.root;
+		scratch.push(checkout);
 		writeApiReports(root, BASE_REPORTS);
 
-		expect(readFileSync(join(root, 'api-reports', 'tokens.api.md'), 'utf8')).toBe('tokens-v1');
-		expect(readFileSync(join(root, 'api-reports', 'motion.api.md'), 'utf8')).toBe('motion-v1');
-		expect(readFileSync(join(root, 'api-reports', 'gates.api.md'), 'utf8')).toBe('gates-v1');
-		expect(readFileSync(join(root, 'api-reports', 'seo-kit.api.md'), 'utf8')).toBe('seo-kit-v1');
-		expect(readFileSync(join(root, 'api-reports', 'ui.api.md'), 'utf8')).toBe('ui-v1');
+		for (const { name, directory } of API_PACKAGES) {
+			expect(readFileSync(join(root, 'api-reports', `${directory}.api.md`), 'utf8')).toBe(BASE_REPORTS[name]);
+		}
 		expect(() => checkApiReports(root, BASE_REPORTS)).not.toThrow();
 
 		writeFileSync(join(root, 'api-reports', 'ui.api.md'), 'stale-ui');

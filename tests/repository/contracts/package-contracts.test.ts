@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { RELEASE_PACKAGES } from '../../../tools/release-core.js';
 
 type ConditionalExport = Record<string, string>;
 type PackageExport = string | ConditionalExport;
@@ -103,6 +104,12 @@ describe('strict SemVer 2.0.0 validator', () => {
 describe('prospective package release contract', () => {
 	const rootManifest = readManifest(ROOT_MANIFEST_URL);
 
+	it('accounts for every package in the release inventory', () => {
+		expect(PACKAGE_MANIFESTS.map(([name]) => name).sort()).toEqual(
+			RELEASE_PACKAGES.map(({ name }) => name).sort(),
+		);
+	});
+
 	it('defines a strict SemVer canonical version in the root manifest', () => {
 		expect(
 			isStrictSemVer(rootManifest.version),
@@ -151,12 +158,8 @@ describe('browser authority script contract', () => {
 describe('conditioned package export contract', () => {
 	const manifests = Object.fromEntries(PACKAGE_MANIFESTS.map(([name, url]) => [name, readManifest(url)]));
 
-	it.each(['@yesid/tokens', '@yesid/motion', '@yesid/gates', '@yesid/ui'] as const)('%s retains explicitly imported CSS', (packageName) => {
-		expect(manifests[packageName].sideEffects).toEqual(['**/*.css']);
-	});
-
-	it.each(['@yesid/analytics', '@yesid/seo-kit', '@yesid/i18n-core'] as const)('%s remains side-effect free', (packageName) => {
-		expect(manifests[packageName].sideEffects).toBe(false);
+	it.each(RELEASE_PACKAGES)('$name declares its side effects', ({ name, sideEffects }) => {
+		expect(manifests[name].sideEffects).toEqual(sideEffects);
 	});
 
 	it.each(PACKAGE_MANIFESTS)(
