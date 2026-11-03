@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { TocEntry } from '@yesid/ui/brand';
+	import { CollapsibleSection, SectionsToggle, useSectionJump, type TocEntry } from '@yesid/ui/brand';
 	import { ArticleHeader, DetailFrame } from '@yesid/ui/layout';
 
 	const sections = [
@@ -11,12 +12,15 @@
 		{ id: 'handover', title: 'Handover' },
 	];
 	const entries: TocEntry[] = sections.map(({ id, title }) => ({ id, title, level: 2, children: [] }));
+	const navigation = useSectionJump(afterNavigate);
+	const sectionCopy = { collapse: 'Collapse all', expand: 'Expand all', collapseTitle: 'Collapse sections', expandTitle: 'Expand sections' };
 	const filler =
 		'Sample copy for a long section, repeated so the page scrolls far enough to keep the side rails stuck below the navigation bar while the center column moves.';
 
 	let params = $state(new URLSearchParams());
 	onMount(() => (params = page.url.searchParams));
 	const layout = $derived(params.get('layout'));
+	const sectionFixture = $derived(params.get('sections') === '1');
 	const railTop = $derived(Number(params.get('railTop')));
 	// Space an app leaves under its chrome inside --chrome-offset.
 	const chromeGap = $derived(Number(params.get('chromeGap')));
@@ -36,7 +40,7 @@
 		measure={layout === 'measured' ? '46rem' : undefined}
 		railScroll={params.get('railScroll') === '1'}
 		style={railTop ? `--detail-rail-top: ${railTop}px` : undefined}
-		toc={{ entries, selector: 'section[id]', openAria: 'Open contents', closeAria: 'Close contents' }}
+		toc={{ entries, navigation, landFragments: true, selector: sectionFixture ? undefined : 'section[id]', openAria: 'Open contents', closeAria: 'Close contents' }}
 	>
 		{#snippet header()}
 			<ArticleHeader
@@ -56,12 +60,21 @@
 			</ArticleHeader>
 		{/snippet}
 
+		{#if sectionFixture}<SectionsToggle copy={sectionCopy} />{/if}
 		{#each sections as { id, title } (id)}
 			<section {id} class="mb-10">
+				{#if sectionFixture}
+					<CollapsibleSection {title} anchor={id} open={false}>
+						{#each [1, 2, 3, 4, 5, 6] as n (n)}
+							<p class="mb-4 text-reading lg:text-reading-desktop leading-[1.7]">{filler}</p>
+						{/each}
+					</CollapsibleSection>
+				{:else}
 				<h2 class="mb-3 text-heading font-bold">{title}</h2>
 				{#each [1, 2, 3, 4, 5, 6] as n (n)}
 					<p class="mb-4 text-reading lg:text-reading-desktop leading-[1.7]">{filler}</p>
 				{/each}
+				{/if}
 			</section>
 		{/each}
 

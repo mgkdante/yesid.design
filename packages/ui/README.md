@@ -315,20 +315,36 @@ A card with a toggle header, an optional index badge, `icon` and `headerActions`
 Collapse all / Expand all. Each mount starts at its declared `open` default (true); no disclosure
 state is stored or restored. Static cards always show their body. Closed bodies stay mounted,
 inert and hidden from assistive technology; collapsing a focused body returns focus to its header.
-`openSignal` opens a card whenever the consumer counter changes. `openSection(anchor)` opens every
-mounted collapsible card with that anchor and returns whether one matched. Registration is removed
-on unmount and refreshed when the anchor changes. No trigger click or private selector is needed.
+`openSignal` opens a card whenever the consumer counter changes. `openSection(anchor, root?)`
+opens mounted content sections with that anchor, optionally within a page root, and returns
+whether one matched. Registration is removed on unmount and refreshed when the anchor changes. No trigger click or private selector is needed.
 
-### TocNav, TocPill, and toc helpers
+### TocNav, TocPill, and section navigation
 
-Both take a `TocEntry[]` and an `activeId`; the page owns the active id. `TocNav` is the desktop
-list inside a `CollapsibleSection` and skips entries marked `rail`. `TocPill` is the mobile pill
-and drawer, hidden at the desktop breakpoint; the caller supplies `openAria` and `closeAria`, and
-`onNavigate` defaults to `navigateToc`. `observeActiveToc` reports the active id from
-`[data-section-index]` and `[data-toc]` targets, and `onTocNavigate` belongs in `afterNavigate`.
-`DetailFrame`'s `toc.landFragments` lands same-page fragment links for layouts that don't already. Jumps through
-`navigateToc` and `revealTocTarget` land the section a quarter down the viewport, the same line
-`observeActiveToc` reads, so the active entry is always the one the reader picked.
+TocNav is a desktop contents card; it skips rail entries and keeps its own independent toggle.
+TocPill is the mobile contents drawer and retains consumer-owned openAria and closeAria copy.
+TocBadge is a stateless rendering adapter for numeric and icon badges. Both navigation views
+accept a SectionJump controller through navigation; activeId and onNavigate can still be
+explicitly controlled. Without activeId, they read the controller's reactive active id.
+
+createSectionJump() returns one page controller with activeId, register(entries, options), and
+jump(id, options). register replaces the previous target scope and returns cleanup. It reconciles
+active identity against the previous entry order, then observes marked sections, explicit entry
+ids and optional additional selector targets. Cleanup disconnects observers/listeners and cancels
+pending work. DetailFrame performs this registration through toc.navigation, or its own controller.
+
+useSectionJump(afterNavigate) is the SvelteKit adapter: call it during page initialization and pass
+its result to the frame and TOC views. It handles observer/mount ordering and new URL fragments;
+popstate preserves the router's reading position. toc.landFragments opts into same-page fragment
+links. Product route, tab/grain and presence policy remains local.
+
+jump resolves section-N, data-toc and ordinary ids, including a nested heading's owning content
+section. It opens only that target section through the section interface, waits for Svelte and
+layout settlement, and lands the target a quarter down the viewport. The observer reads the same
+viewport-height line and refreshes on resize. Reduced motion forces an instant jump. beforeReveal
+may mount/select content asynchronously; later requests and cleanup cancel stale jumps. The
+boolean result tells the consumer whether it landed, allowing app-owned restoration fallbacks.
+See [the breaking migration](../../docs/migrations/deepen-section-jump.md) for removed helpers.
 
 ### CornerMarks, StatusDot, MetricDisplay, SectionHeading, and SectionIcon
 

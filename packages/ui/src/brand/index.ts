@@ -98,19 +98,8 @@ export type { TocPillProps } from './TocPill.svelte';
 export { default as ToggleChip } from './ToggleChip.svelte';
 export type { ToggleChipProps } from './ToggleChip.svelte';
 
-export {
-	TOC_TARGET_SELECTOR,
-	navigateToc,
-	observeActiveToc,
-	onTocNavigate,
-	openCollapsedTocTarget,
-	reconcileActiveToc,
-	revealTocTarget,
-	settleLayout,
-	tocElement,
-	type RevealTocTargetOptions,
-	type TocEntry,
-} from './toc.js';
+export type { TocEntry } from './toc.js';
+export { createSectionJump, useSectionJump, type SectionJump } from './section-jump.js';
 
 export { default as Wordmark } from './Wordmark.svelte';
 export type { WordmarkProps } from './Wordmark.svelte';

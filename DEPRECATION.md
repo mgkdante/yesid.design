@@ -56,6 +56,18 @@ consumer or clean-room verification.
 
 ## Removals
 
+- **Upcoming minor release (section-jump owner exception, 2026-11-03):** the owner-directed
+  D-b interface reduction removes `TOC_TARGET_SELECTOR`, `navigateToc`, `observeActiveToc`,
+  `onTocNavigate`, `openCollapsedTocTarget`, `reconcileActiveToc`, `revealTocTarget`, `settleLayout`,
+  `tocElement` and `RevealTocTargetOptions` from both `@yesid/ui` and `@yesid/ui/brand`, without a
+  prior deprecation release. Both the 90-day wait and intervening-minor-release gate are waived
+  for this scoped transition. Replacements are `createSectionJump`, `useSectionJump` and `SectionJump`;
+  `TocEntry` remains public. The controller owns opening, active tracking, layout settlement,
+  cancellation, fragments and the shared landing line. See the
+  [section-jump migration](docs/migrations/deepen-section-jump.md) for every removed export,
+  its replacement and the read-only consumer caller inventory. Generic history restoration,
+  content presence and tab/grain policy remain consumer-owned.
+
 - **Upcoming minor release (owner exception, 2026-11-03):** the owner approved immediate
   removal of the following disclosure contracts, explicitly waiving both the 90-day wait and
   the intervening-minor-release gate. From `@yesid/ui` and `@yesid/ui/brand`, remove

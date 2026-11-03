@@ -10,6 +10,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { TocEntry } from '../brand/toc.js';
+	import type { SectionJump } from '../brand/section-jump.js';
 
 	export interface DetailFrameToc {
 		entries: TocEntry[];
@@ -18,9 +19,11 @@
 		openAria: string;
 		closeAria: string;
 		onNavigate?: (id: string) => void;
-		/** Targets observed for the active entry; defaults to `TOC_TARGET_SELECTOR`. */
+		/** Share a routed page controller with TocNav and other section views. */
+		navigation?: SectionJump;
+		/** Additional targets; marked sections and registered ids are always observed. */
 		selector?: string;
-		/** Correct same-page fragment landings with `landTocFragments`. */
+		/** Let the controller correct same-page fragment landings. */
 		landFragments?: boolean;
 	}
 
@@ -49,12 +52,12 @@
 </script>
 
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { untrack } from 'svelte';
 	import { scrollChain } from '@yesid/motion/actions';
 	import { cn } from '../cn/index.js';
 	import { Separator } from '../primitives/separator/index.js';
 	import TocPill from '../brand/TocPill.svelte';
-	import { landTocFragments, observeActiveToc } from '../brand/toc.js';
+	import { createSectionJump } from '../brand/section-jump.js';
 
 	let {
 		header,
@@ -77,27 +80,20 @@
 		...rest
 	}: DetailFrameProps = $props();
 
+	const ownNavigation = createSectionJump();
+	let frame = $state<HTMLElement>();
 	$effect(() => {
-		if (!toc) return;
-		const signature = toc.entries.map((entry) => entry.id).join('|');
-		const selector = toc.selector;
-		let cancelled = false;
-		let stop: (() => void) | undefined;
-
-		void (async () => {
-			void signature;
-			await tick();
-			if (!cancelled) stop = observeActiveToc((id) => (activeId = id), selector);
-		})();
-
-		return () => {
-			cancelled = true;
-			stop?.();
+		if (!toc || !frame) return;
+		const config = toc;
+		const navigation = config.navigation ?? ownNavigation;
+		const options = {
+			root: frame,
+			selector: config.selector,
+			landFragments: config.landFragments,
+			activeId: untrack(() => activeId) || undefined,
+			onActiveChange: (id: string) => { activeId = id; },
 		};
-	});
-
-	$effect(() => {
-		if (toc?.landFragments) return landTocFragments();
+		return navigation.register(config.entries, options);
 	});
 
 	const hasLeft = $derived(Boolean(left || rail));
@@ -109,6 +105,7 @@
 </script>
 
 <article
+	bind:this={frame}
 	{...rest}
 	data-slot="detail-shell"
 	class={cn('detail-shell', className)}
@@ -180,6 +177,7 @@
 		openAria={toc.openAria}
 		closeAria={toc.closeAria}
 		onNavigate={toc.onNavigate}
+		navigation={toc.navigation ?? ownNavigation}
 	/>
 {/if}
 

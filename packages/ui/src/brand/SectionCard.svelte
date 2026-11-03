@@ -11,6 +11,7 @@
 	import ChevronToggle from './ChevronToggle.svelte';
 
 	let {
+		ref = $bindable(null),
 		title,
 		subtitle,
 		headerVariant = 'default',
@@ -23,7 +24,7 @@
 		icon,
 		headerActions,
 		children,
-	}: CollapsibleSectionProps = $props();
+	}: CollapsibleSectionProps & { ref?: HTMLDivElement | null } = $props();
 
 	const headerUid = $props.id();
 	const subtitleId = `${headerUid}-summary`;
@@ -105,6 +106,7 @@
 {/snippet}
 
 <Card
+	bind:ref
 	class="section-card {collapsible ? 'section-card--toggleable' : ''} {usesArticleSummary
 		? 'section-card--article-summary'
 		: ''}"

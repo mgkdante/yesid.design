@@ -27,11 +27,13 @@
 	import { registerSection } from './sections-registry.js';
 
 	let { open = $bindable(true), ...props }: CollapsibleSectionProps = $props();
+	let element = $state<HTMLDivElement | null>(null);
 
 	$effect(() => {
 		if (props.collapsible === false) return;
 		return registerSection({
 			id: props.anchor,
+			element: () => element,
 			isOpen: () => open,
 			setOpen: (next) => {
 				open = next;
@@ -40,4 +42,4 @@
 	});
 </script>
 
-<SectionCard {...props} bind:open />
+<SectionCard {...props} bind:open bind:ref={element} />

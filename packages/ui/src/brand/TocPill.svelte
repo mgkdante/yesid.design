@@ -4,14 +4,16 @@
 -->
 <script lang="ts" module>
 	import type { TocEntry } from './toc.js';
+	import type { SectionJump } from './section-jump.js';
 
 	export interface TocPillProps {
 		entries: TocEntry[];
-		activeId: string;
+		activeId?: string;
+		navigation?: SectionJump;
 		/** Appended to the visible text to form the pill's accessible name. */
 		openAria: string;
 		closeAria: string;
-		/** Defaults to `navigateToc`, which jumps instead of gliding under reduced motion. */
+		/** Overrides the controller action when the consumer owns additional navigation policy. */
 		onNavigate?: (id: string) => void;
 	}
 </script>
@@ -20,9 +22,12 @@
 	import { scrollChain } from '@yesid/motion/actions';
 	import ChevronToggle from './ChevronToggle.svelte';
 	import TocBadge from './TocBadge.svelte';
-	import { flattenToc, navigateToc, resolveTocCounter } from './toc.js';
+	import { flattenToc, resolveTocCounter } from './toc.js';
+	import { defaultSectionJump } from './section-jump.js';
 
-	let { entries, activeId, openAria, closeAria, onNavigate = navigateToc }: TocPillProps = $props();
+	let { entries, activeId: activeIdProp, navigation: navigationProp, openAria, closeAria, onNavigate }: TocPillProps = $props();
+	const navigation = $derived(navigationProp ?? defaultSectionJump);
+	const activeId = $derived(activeIdProp ?? navigation.activeId);
 
 	const flat = $derived(flattenToc(entries));
 	const activeIndex = $derived(
@@ -58,7 +63,8 @@
 
 	function scrollTo(id: string): void {
 		closeDrawer(true);
-		onNavigate(id);
+		if (onNavigate) onNavigate(id);
+		else void navigation.jump(id);
 	}
 </script>
 
