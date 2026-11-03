@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
+	import { createNavigationLifecycle } from '@yesid/ui/brand';
+	import { setContext } from 'svelte';
 	import { page } from '$app/state';
 	import '@yesid/motion/ripple.css';
 	import { initGlobalRipple } from '@yesid/motion/utils/globalRipple';
@@ -9,6 +12,8 @@
 	import '../gallery.css';
 
 	let { children } = $props();
+	const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate });
+	setContext('gallery-navigation', navigation);
 
 	onMount(() => initGlobalRipple());
 </script>

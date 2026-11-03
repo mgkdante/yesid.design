@@ -56,6 +56,18 @@ consumer or clean-room verification.
 
 ## Removals
 
+### Approved pending transition
+
+- **deepen D-c, owner decision 2026-11-03, next coordinated minor:** `SiteHeader.navigation`
+  changes from raw SvelteKit hooks to the app layout's `createNavigationLifecycle` result;
+  `LanguageToggle.onNavigate` is removed; `SiteHeader.labels.menuFooter`,
+  `SiteHeader.labels.skipToContent` and `LanguageToggle.names` become required with no built-in
+  translated defaults. The owner explicitly requested this breaking migration without a
+  deprecation window for the two coordinated consumers, waiving both normal removal gates for
+  these contracts. The release fragment and API report travel with the source change;
+  [the migration](docs/migrations/navigation-lifecycle.md) names both consumers' props and strings.
+  This entry records approval, not a published release or consumer adoption.
+
 - **Upcoming minor release (section-jump owner exception, 2026-11-03):** the owner-directed
   D-b interface reduction removes `TOC_TARGET_SELECTOR`, `navigateToc`, `observeActiveToc`,
   `onTocNavigate`, `openCollapsedTocTarget`, `reconcileActiveToc`, `revealTocTarget`, `settleLayout`,
@@ -85,6 +97,8 @@ consumer or clean-room verification.
   action and boot marks have no replacement; the generic `persisted` store remains available
   for non-disclosure state. The TOC and filter controls remain independent. See the
   [consumer migration](docs/migrations/deepen-disclosure.md) for the full surface and caller list.
+
+### Published removals
 
 - **v0.28.0:** removed the adoption CLI (`tools/adopt.ts` and `tools/adopt/`), its schema-2
   `manifest.json` and the `yesid.dev-design-vX.Y.Z.tar` archive: each package now ships as its own

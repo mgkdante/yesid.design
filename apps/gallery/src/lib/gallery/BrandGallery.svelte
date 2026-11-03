@@ -246,8 +246,8 @@
 				<Card.Description>Signpost with one board per locale; links to the next one through the caller's href.</Card.Description>
 			</Card.Header>
 			<Card.Content class="flex items-center gap-6">
-				<LanguageToggle locale="en" locales={['en', 'fr']} href={(next) => `/?lang=${next}`} label="Language" />
-				<LanguageToggle locale="fr" locales={['en', 'fr', 'es']} href={(next) => `/?lang=${next}`} label="Langue" />
+				<LanguageToggle locale="en" locales={['en', 'fr']} href={(next) => `/?lang=${next}`} names={{ en: 'English', fr: 'Français', es: 'Español' }} label="Language" />
+				<LanguageToggle locale="fr" locales={['en', 'fr', 'es']} href={(next) => `/?lang=${next}`} names={{ en: 'English', fr: 'Français', es: 'Español' }} label="Langue" />
 			</Card.Content>
 		</Card.Root>
 

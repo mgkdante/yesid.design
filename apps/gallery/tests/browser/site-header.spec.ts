@@ -119,6 +119,17 @@ test('a language switch from the open menu keeps it open', async ({ page }) => {
 	await expect(menu(page)).toBeVisible();
 	await expect(language(page)).toBeFocused();
 	await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[0]));
+	await page.keyboard.press('Escape');
+	await expect(menu(page)).toBeHidden();
+	await expect(toggle(page)).toBeFocused();
+});
+
+test('a state-preserving language switch from the closed header resets page focus', async ({ page }) => {
+	await page.goto(HOME);
+	await language(page).click();
+	await expect(page).toHaveURL(new RegExp(`lang=${LOCALES[1]}$`));
+	await expect(menu(page)).toBeHidden();
+	await expect(page.locator('body')).toBeFocused();
 });
 
 test.describe('with motion on', () => {

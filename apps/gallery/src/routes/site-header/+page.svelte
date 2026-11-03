@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
+	import { getContext } from 'svelte';
+	import type { NavigationLifecycle } from '@yesid/ui/brand';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
@@ -11,6 +12,7 @@
 		HOME,
 		LABELS,
 		LANGUAGE_LABEL,
+		LANGUAGE_NAMES,
 		LINKS,
 		LOCALES,
 		MENU_ITEMS,
@@ -18,6 +20,7 @@
 		languageHref,
 	} from '$lib/gallery/site-header-fixture';
 
+	const navigation = getContext<NavigationLifecycle>('gallery-navigation');
 	const ICONS: Record<string, typeof PanelTop> = {
 		[HOME]: PanelTop,
 		'/listing-frame': LayoutList,
@@ -41,12 +44,12 @@
 {/snippet}
 
 <SiteHeader
-	navigation={{ beforeNavigate, onNavigate, afterNavigate }}
+	{navigation}
 	home={HOME}
 	links={LINKS}
 	menuItems={MENU_ITEMS.map((item) => ({ ...item, icon: ICONS[item.href] }))}
 	labels={LABELS}
-	language={{ locale, locales: LOCALES, href: languageHref, label: LANGUAGE_LABEL, preserveState: true }}
+	language={{ locale, locales: LOCALES, href: languageHref, label: LANGUAGE_LABEL, names: LANGUAGE_NAMES, preserveState: true }}
 	{search}
 />
 

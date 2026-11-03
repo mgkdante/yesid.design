@@ -1,4 +1,4 @@
-/** The slice of SvelteKit's navigation hooks the header uses; pass the ones from `$app/navigation`. */
+/** The slice of SvelteKit's navigation events used by the shared navigation lifecycle. */
 export interface NavigationEvent {
 	type: string;
 	to: { url: URL } | null;

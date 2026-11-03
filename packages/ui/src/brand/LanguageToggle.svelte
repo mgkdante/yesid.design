@@ -3,8 +3,6 @@
   links to the next locale. Renders nothing with fewer than two locales.
 -->
 <script lang="ts" module>
-	import type { OnNavigate } from './navigation.js';
-
 	export interface LanguageToggleProps {
 		locale: string;
 		locales: readonly string[];
@@ -13,45 +11,35 @@
 		/** Names the control; the current language's own name follows it. */
 		label: string;
 		/** Each language's name in that language, keyed by locale. */
-		names?: Readonly<Record<string, string>>;
-		/** Keeps scroll and page state across the switch, then resets focus like a normal navigation. Needs `onNavigate`. */
+		names: Readonly<Record<string, string>>;
+		/** Keeps scroll and page state. The app's navigation lifecycle restores focus after the switch. */
 		preserveState?: boolean;
 		/** Loads the target page with a full document request. */
 		reload?: boolean;
-		onNavigate?: OnNavigate;
+		/** The rendered link, for a header or the app's navigation lifecycle. */
+		ref?: HTMLAnchorElement | null;
 		class?: string;
 	}
-
-	const NAMES: Readonly<Record<string, string>> = { en: 'English', fr: 'Français', es: 'Español' };
 </script>
 
 <script lang="ts">
 	import { cn } from '../cn/index.js';
-	import { resetFocusAfterNavigation } from './navigation.js';
 
 	let {
 		locale,
 		locales,
 		href,
 		label,
-		names = NAMES,
+		names,
 		preserveState = false,
 		reload = false,
-		onNavigate,
+		ref = $bindable(null),
 		class: className,
 	}: LanguageToggleProps = $props();
 
 	const next = $derived(locales[(Math.max(0, locales.indexOf(locale)) + 1) % locales.length]);
 	const nextHref = $derived(href(next));
-	const name = $derived(names[locale] ?? locale);
-
-	// The link keeps native routing and preloading; only its focus reset is restored. Registered once, at init.
-	// svelte-ignore state_referenced_locally
-	onNavigate?.((navigation) => {
-		if (navigation.type === 'link' && preserveState && navigation.to?.url.href === new URL(nextHref, location.href).href) {
-			return resetFocusAfterNavigation();
-		}
-	});
+	const name = $derived(names[locale]);
 
 	// Every board keeps the two-board geometry, so a third board grows the post rather than shrinking the letters.
 	const SPAN = 18;
@@ -86,6 +74,7 @@
 
 {#if locales.length >= 2}
 	<a
+		bind:this={ref}
 		href={nextHref}
 		data-testid="language-toggle"
 		data-slot="language-toggle"

@@ -3,6 +3,7 @@ import type { SiteHeaderLabels, SiteHeaderLink, SiteHeaderMenuItem } from '@yesi
 /** The Gallery header's data, shared by its route and its browser spec. */
 export const HOME = '/site-header';
 export const LOCALES = ['en', 'fr'] as const;
+export const LANGUAGE_NAMES = { en: 'English', fr: 'Français', es: 'Español' };
 export const LANGUAGE_LABEL = 'Language';
 export const SEARCH_LABEL = 'Search';
 export const LINKS: readonly SiteHeaderLink[] = [
@@ -21,6 +22,7 @@ export const LABELS = {
 	openMenu: 'Open menu',
 	closeMenu: 'Close menu',
 	menu: 'Site menu',
+	menuFooter: 'Navigation · All routes',
 	theme: 'Dark theme',
 	nav: 'Primary',
 } satisfies SiteHeaderLabels;

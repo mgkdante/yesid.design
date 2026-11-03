@@ -108,6 +108,13 @@ export { default as LanguageToggle } from './LanguageToggle.svelte';
 export type { LanguageToggleProps } from './LanguageToggle.svelte';
 
 export {
+	createNavigationLifecycle,
+	type NavigationLifecycle,
+	type NavigationLifecycleOptions,
+	type NavigationMenu,
+} from './navigation-lifecycle.js';
+
+export {
 	resetFocusAfterNavigation,
 	type NavigationEvent,
 	type OnNavigate,

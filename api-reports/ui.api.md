@@ -860,6 +860,10 @@ declare namespace Brand {
         WordmarkProps,
         LanguageToggle,
         LanguageToggleProps,
+        createNavigationLifecycle,
+        NavigationLifecycle,
+        NavigationLifecycleOptions,
+        NavigationMenu,
         resetFocusAfterNavigation,
         NavigationEvent,
         OnNavigate,
@@ -1299,6 +1303,9 @@ function createCn(vocab?: {
 function createLocaleContext<Locale extends string>(fallback: Locale): LocaleContext<Locale>;
 
 // @public
+function createNavigationLifecycle(router: SiteNavigation, options?: NavigationLifecycleOptions): NavigationLifecycle;
+
+// @public
 function createSectionJump(): SectionJump;
 
 // @public (undocumented)
@@ -1729,6 +1736,10 @@ declare namespace Index {
         WordmarkProps,
         LanguageToggle,
         LanguageToggleProps,
+        createNavigationLifecycle,
+        NavigationLifecycle,
+        NavigationLifecycleOptions,
+        NavigationMenu,
         resetFocusAfterNavigation,
         NavigationEvent,
         OnNavigate,
@@ -1741,7 +1752,7 @@ declare namespace Index {
 function injectThemeBoot(html: string): string;
 
 // @public (undocumented)
-const LanguageToggle: Component<LanguageToggleProps, {}, "">;
+const LanguageToggle: Component<LanguageToggleProps, {}, "ref">;
 
 // @public (undocumented)
 type LanguageToggle = ReturnType<typeof LanguageToggle>;
@@ -1756,10 +1767,9 @@ interface LanguageToggleProps {
     locale: string;
     // (undocumented)
     locales: readonly string[];
-    names?: Readonly<Record<string, string>>;
-    // (undocumented)
-    onNavigate?: OnNavigate;
+    names: Readonly<Record<string, string>>;
     preserveState?: boolean;
+    ref?: HTMLAnchorElement | null;
     reload?: boolean;
 }
 
@@ -1933,6 +1943,30 @@ interface NavigationEvent {
     } | null;
     // (undocumented)
     type: string;
+}
+
+// @public
+interface NavigationLifecycle {
+    attachMenu(menu: NavigationMenu): () => void;
+    menuClosed(): void;
+    readonly pending: boolean;
+    readonly version: number;
+}
+
+// @public (undocumented)
+interface NavigationLifecycleOptions {
+    languageLink?: () => HTMLAnchorElement | null | undefined;
+}
+
+// @public
+interface NavigationMenu {
+    readonly active: boolean;
+    // (undocumented)
+    close(): void;
+    // (undocumented)
+    languageLink(): HTMLAnchorElement | null | undefined;
+    // (undocumented)
+    readonly open: boolean;
 }
 
 // @public (undocumented)
@@ -2613,11 +2647,11 @@ interface SiteHeaderLabels {
     // (undocumented)
     closeMenu: string;
     menu: string;
-    menuFooter?: string;
+    menuFooter: string;
     nav?: string;
     // (undocumented)
     openMenu: string;
-    skipToContent?: string;
+    skipToContent: string;
     // (undocumented)
     theme: string;
 }
@@ -2659,12 +2693,12 @@ interface SiteHeaderProps {
     // (undocumented)
     labels: SiteHeaderLabels;
     // (undocumented)
-    language?: Omit<LanguageToggleProps, 'onNavigate' | 'class'>;
+    language?: Omit<LanguageToggleProps, 'ref' | 'class'>;
     // (undocumented)
     links: readonly SiteHeaderLink[];
     // (undocumented)
     menuItems: readonly SiteHeaderMenuItem[];
-    navigation: SiteNavigation;
+    navigation: NavigationLifecycle;
     search?: Snippet;
     // (undocumented)
     wordmark?: string;
