@@ -431,14 +431,24 @@ the chrome. The back link sits midway between the chrome and the next line; an a
 The pill renders inside the dialog, so it stays above the open menu and inside its focus trap.
 Call `createNavigationLifecycle` from `@yesid/ui/brand` once during the persistent app layout's
 initialization with `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation`,
-plus the required `subscribeNavigation` adapter method.
+plus optional `subscribeNavigation` when the router can publish every accepted start.
 Pass its result as `navigation`: the menu closes before a navigation lands, and a language switch
 from the open menu keeps it open. The lifecycle interrupts Lenis momentum even without a header.
 It reconciles redirect and superseding events in `onNavigate` when `beforeNavigate` was skipped,
 and re-closes a menu reopened during loading before waiting for its animation and focus trap.
-The subscription publishes every accepted start with its original native `NavigationEvent.event`,
-including superseding links whose before hook is skipped. Cancelled clicks are never published.
-Kit 3 needs a separate bridge/SDK change exposing that event before adoption; see the migration note.
+Without a subscription, direct language switches work through matching native hook events.
+An eventless step discards locale intent: a language switch that lands on a redirect closes the
+menu without locale refocus. The fallback restores ordinary page focus even when a link disabled
+the router reset through `preserveState`. Kit 3 apps omit the subscription and use this fallback; no
+bridge/SDK change is required. Kit 2 apps can pass the navigation store as shown below.
+
+A supplied subscription must publish every accepted start before loading/redirecting, including
+superseding links whose before hook is skipped, with the exact original native `NavigationEvent.event`.
+Redirect hops may omit it. Cancelled clicks are never published; null denotes idle and the return
+value unsubscribes. Partial or late streams are unsupported: an eventless redirect during an
+accepted load cannot be distinguished from a superseding start missing its event. Completed-event
+replays are ignored, but unseen late events cannot be identified. Omit the subscription if the
+router cannot meet the full contract. See the migration note for both consumer integrations.
 Momentum cancellation uses Lenis stop/start in the same callback, preserving an existing external
 stop and leaving input available if navigation is canceled.
 

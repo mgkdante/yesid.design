@@ -65,8 +65,9 @@ consumer or clean-room verification.
   translated defaults. The owner explicitly requested this breaking migration without a
   deprecation window for the two coordinated consumers, waiving both normal removal gates for
   these contracts. The release fragment and API report travel with the source change.
-  The lifecycle adapter also requires `subscribeNavigation` to claim every accepted original
-  link event before loading or redirecting. Kit 3's event bridge is a separate adoption prerequisite.
+  The lifecycle adapter optionally accepts `subscribeNavigation` for full redirect continuity.
+  Kit 3 consumers omit it: direct language switches still work, while eventless language redirects
+  close the menu without locale refocus. No SDK change is required for adoption.
   [The migration](docs/migrations/navigation-lifecycle.md) names both consumers' props and strings.
   This entry records approval, not a published release or consumer adoption.
 

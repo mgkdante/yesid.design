@@ -160,6 +160,85 @@ test('a state-preserving language switch from the closed header resets page focu
 	await expect(page.locator('body')).toBeFocused();
 });
 
+test.describe('without a navigation subscription', () => {
+	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
+	const fallbackHome = `${HOME}?navigation=fallback`;
+
+	test('a direct language link keeps the menu open and focuses its updated link', async ({ page }) => {
+		await page.goto(fallbackHome);
+		await toggle(page).click();
+		await language(page).click();
+		await expect(page).toHaveURL(new RegExp(`lang=${LOCALES[1]}$`));
+		await expect(menu(page)).toBeVisible();
+		await expect(language(page)).toBeFocused();
+		await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[0]));
+	});
+
+	test('an eventless language redirect closes the menu without locale focus or stale intent', async ({ page }) => {
+		await page.goto(fallbackHome);
+		await toggle(page).click();
+		await language(page).evaluate((node, href) => node.setAttribute('href', href), routerFixture({ redirect: 'locale' }));
+		await language(page).click();
+		await expect(page).toHaveURL((url) => url.searchParams.get('landed') === 'locale');
+		await expect(menu(page)).toBeHidden();
+		await expect(language(page)).not.toBeFocused();
+		await toggle(page).click();
+		const ordinary = header(page).getByRole('link').first();
+		await ordinary.evaluate((node, href) => node.setAttribute('href', href), routerFixture({ redirect: 'ordinary' }));
+		await ordinary.click();
+		await expect(page).toHaveURL((url) => url.searchParams.get('landed') === 'ordinary');
+		await expect(menu(page)).toBeHidden();
+		await expect(language(page)).not.toBeFocused();
+	});
+
+	test('an eventless redirect from a closed state-preserving language link resets page focus', async ({ page }) => {
+		await page.goto(fallbackHome);
+		await language(page).evaluate((node, href) => node.setAttribute('href', href), routerFixture({ redirect: 'locale' }));
+		await language(page).click();
+		await expect(page).toHaveURL((url) => url.searchParams.get('landed') === 'locale');
+		await expect(menu(page)).toBeHidden();
+		await expect(page.locator('body')).toBeFocused();
+	});
+
+	test('an ordinary navigation closes the menu and completes', async ({ page }) => {
+		await page.goto(fallbackHome);
+		await toggle(page).click();
+		await header(page).getByRole('link').first().click();
+		await expect(page).toHaveURL((url) => url.pathname === HOME && url.search === '');
+		await expect(menu(page)).toBeHidden();
+	});
+
+	for (const initial of ['locale', 'ordinary'] as const) {
+		test(`a redirect superseding a slow ${initial} navigation closes a reopened menu`, async ({ page }) => {
+			await page.goto(fallbackHome);
+			const delay = await delayFixtureLoad(page);
+			try {
+				await toggle(page).click();
+				const ordinary = header(page).getByRole('link').first();
+				const first = initial === 'locale' ? language(page) : ordinary;
+				await first.evaluate((node, href) => node.setAttribute('href', href), routerFixture({ delay: initial }));
+				await first.click({ noWaitAfter: true });
+				await delay.loading;
+				if (initial === 'ordinary') {
+					await expect(menu(page)).toBeHidden();
+					await toggle(page).click();
+				}
+				await expect(menu(page)).toBeVisible();
+				const second = initial === 'locale' ? ordinary : language(page);
+				const destination = initial === 'locale' ? 'ordinary' : 'locale';
+				await second.evaluate((node, href) => node.setAttribute('href', href), routerFixture({ redirect: destination }));
+				await second.click();
+				await expect(page).toHaveURL((url) => url.searchParams.get('landed') === destination);
+				await expect(menu(page)).toBeHidden();
+				await expect(language(page)).not.toBeFocused();
+			} finally {
+				delay.release();
+				await page.unrouteAll({ behavior: 'wait' });
+			}
+		});
+	}
+});
+
 test.describe('with motion on', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
 

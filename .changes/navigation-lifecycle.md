@@ -3,7 +3,7 @@
 ---
 
 Owner-approved breaking transition (2026-11-03, deepen D-c): initialize
-`createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate, subscribeNavigation })` once in the persistent
+`createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate })` once in the persistent
 app layout and pass its result as `SiteHeader.navigation`. The module interrupts Lenis even
 without a header, waits for menu closure and coordinates locale-switch focus through a native
 link ref. `LanguageToggle` is a plain link: remove its `onNavigate` prop.
@@ -22,7 +22,11 @@ Lenis momentum is canceled through its public stop/start API in both navigation 
 of any header, without leaving input locked after cancellation. The migration includes the Transit
 unit harness and yesid.dev browser expectation updates required alongside the production calls.
 
-The router adapter now requires `subscribeNavigation`: every accepted start, including superseding
-links, must carry its original native event before loading/redirecting. Cancelled DOM clicks never
-claim intent. Gallery uses Kit 2's navigation store. Kit 3.1 consumers need a separately coordinated
-bridge/SDK change because public navigation state omits the native event; see the migration note.
+The router adapter optionally accepts `subscribeNavigation` for redirect continuity: every accepted
+original link start, including superseding links, carries its native event before loading/redirecting.
+Transit / Kit 2 can use `$app/stores.navigating.subscribe`. Kit 3 apps omit it and use the safe
+fallback: direct language switches preserve the menu through matching native hook events, while
+a language switch that lands on an eventless redirect closes the menu without locale refocus.
+There is no Kit 3 SDK adoption prerequisite. Partial/late subscriptions are unsupported; hook-only
+claims are dropped at eventless commits and completed-event replays are ignored. The lifecycle
+never observes DOM clicks or treats `defaultPrevented` as proof of router interception.

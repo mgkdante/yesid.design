@@ -30,7 +30,7 @@ export interface NavigationLifecycle {
 
 /**
  * Call once during the persistent app layout's initialization, even on routes without a header.
- * Pass router hooks and an accepted-start subscription; their lifetime follows that layout, not the header.
+ * Pass router hooks and an optional accepted-start subscription; their lifetime follows that layout, not the header.
  */
 export function createNavigationLifecycle(
 	router: SiteNavigation,
@@ -38,8 +38,11 @@ export function createNavigationLifecycle(
 ): NavigationLifecycle {
 	let menu: NavigationMenu | undefined;
 	let version = 0;
+	const hasSubscription = !!router.subscribeNavigation;
+	const completedEvents = new WeakSet<Event>();
 	type LinkIntent = {
 		event: Event;
+		accepted: boolean;
 		localeSwitch: boolean;
 		resetFocus: boolean;
 	};
@@ -57,34 +60,51 @@ export function createNavigationLifecycle(
 	} | undefined;
 	const waiting = new Set<() => void>();
 	const shallow = (event: NavigationEvent) => event.shallow && event.type === 'goto';
-	function claim(event: NavigationEvent) {
+	function claim(event: NavigationEvent, accepted = false) {
 		if (event.type !== 'link') {
 			observedLink = undefined;
 			return;
 		}
 		// Only a router-supplied native trigger claims intent. An eventless redirect
 		// retains the last accepted start; DOM cancellation is never router evidence.
-		if (!event.event || observedLink?.event === event.event) return;
+		if (!event.event || completedEvents.has(event.event)) return;
+		if (observedLink?.event === event.event) {
+			observedLink.accepted ||= accepted;
+			return;
+		}
 		const language = menu?.languageLink() ?? options.languageLink?.();
 		const target = event.event.target;
 		const localeSwitch = !!language && (target instanceof Node
 			? language.contains(target) : event.to?.url.href === language.href);
 		observedLink = {
 			event: event.event,
+			accepted,
 			localeSwitch,
 			resetFocus: localeSwitch && language?.getAttribute('data-sveltekit-reset') === 'false',
 		};
 	}
 	onMount(() => {
-		const unsubscribe = router.subscribeNavigation((event) => {
-			if (!event || event.type === 'enter' || shallow(event)) return;
+		const unsubscribe = router.subscribeNavigation?.((event) => {
+			if (!event) {
+				if (observedLink) {
+					completedEvents.add(observedLink.event);
+					observedLink = undefined;
+					version++;
+				}
+				return;
+			}
+			if (event.type === 'enter' || shallow(event)) return;
+			if (event.event && completedEvents.has(event.event)) return;
 			const previous = observedLink?.event;
-			claim(event);
+			// An eventless hop can continue only an accepted load. Hook-only claims,
+			// or starts after the commit boundary, cannot establish a redirect chain.
+			if (!event.event && (!observedLink?.accepted || transition?.stage === 'committing')) observedLink = undefined;
+			claim(event, true);
 			// Superseding starts invalidate focus work even when beforeNavigate is skipped.
 			if (event.type !== 'link' || observedLink?.event !== previous) version++;
 			interruptScroll();
 		});
-		return () => { unsubscribe(); observedLink = undefined; };
+		return () => { unsubscribe?.(); observedLink = undefined; };
 	});
 	function interruptScroll() {
 		const lenis = getLenis();
@@ -95,7 +115,10 @@ export function createNavigationLifecycle(
 		lenis.start();
 	}
 	function reconcile(event: NavigationEvent, stage: 'loading' | 'committing') {
-		if (stage === 'loading' && !event.event) observedLink = undefined;
+		if (!event.event && (stage === 'loading' || !hasSubscription || !observedLink?.accepted)) {
+			if (stage === 'committing' && observedLink) completedEvents.add(observedLink.event);
+			observedLink = undefined;
+		}
 		claim(event);
 		const observed = event.type === 'link' ? observedLink : undefined;
 		const localeSwitch = observed?.localeSwitch ?? false;
@@ -131,7 +154,8 @@ export function createNavigationLifecycle(
 		// Loading can outlast the first close, allowing the reader to reopen the menu.
 		// Re-close it before waiting, or the focus trap can block this navigation forever.
 		menu?.close();
-		const reset = current.resetFocus ? resetFocusAfterNavigation() : undefined;
+		// Unknown fallback commits use ordinary page focus even if the triggering link disabled Kit's reset.
+		const reset = current.resetFocus || (!hasSubscription && !event.event) ? resetFocusAfterNavigation() : undefined;
 		const after = reset ? () => { if (version === current.version) reset(); } : undefined;
 		if (menu?.active) return new Promise<void>((resolve) => waiting.add(resolve)).then(() => after);
 		return after;
@@ -142,6 +166,12 @@ export function createNavigationLifecycle(
 		const current = transition;
 		if (!current || current.version !== version || current.stage !== 'committing' || current.href !== event.to?.url.href) return;
 		transition = undefined;
+		if (current.event) completedEvents.add(current.event);
+		if (!hasSubscription && (!event.event || event.event !== current.event)) {
+			observedLink = undefined;
+			menu?.close();
+			return;
+		}
 		if (observedLink?.event === current.event) observedLink = undefined;
 		if (!current.keepMenu) return;
 		await tick();

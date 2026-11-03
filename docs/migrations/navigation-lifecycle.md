@@ -16,12 +16,8 @@ when the current route renders no header, so navigation still interrupts Lenis m
 <script lang="ts">
   import { beforeNavigate, onNavigate, afterNavigate } from '$app/navigation';
   import { createNavigationLifecycle } from '@yesid/ui/brand';
-  import { navigating } from '$app/stores'; // SvelteKit 2 adapter only
 
-  const navigation = createNavigationLifecycle({
-    beforeNavigate, onNavigate, afterNavigate,
-    subscribeNavigation: navigating.subscribe,
-  });
+  const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate });
 </script>
 
 <SiteHeader {navigation} {home} {links} {menuItems} {labels} {language} />
@@ -44,29 +40,42 @@ analytics, view transitions or locale/URL policy. Keep those app-owned hooks.
 
 `onNavigate` reconciles the actual commit event even when SvelteKit skips `beforeNavigate`
 during an active load. It re-closes an ordinary menu that was reopened while loading, then waits
-for that close. The adapter must implement required
-`subscribeNavigation(callback): () => void`: emit every router-accepted start synchronously,
-including superseding links whose `beforeNavigate` is skipped and redirect hops. Each original
-link start must include its exact native `event`, before loaders or redirects run. Redirects may
-omit it. Emit `null` when idle and return unsubscribe cleanup. Forward native events unchanged in
-all hooks too. A cancelled click must never be published. The lifecycle retains the latest claimed
-link intent through redirects, advances its stale-focus guard on superseding starts, and removes
-the subscription when the layout unmounts. It does not observe document clicks, infer router
-interception from `defaultPrevented`, or promote an eventless commit into a click claim.
+for that close. `subscribeNavigation(callback): () => void` is optional. Without it, native hook
+events with matching identity still preserve a direct language switch and focus its updated link.
+An eventless step drops locale intent and is handled as ordinary navigation: the menu closes and
+there is no locale refocus or carried-over claim. It restores ordinary page focus even when the
+triggering link disabled Kit's reset with `preserveState`. **The limitation is that a language switch which
+lands on a redirect closes the menu.** No SDK change is needed to use this fallback.
 
-**Adapter adoption tasks:** Gallery uses SvelteKit 2.70.3's public `$app/stores.navigating`
-subscription, which exposes the native event at accepted starts. Transit also uses Kit 2.70.3 and
-can use the same subscription; add it to its persistent layout and fake adapter, then test the
-contract in its shell harness.
-yesid.dev uses Kit 3.1.0: `$app/stores` is removed and public `$app/state.navigating` currently
-omits the native event. Its bridge/SDK change is a separate coordinated prerequisite, approved by
-the owner on 2026-11-03. Do not copy the Kit 2 import into that app, cast away the missing event,
-or substitute a DOM click listener, URL heuristic, no-op subscription, or effect over the incomplete
-public state. The bridge must expose every accepted original native trigger before redirects and
-exclude app-cancelled clicks. Verify locale-to-ordinary and ordinary-to-locale superseding redirects,
-plus app cancellation with `preventDefault`, `stopPropagation`, and `data-sveltekit-reload`, before
-adopting this package. This PR implements the adapter contract and Gallery integration, not the
-Kit 3 bridge/SDK or consumer adoption.
+**Transit / Kit 2.70.3:** include the accepted-start subscription to preserve locale continuity
+through redirects and superseding navigations. Gallery uses this same public store:
+
+```ts
+import { navigating } from '$app/stores';
+const navigation = createNavigationLifecycle({
+  beforeNavigate, onNavigate, afterNavigate,
+  subscribeNavigation: navigating.subscribe,
+});
+```
+
+**yesid.dev / Kit 3.1.0:** omit `subscribeNavigation`, as in the first example. `$app/stores` is
+removed and public `$app/state.navigating` omits the native event. Direct language switches still
+keep the menu open; language redirects close it. A Kit 3 bridge/SDK change is optional future work,
+not an adoption prerequisite. Keep the existing local-copy and test migrations listed below.
+
+**Custom adapter contract:** a supplied subscription must publish every router-accepted start
+before loading or redirecting, including superseding links whose before hook is skipped. Every
+original link start carries the exact native `event`; redirect hops may omit it. Forward hook events
+unchanged too. Emit `null` when idle, return unsubscribe cleanup, and never publish app-cancelled
+clicks. The lifecycle removes the subscription on layout unmount. It has no document/window click
+observer and does not infer interception from `defaultPrevented`.
+
+Partial and late subscriptions are unsupported. Hook-only claims are cleared at eventless commits,
+and completed-event replays are ignored. However, during an accepted load, an eventless redirect
+and a malformed superseding start missing its event are indistinguishable. An unseen late event
+also cannot be identified reliably. Omit the subscription when the router cannot meet its full
+contract; a no-op subscription or an effect over incomplete public state is not a substitute.
+Verify both superseding-redirect directions and app-cancelled clicks at each consumer bump.
 
 Lenis interruption is independent of header attachment and runs in both `beforeNavigate` and
 `onNavigate`, including when only the latter fires. The lifecycle uses Lenis's public `stop()`
@@ -184,7 +193,7 @@ and give the lifecycle a live getter so it can restore focus after the state-pre
 <script lang="ts">
   let languageLink = $state<HTMLAnchorElement | null>(null);
   const navigation = createNavigationLifecycle(
-    { beforeNavigate, onNavigate, afterNavigate, subscribeNavigation: navigating.subscribe },
+    { beforeNavigate, onNavigate, afterNavigate },
     { languageLink: () => languageLink },
   );
 </script>
@@ -202,10 +211,10 @@ Update the consumer test integrations with the production calls during each bump
   renders NavPill with no lifecycle and mocks the three raw `$app/navigation` hooks as no-ops.
   Create the real lifecycle with an app-local fake router adapter and supply it through the new
   NavPill prop or app context, matching the production layout integration. Implement
-  `subscribeNavigation` in that fake adapter, emitting only accepted starts with their original
-  native event. Give each test a fresh adapter/lifecycle and exercise the relevant callbacks when
-  asserting navigation. Do not import
-  this repository's private fake-router fixture from the released package.
+  `subscribeNavigation` in that fake adapter for the Transit subscription path, emitting only
+  accepted starts with their original native event. Exercise omission as the Kit 3 fallback. Give
+  each test a fresh adapter/lifecycle and exercise the relevant callbacks when asserting navigation.
+  Do not import this repository's private fake-router fixture from the released package.
 - **yesid.dev, `apps/web/tests/header.spec.ts` and `apps/web/tests/accessibility.spec.ts`:**
   replace header expectation reads from CMS-generated `siteLabels.navChrome.shared` with the same
   local locale copy files the header now uses. Update their `chrome` mapping and locale resolution

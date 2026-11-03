@@ -19,7 +19,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe.each(['window', 'element'] as const)('header-less navigation with a real %s Lenis scroller', (scroller) => {
+describe.each([['window', true], ['element', true], ['window', false], ['element', false]] as const)('header-less navigation with a real %s Lenis scroller (subscription=%s)', (scroller, subscribe) => {
 	it.each([
 		{ hook: 'before', programmatic: false }, { hook: 'on', programmatic: false },
 		{ hook: 'before', programmatic: true }, { hook: 'on', programmatic: true },
@@ -47,7 +47,8 @@ describe.each(['window', 'element'] as const)('header-less navigation with a rea
 		expect(lenis.isScrolling).toBe('smooth');
 		const position = lenis.scroll;
 		const hooks = fakeRouter();
-		mountLifecycle(hooks.router);
+		const { subscribeNavigation, ...withoutSubscription } = hooks.router;
+		mountLifecycle(subscribe ? hooks.router : withoutSubscription);
 		hooks[hook](linkNavigation('/destination'));
 		expect(lenis.isScrolling).toBe(false);
 		expect(lenis.velocity).toBe(0);

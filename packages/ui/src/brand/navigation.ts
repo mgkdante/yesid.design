@@ -3,18 +3,24 @@ export interface NavigationEvent {
 	type: string;
 	to: { url: URL } | null;
 	shallow?: boolean;
-	/** Exact native trigger, required on original accepted link starts; redirect hops may omit it. */
+	/** Exact native trigger when available. A subscribed adapter must supply it on original link starts. */
 	event?: Event;
 }
 type NavigationResult = void | (() => void) | Promise<void | (() => void)>;
 export type OnNavigate = (callback: (navigation: NavigationEvent) => NavigationResult) => void;
 export interface SiteNavigation {
 	/**
-	 * Subscribe to every router-accepted start, including superseding links and redirects.
-	 * Original link starts must carry the exact native event, before loading or redirecting.
-	 * Never emit app-cancelled clicks. Null denotes idle. Returns subscription cleanup.
+	 * Optional accepted-start stream: every original link, including superseding links,
+	 * must carry its exact native event before loading/redirecting. Redirect hops may
+	 * omit it. Never emit app-cancelled clicks. Null denotes idle; return cleanup.
+	 * Without this stream, native hook identities work but an eventless step drops
+	 * locale continuity: a language redirect closes the menu without locale refocus.
+	 * Partial or late streams are unsupported: during an accepted load, a redirect
+	 * and a superseding start missing its event cannot be distinguished. Replayed
+	 * completed events are ignored, but unseen late events cannot be identified.
+	 * Omit the stream when the router cannot meet this contract.
 	 */
-	subscribeNavigation(callback: (navigation: NavigationEvent | null) => void): () => void;
+	subscribeNavigation?(callback: (navigation: NavigationEvent | null) => void): () => void;
 	beforeNavigate(callback: (navigation: NavigationEvent) => void): void;
 	onNavigate: OnNavigate;
 	afterNavigate(callback: (navigation: NavigationEvent) => void): void;
