@@ -36,6 +36,7 @@ open/closed choices between visits. Filter groups and listing filter panels rema
 - Replace private trigger clicks with `openSection(anchor)` from `@yesid/ui/brand` (also root).
   It opens every mounted matching collapsible card and returns whether any matched. It is safe
   after unmount and refreshes on anchor changes. Static cards always show their bodies.
+- Keep a keyed boundary per page or entity identity around disclosures: defaults reset on remount, not when a reused CollapsibleSection receives a new anchor.
 - In yesid.dev `apps/web/src/lib/components/blog/BlogFilterSidebar.svelte`, the custom date filter
   still uses `persisted('blog-filter-date', true)` outside FilterGroup. Replace it with local state
   seeded true and update its `.value` bindings. Search queries, dates and other selections can

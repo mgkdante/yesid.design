@@ -56,6 +56,24 @@ consumer or clean-room verification.
 
 ## Removals
 
+- **Upcoming minor release (owner exception, 2026-11-03):** the owner approved immediate
+  removal of the following disclosure contracts, explicitly waiving both the 90-day wait and
+  the intervening-minor-release gate. From `@yesid/ui` and `@yesid/ui/brand`, remove
+  `QuietModeButton`, `QuietModeButtonProps`, `QuietModeButtonCopy` and `QuietModeActiveEffect`;
+  from `@yesid/ui/state`, remove `quietMode` and `QuietModeStore`. Remove `sectionKey` and
+  `quiet` from `CollapsibleSection` and `TocNav`, `FilterGroup.persistKey`, and
+  `ListingFrame.filterPersistKey`. Remove remembered open/closed state, remembered bulk-collapse
+  defaults, the Remember/Forget action and its copy/props, and pre-paint disclosure restoration.
+  Retire the public `quiet-mode-controls` / `quiet-mode-toggle` class families and matching test
+  ids, `quiet-mode-remember`, `data-remembered`, `data-quiet-mode`, and disclosure boot marks
+  (`data-persisted-key`, `data-persisted-body`, `data-quiet`). Replacements are
+  `SectionsToggle` / `SectionsToggleProps` / `SectionsToggleCopy` / `SectionsToggleActiveEffect`,
+  the in-memory `sections` / `SectionsState` actions, `sections-controls` / `sections-toggle`
+  selectors, declared per-mount disclosure defaults, and `openSection(anchor)`. The remembered
+  action and boot marks have no replacement; the generic `persisted` store remains available
+  for non-disclosure state. The TOC and filter controls remain independent. See the
+  [consumer migration](docs/migrations/deepen-disclosure.md) for the full surface and caller list.
+
 - **v0.28.0:** removed the adoption CLI (`tools/adopt.ts` and `tools/adopt/`), its schema-2
   `manifest.json` and the `yesid.dev-design-vX.Y.Z.tar` archive: each package now ships as its own
   release tarball installed by URL. Also removed, with no consumer in either app or the Gallery:
