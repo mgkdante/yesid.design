@@ -1,7 +1,7 @@
 # @yesid/ui
 
 Source-shipped Svelte 5 primitives and promoted brand components. The package owns reusable
-rendering mechanics and shared theme, quiet-mode and tab-scoped state in `@yesid/ui/state`.
+rendering mechanics and shared theme, content-section actions and tab-scoped state in `@yesid/ui/state`.
 Consumers choose what to persist and own product copy, policy, data, routing and every recorded
 compatibility seam. Consumers import individual families so unused primitives stay out of their
 bundle.
@@ -292,13 +292,16 @@ nodes/traces, warm glow and ripple ink. Companion product grids use the same pro
 `BlueprintSignal` and the rest), drawn in `currentColor`. Each takes `BlueprintProps` (`class`, `style` and other attributes), and `BlueprintBusSide` names the fleet's `operator`; compose them in a
 `BlueprintShell`. The Gallery shows every one.
 
-### QuietModeButton
+### SectionsToggle
 
-`QuietModeButton` owns the shared two-button markup, icons, minimum targets, interaction geometry,
-active visuals, and reduced-motion CSS. The caller owns copy and locale resolution. State and both
-actions default to the shared `quietMode` store; pass `enabled`, `remembered`, `onToggle`, and
-`onRememberToggle` to control it instead. `activeEffect="none"` preserves flat marks; `"glow"` adds
-the scoped core/bookmark filters without selecting a product.
+`SectionsToggle` renders one Collapse all / Expand all control. The caller supplies localized
+`collapse`, `expand`, `collapseTitle` and `expandTitle` copy. State and `onToggle` default to the
+in-memory `sections` state; `collapsed` and `onToggle` support a controlled adapter. The default
+label reflects the mounted sections: Expand all when all are closed, Collapse all otherwise.
+The control is hidden with fewer than two mounted collapsible sections. Registration is client-only,
+so the server omits it until hydration has counted the sections. Static cards and TocNav do not count;
+the TOC keeps its independent toggle and is never changed by expand-all actions.
+`activeEffect="none"` keeps flat marks; `"glow"` adds a scoped core filter.
 
 ### ThemeToggle
 
@@ -308,12 +311,13 @@ supplies one fixed `label`; `aria-checked` carries the state.
 ### CollapsibleSection
 
 A card with a toggle header, an optional index badge, `icon` and `headerActions` snippets, and an
-`anchor` that emits `data-toc` for the TOC family. It follows the shared `quietMode` store by
-default; pass `quiet={false}` when another owner already applies it. `sectionKey` stores the
-reader's open/closed choice for the tab under `persisted:<sectionKey>`. Quiet mode changes what a
-keyed section shows without overwriting that choice. `openSignal` is a product counter: each
-change opens the section like a reader click and is stored, so never feed it
-`quietMode.openSignal`.
+`anchor` that emits `data-toc` for the TOC family. Every mounted collapsible card participates in
+Collapse all / Expand all. Each mount starts at its declared `open` default (true); no disclosure
+state is stored or restored. Static cards always show their body. Closed bodies stay mounted,
+inert and hidden from assistive technology; collapsing a focused body returns focus to its header.
+`openSignal` opens a card whenever the consumer counter changes. `openSection(anchor)` opens every
+mounted collapsible card with that anchor and returns whether one matched. Registration is removed
+on unmount and refreshed when the anchor changes. No trigger click or private selector is needed.
 
 ### TocNav, TocPill, and toc helpers
 
@@ -339,8 +343,7 @@ caller. `SectionHeading` takes `heading` or `overline`, plus `number`, `headingA
 
 The listing filter family; every label comes from the caller. `FilterGroup` is a single choice
 with an "All" reset (`allLabel`) mapped to `null`; choosing the active item again clears it
-unless `allowDeselect={false}`. With `collapsible` it gets a header toggle, and `persistKey`
-keeps its open state under `persisted:<persistKey>`. `FilterSection` wraps one block of a filter
+unless `allowDeselect={false}`. With `collapsible` it gets a header toggle and starts at `startOpen` (true) on every mount. `FilterSection` wraps one block of a filter
 panel with the dashed rule. `FilterSummary` shows `countLabel.singular` or `countLabel.plural`
 (each with a `{count}` placeholder) by the plural rule of `locale`, plus a `clearLabel` button.
 `SearchInput` is the listing search field; `label` is its accessible name.
@@ -370,7 +373,7 @@ its cleanup.
 
 The filter column holds the `search` snippet and a panel with the `filters` snippet. From 1024px
 the panel is always shown and the column is sticky. Below 1024px a button labelled `filterLabel`
-opens it, and `filterPersistKey` keeps that state under `persisted:<filterPersistKey>`. The panel
+opens it. The panel starts closed on every mount. The panel
 never uses `inert`; a closed panel is `visibility: hidden` below 1024px only. So from 1024px the
 filters are visible and reachable by keyboard before hydration and without JavaScript, and below
 1024px opening them needs JavaScript. Wheel scrolling in the sticky column chains to the page
@@ -507,9 +510,11 @@ The app keeps its own navigation, scroll-restoration, and analytics handling.
   is ignored, the choice persists under `theme`, `data-theme` is set on `<html>`, `meta[name=
   "theme-color"]` follows `--background`, every `link[rel="icon"]` becomes the brand mark in
   `--primary`, and a `themechange` event fires on `document`.
-- `quietMode`: `enabled`, `remembered`, `closeSignal`, `openSignal`, `set`, `toggle`,
-  `rememberCurrent`, `forgetDefault`, `init`. Sections close on `closeSignal` and reopen on
-  `openSignal`. `init` closes them when a default is remembered and never issues an open.
+- `sections`: page actions for mounted content sections. `count` counts registered collapsible
+  sections. `allCollapsed` is true only when
+  all registered sections are closed; `collapseAll()`, `expandAll()` and `toggle()` reach those
+  sections only. Filter groups and listing filter panels keep their own independent toggles.
+  New sections start at their declared defaults; nothing is read from or written to storage.
 - `desktop`: a Svelte `MediaQuery` at the `breakpoint.desktop-min` token (1024px). It is false
   during SSR.
 
@@ -532,12 +537,8 @@ resets in a new tab. `bind:value={state.value}` works directly. Values must be `
 (strings, numbers, booleans, null, and arrays of those), so store ids and flags, never translated
 text. During SSR it returns the seed.
 
-A persisted boolean that opens and closes something can paint right on reload: mark each element
-that mirrors the state with `data-persisted-key="<key>"` (it gets `data-state` and, if present,
-`aria-expanded`) and each body that hides with `data-persisted-body="<key>"` (it also gets `inert`
-and `aria-hidden`). Elements that follow quiet mode also carry `data-quiet` (a body with no key
-takes an empty `data-persisted-body`), and a remembered quiet mode paints them closed whatever
-their stored choice. `CollapsibleSection`, `FilterGroup` and `ListingFrame` already do.
+The generic store remains available for search and selection state. Disclosure components and the
+head boot script do not use it. Historical disclosure storage keys are ignored, not deleted.
 
 ## Head
 
@@ -552,9 +553,9 @@ their stored choice. `CollapsibleSection`, `FilterGroup` and `ListingFrame` alre
 
 `injectThemeBoot(html)` replaces `%yesid.themeBoot%` with the boot script. Put the placeholder in
 `app.html` before `%sveltekit.head%` and call it from `transformPageChunk`. Before first paint the
-script sets `data-theme` from the `theme` key (dark otherwise) and, as the parser adds marked
-elements, applies stored `persisted:` booleans and closes the ones that follow a remembered quiet
-mode (`quiet-mode` key, which also sets `data-quiet-mode` on `<html>`). A hash-based CSP allows it with the source in
+script sets `data-theme` from the `theme` key (dark otherwise). It also handles a rejected
+cross-document view transition during reload. It does not restore open/closed choices.
+A hash-based CSP allows it with the source in
 `@yesid/ui/boot.json` (`{ "hash": "sha256-…" }`), which Node config files can import. A CSP that
 relies on `'unsafe-inline'` must not add the hash, because any hash switches `'unsafe-inline'` off.
 

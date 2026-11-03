@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-// With the app's scripts blocked, only the head boot script can restore the reader's choices.
+// Blocking app scripts proves that only the theme is restored before hydration.
 for (const colorScheme of ['dark', 'light'] as const) {
-	test(`a reload paints the stored theme and closed section before the app runs (system ${colorScheme})`, async ({ page }) => {
+	test(`a reload paints the stored theme and default-open section before the app runs (system ${colorScheme})`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme });
 		await page.goto('/');
 		const html = page.locator('html');
@@ -23,67 +23,37 @@ for (const colorScheme of ['dark', 'light'] as const) {
 		await page.route('**/_app/**/*.js', (route) => route.abort());
 		await page.reload();
 		await expect(html).toHaveAttribute('data-theme', 'light');
-		await expect(section).toHaveAttribute('aria-expanded', 'false');
+		await expect(section).toHaveAttribute('aria-expanded', 'true');
 		const body = page.locator(`[id="${await section.getAttribute('aria-controls')}"]`);
-		await expect(body).toBeHidden();
+		await expect(body).toBeVisible();
 
 		// Hydration takes over the boot script's markup: once the theme switch responds, the section is
-		// still closed and its toggle still opens it.
+		// at its declared default and its toggle still closes it.
 		await page.unroute('**/_app/**/*.js');
 		await page.reload();
 		await expect(async () => {
 			if ((await html.getAttribute('data-theme')) !== 'dark') await themeSwitch.click();
 			await expect(html).toHaveAttribute('data-theme', 'dark', { timeout: 1000 });
 		}).toPass();
-		await expect(section).toHaveAttribute('aria-expanded', 'false');
-		await section.click();
 		await expect(section).toHaveAttribute('aria-expanded', 'true');
-		await expect(body).toBeVisible();
+		await section.click();
+		await expect(section).toHaveAttribute('aria-expanded', 'false');
+		await expect(body).toBeHidden();
 	});
 }
 
-test('a remembered quiet mode paints sections closed before the app runs, and hydration keeps them closed', async ({ page }) => {
-	await page.goto('/');
-	const section = page.getByRole('button', { name: 'Service notes' });
-	const remember = page.getByRole('button', { name: 'Always start collapsed' });
-	// Server markup shows the controls before hydration wires them; retry until they respond.
-	await expect(async () => {
-		if ((await section.getAttribute('aria-expanded')) !== 'false') await remember.click();
-		await expect(section).toHaveAttribute('aria-expanded', 'false', { timeout: 1000 });
-	}).toPass();
-
-	await page.route('**/_app/**/*.js', (route) => route.abort());
-	await page.reload();
-	await expect(section).toHaveAttribute('aria-expanded', 'false');
-	// The boot script's html[data-quiet-mode] already shows the remembered labels.
-	await expect(page.getByRole('button', { name: 'Expand all' })).toBeVisible();
-	await expect(page.getByRole('button', { name: "Don't start collapsed" })).toBeVisible();
-	await expect(page.locator(`[id="${await section.getAttribute('aria-controls')}"]`)).toBeHidden();
-	const closed = await page
-		.getByRole('button', { expanded: false })
-		.evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-controls')).filter(Boolean));
-	expect(closed).toContain(await section.getAttribute('aria-controls'));
-
-	// Every value each control's aria-expanded holds from the first parse through hydration.
-	await page.unroute('**/_app/**/*.js');
-	await page.addInitScript(() => {
-		const states: Record<string, (string | null)[]> = {};
-		Object.assign(window, { states });
-		new MutationObserver((records) => {
-			for (const { target, oldValue } of records)
-				(states[(target as Element).getAttribute('aria-controls') ?? ''] ??= []).push(oldValue);
-		}).observe(document, { subtree: true, attributeFilter: ['aria-expanded'], attributeOldValue: true });
-	});
-	await page.reload();
-	// The store retitles the remember button, so this holds only once the app runs.
-	await expect(page.getByRole('button', { name: "Don't start collapsed" })).toHaveAttribute('title', "Don't start collapsed");
-	const expandAll = page.getByRole('button', { name: 'Expand all' });
-	const states = await page.evaluate(() => (window as unknown as { states: Record<string, (string | null)[]> }).states);
-	for (const id of closed) {
-		// The first value is the server markup's; nothing after it may be expanded.
-		const current = await page.locator(`[aria-controls="${id}"]`).first().getAttribute('aria-expanded');
-		expect([...(states[id!] ?? []).slice(1), current], id!).not.toContain('true');
-	}
-	await expandAll.click();
-	await expect(section).toHaveAttribute('aria-expanded', 'true');
+test('bulk control reaches the real sections and reload ignores old quiet mode', async ({ page }) => {
+ await page.goto('/');
+ const section = page.getByRole('button', { name: 'Service notes' });
+ await expect(async () => {
+  if (await section.getAttribute('aria-expanded') !== 'false') await page.getByRole('button', { name: 'Collapse all' }).click();
+  await expect(section).toHaveAttribute('aria-expanded', 'false', { timeout: 1000 });
+ }).toPass();
+ await page.getByRole('button', { name: 'Expand all' }).click();
+ await expect(section).toHaveAttribute('aria-expanded', 'true');
+ await page.evaluate(() => localStorage.setItem('quiet-mode', 'true'));
+ await page.reload();
+ await expect(section).toHaveAttribute('aria-expanded', 'true');
+ await expect(page.getByRole('button', { name: 'Collapse all' })).toBeVisible();
+ await expect(page.getByTestId('sections-remember')).toHaveCount(0);
 });

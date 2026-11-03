@@ -13,14 +13,11 @@
 		counterPrefix?: string;
 		open?: boolean;
 		collapsible?: boolean;
-		sectionKey?: string;
-		/** Follow quiet mode. Pass false when another owner already applies it. */
-		quiet?: boolean;
 	}
 </script>
 
 <script lang="ts">
-	import CollapsibleSection from './CollapsibleSection.svelte';
+	import SectionCard from './SectionCard.svelte';
 	import SectionIcon from './SectionIcon.svelte';
 	import TocBadge from './TocBadge.svelte';
 	import { resolveTocCounter } from './toc.js';
@@ -33,8 +30,6 @@
 		counterPrefix = 'SEC',
 		collapsible = true,
 		open = $bindable(true),
-		sectionKey,
-		quiet = true,
 	}: TocNavProps = $props();
 
 	// Rail entries already show in the desktop side rail; the mobile pill keeps them.
@@ -42,7 +37,7 @@
 	const counter = $derived(resolveTocCounter(shown, activeId));
 </script>
 
-<CollapsibleSection title={heading} {collapsible} {sectionKey} {quiet} bind:open>
+<SectionCard title={heading} {collapsible} bind:open>
 	{#snippet icon()}
 		<SectionIcon name="toc" class="h-4 w-4 shrink-0 text-primary" />
 	{/snippet}
@@ -80,7 +75,7 @@
 			{counter.current} / {counter.total}
 		</span>
 	</div>
-</CollapsibleSection>
+</SectionCard>
 
 <style>
 	.toc-nav {

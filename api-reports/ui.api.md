@@ -151,7 +151,7 @@
 ## Direct public assets
 
 - `./base.css` — direct asset `./base.css` (`default`), sha256 `f50f50d90e4ffba59b9088fb2b29320553a79eb7e97938bec86f4bc46b0a420d`
-- `./boot.json` — direct asset `./src/head/boot.json` (`default`), sha256 `9b0229a77f56656dfffbafab88b3e5d9c62c654aa37c6721284aad0ff5626577`
+- `./boot.json` — direct asset `./src/head/boot.json` (`default`), sha256 `fa6a3d0b4682d1f2529ca9d0db35722afd4cf7136ca7d74fe07c2364106551d4`
 
 ## Declaration namespaces
 
@@ -813,10 +813,10 @@ declare namespace Brand {
         MetricDisplayProps,
         MetroStation,
         MetroStationProps,
-        QuietModeButton,
-        QuietModeActiveEffect,
-        QuietModeButtonCopy,
-        QuietModeButtonProps,
+        SectionsToggle,
+        SectionsToggleActiveEffect,
+        SectionsToggleCopy,
+        SectionsToggleProps,
         SearchInput,
         SearchInputProps,
         SectionHeading,
@@ -870,7 +870,8 @@ declare namespace Brand {
         resetFocusAfterNavigation,
         NavigationEvent,
         OnNavigate,
-        SiteNavigation
+        SiteNavigation,
+        openSection
     }
 }
 
@@ -1165,8 +1166,6 @@ interface CollapsibleSectionProps {
     // (undocumented)
     open?: boolean;
     openSignal?: number | null;
-    quiet?: boolean;
-    sectionKey?: string;
     // (undocumented)
     subtitle?: string;
     // (undocumented)
@@ -1547,8 +1546,6 @@ interface FilterGroupProps {
     // (undocumented)
     onSelect: (key: string | null) => void;
     // (undocumented)
-    persistKey?: string;
-    // (undocumented)
     startOpen?: boolean;
     testIdPrefix?: string;
 }
@@ -1688,10 +1685,10 @@ declare namespace Index {
         MetricDisplayProps,
         MetroStation,
         MetroStationProps,
-        QuietModeButton,
-        QuietModeActiveEffect,
-        QuietModeButtonCopy,
-        QuietModeButtonProps,
+        SectionsToggle,
+        SectionsToggleActiveEffect,
+        SectionsToggleCopy,
+        SectionsToggleProps,
         SearchInput,
         SearchInputProps,
         SectionHeading,
@@ -1745,7 +1742,8 @@ declare namespace Index {
         resetFocusAfterNavigation,
         NavigationEvent,
         OnNavigate,
-        SiteNavigation
+        SiteNavigation,
+        openSection
     }
 }
 
@@ -1834,7 +1832,6 @@ interface ListingFrameProps {
     description?: string;
     edgeTitle?: string;
     filterLabel: string;
-    filterPersistKey?: string;
     // (undocumented)
     filters: Snippet;
     heading: string;
@@ -1970,6 +1967,9 @@ function onTocNavigate(input: {
 
 // @public (undocumented)
 function openCollapsedTocTarget(id: string): boolean;
+
+// @public
+function openSection(id: string): boolean;
 
 // @public
 interface Persisted<T extends LocaleFree> {
@@ -2169,76 +2169,6 @@ declare namespace PrimitivesToggleGroup {
 }
 
 // @public (undocumented)
-const quietMode: QuietModeStore;
-
-// @public (undocumented)
-type QuietModeActiveEffect = 'none' | 'glow';
-
-// @public (undocumented)
-const QuietModeButton: Component<QuietModeButtonProps, {}, "">;
-
-// @public (undocumented)
-type QuietModeButton = ReturnType<typeof QuietModeButton>;
-
-// @public (undocumented)
-interface QuietModeButtonCopy {
-    // (undocumented)
-    readonly collapse: string;
-    // (undocumented)
-    readonly collapseTitle: string;
-    // (undocumented)
-    readonly expand: string;
-    // (undocumented)
-    readonly expandTitle: string;
-    // (undocumented)
-    readonly forget: string;
-    // (undocumented)
-    readonly remember: string;
-}
-
-// @public
-interface QuietModeButtonProps {
-    // (undocumented)
-    activeEffect?: QuietModeActiveEffect;
-    // (undocumented)
-    class?: string;
-    // (undocumented)
-    copy: QuietModeButtonCopy;
-    // (undocumented)
-    enabled?: boolean;
-    // (undocumented)
-    onRememberToggle?: () => void;
-    // (undocumented)
-    onToggle?: () => void;
-    // (undocumented)
-    remembered?: boolean;
-}
-
-// @public
-interface QuietModeStore {
-    // (undocumented)
-    readonly closeSignal: number;
-    // (undocumented)
-    readonly enabled: boolean;
-    // (undocumented)
-    forgetDefault(): void;
-    // (undocumented)
-    init(): void;
-    // (undocumented)
-    readonly openSignal: number;
-    // (undocumented)
-    rememberCurrent(): void;
-    // (undocumented)
-    readonly remembered: boolean;
-    // (undocumented)
-    resetForTest(): void;
-    // (undocumented)
-    set(next: boolean): void;
-    // (undocumented)
-    toggle(): void;
-}
-
-// @public (undocumented)
 function reconcileActiveToc(activeId: string, previousIds: readonly string[], nextIds: readonly string[]): string;
 
 // @public
@@ -2353,6 +2283,57 @@ type SectionLabelProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children' | 'cla
     align?: 'left' | 'center';
     class?: string;
 };
+
+// @public (undocumented)
+const sections: SectionsState;
+
+// @public
+interface SectionsState {
+    // (undocumented)
+    readonly allCollapsed: boolean;
+    // (undocumented)
+    collapseAll(): void;
+    readonly count: number;
+    // (undocumented)
+    expandAll(): void;
+    // (undocumented)
+    toggle(): void;
+}
+
+// @public (undocumented)
+const SectionsToggle: Component<SectionsToggleProps, {}, "">;
+
+// @public (undocumented)
+type SectionsToggle = ReturnType<typeof SectionsToggle>;
+
+// @public (undocumented)
+type SectionsToggleActiveEffect = 'none' | 'glow';
+
+// @public (undocumented)
+interface SectionsToggleCopy {
+    // (undocumented)
+    readonly collapse: string;
+    // (undocumented)
+    readonly collapseTitle: string;
+    // (undocumented)
+    readonly expand: string;
+    // (undocumented)
+    readonly expandTitle: string;
+}
+
+// @public
+interface SectionsToggleProps {
+    // (undocumented)
+    activeEffect?: SectionsToggleActiveEffect;
+    // (undocumented)
+    class?: string;
+    // (undocumented)
+    collapsed?: boolean;
+    // (undocumented)
+    copy: SectionsToggleCopy;
+    // (undocumented)
+    onToggle?: () => void;
+}
 
 // @public (undocumented)
 const SegmentedChoice: $$IsomorphicComponent;
@@ -2756,14 +2737,14 @@ declare namespace State {
     export {
         Theme,
         ThemeStore,
-        QuietModeStore,
+        SectionsState,
         LocaleFree,
         Widen,
         Persisted,
         ClockStore,
         theme,
         clock,
-        quietMode,
+        sections,
         persisted,
         desktop,
         createLocaleContext,
@@ -3097,9 +3078,6 @@ interface TocNavProps {
     onNavigate: (id: string) => void;
     // (undocumented)
     open?: boolean;
-    quiet?: boolean;
-    // (undocumented)
-    sectionKey?: string;
 }
 
 // @public (undocumented)

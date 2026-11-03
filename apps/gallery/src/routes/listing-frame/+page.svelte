@@ -79,7 +79,6 @@
 	subtitle="Travaux et recherches"
 	description="Exemple de page de liste avec filtres, recherche et résultats."
 	filterLabel="Filtres"
-	filterPersistKey="gallery-listing-filters"
 	onHeaderMount={blueprintScrub}
 	aside={params.get('aside') === '0' ? undefined : totals}
 >
