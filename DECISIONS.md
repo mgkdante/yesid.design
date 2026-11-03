@@ -121,3 +121,16 @@ Sections, filter groups and listing panels start at their declared state on ever
 nothing about open or closed is persisted or written by the boot script. Pages with at least two
 collapsible content sections offer one expand-all control for those sections instead; the TOC
 keeps its independent toggle and does not count toward that threshold.
+
+A table-of-contents jump to a collapsed section opens that section and any sections enclosing it.
+Every other section keeps its current state.
+
+## D16: Consumers own navigation setup and header copy
+
+`SiteHeader` and `LanguageToggle` ship no built-in English, French or Spanish header or language
+copy. Each app supplies that copy from its own local locale files, outside the CMS.
+
+Call `createNavigationLifecycle` once during initialization of the persistent app layout and
+pass the resulting instance to `SiteHeader` across route changes. `subscribeNavigation` is optional:
+Kit 2 apps pass the navigation subscription; Kit 3 apps omit it and use the safe fallback, where
+a language switch that lands on a redirect closes the menu.
