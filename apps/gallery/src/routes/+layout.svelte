@@ -1,5 +1,10 @@
 <script lang="ts">
+	import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
+	import { createNavigationLifecycle } from '@yesid/ui/brand';
+	import { setContext } from 'svelte';
 	import { page } from '$app/state';
+	import { browser } from '$app/environment';
+	import { navigating } from '$app/stores';
 	import '@yesid/motion/ripple.css';
 	import { initGlobalRipple } from '@yesid/motion/utils/globalRipple';
 	import { SiteRoot } from '@yesid/ui/layout';
@@ -9,6 +14,14 @@
 	import '../gallery.css';
 
 	let { children } = $props();
+	// The browser fixture selects its adapter once; it stays stable across route changes.
+	function navigationAdapter() {
+		const fallback = browser && page.url.searchParams.get('navigation') === 'fallback';
+		return { beforeNavigate, onNavigate, afterNavigate,
+			...(fallback ? {} : { subscribeNavigation: navigating.subscribe }) };
+	}
+	const navigation = createNavigationLifecycle(navigationAdapter());
+	setContext('gallery-navigation', navigation);
 
 	onMount(() => initGlobalRipple());
 </script>

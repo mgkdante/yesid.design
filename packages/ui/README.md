@@ -429,17 +429,47 @@ the chrome. The back link sits midway between the chrome and the next line; an a
 
 `SiteHeader` is the floating pill header with a full-screen metro-line menu on a bits-ui Dialog.
 The pill renders inside the dialog, so it stays above the open menu and inside its focus trap.
-Pass `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation` as `navigation`: the
-menu closes before a navigation lands, and a language switch from the open menu keeps it open.
+Call `createNavigationLifecycle` from `@yesid/ui/brand` once during the persistent app layout's
+initialization with `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation`,
+plus optional `subscribeNavigation` when the router can publish every accepted start.
+Pass its result as `navigation`: the menu closes before a navigation lands, and a language switch
+from the open menu keeps it open. The lifecycle interrupts Lenis momentum even without a header.
+It reconciles redirect and superseding events in `onNavigate` when `beforeNavigate` was skipped,
+and re-closes a menu reopened during loading before waiting for its animation and focus trap.
+Without a subscription, direct language switches work through matching native hook events.
+An eventless step discards locale intent: a language switch that lands on a redirect closes the
+menu without locale refocus. The fallback restores ordinary page focus even when a link disabled
+the router reset through `preserveState`. Kit 3 apps omit the subscription and use this fallback; no
+bridge/SDK change is required. Kit 2 apps can pass the navigation store as shown below.
+
+A supplied subscription must publish every accepted start before loading/redirecting, including
+superseding links whose before hook is skipped, with the exact original native `NavigationEvent.event`.
+Redirect hops may omit it. Cancelled clicks are never published; null denotes idle and the return
+value unsubscribes. Partial or late streams are unsupported: an eventless redirect during an
+accepted load cannot be distinguished from a superseding start missing its event. Completed-event
+replays are ignored, but unseen late events cannot be identified. Omit the subscription if the
+router cannot meet the full contract. See the migration note for both consumer integrations.
+Momentum cancellation uses Lenis stop/start in the same callback, preserving an existing external
+stop and leaving input available if navigation is canceled.
 
 ```svelte
+<script lang="ts">
+	import { beforeNavigate, onNavigate, afterNavigate } from '$app/navigation';
+	import { createNavigationLifecycle } from '@yesid/ui/brand';
+	import { navigating } from '$app/stores'; // SvelteKit 2 adapter only
+	const navigation = createNavigationLifecycle({
+		beforeNavigate, onNavigate, afterNavigate,
+		subscribeNavigation: navigating.subscribe,
+	});
+</script>
+
 <SiteHeader
-	navigation={{ beforeNavigate, onNavigate, afterNavigate }}
+	{navigation}
 	home="/"
 	links={[{ href: '/work', label: 'Work', current: true }, { href: '/blog', label: 'Blog', priority: 2 }]}
 	menuItems={[{ href: '/work', label: 'Work', subtitle: 'Selected projects', current: true }]}
-	labels={{ openMenu: 'Open menu', closeMenu: 'Close menu', menu: 'Site menu', theme: 'Dark theme' }}
-	language={{ locale, locales: ['en', 'fr'], href: (next) => localizeUrl(page.url, next), label: 'Language' }}
+	labels={{ openMenu: 'Open menu', closeMenu: 'Close menu', menu: 'Site menu', theme: 'Dark theme', menuFooter: 'Navigation · All routes', skipToContent: 'Skip to content' }}
+	language={{ locale, locales: ['en', 'fr'], href: (next) => localizeUrl(page.url, next), label: 'Language', names: { en: 'English', fr: 'Français' } }}
 />
 ```
 
@@ -448,20 +478,24 @@ optional `search` snippet shows from 1024px and folds away with the links while 
 `actions` render before the theme, language and menu controls. The app marks `current` links and
 items; snippets can query the header's width with `@container site-header`. A menu item's `icon`
 (any Lucide icon component, such as `@lucide/svelte/icons/map`) replaces its stop and lights up on
-the current page. The menu footer reads "Navigation · All routes" in the language's locale (en, fr
-or es); `labels.menuFooter` replaces it and an empty string hides it. The header opens with a skip
-link to `#main`, shown on focus ("Skip to content" in the same locales; `labels.skipToContent` replaces
-it), and the pill is the page's banner. Every product renders the same skeleton: `SiteHeader`, then
+the current page. All copy belongs to the app: `labels.menuFooter` and `labels.skipToContent` are
+required, with an empty footer string hiding it. The header opens with the named skip link to
+`#main`, shown on focus, and the pill is the page's banner. Every product renders the same skeleton: `SiteHeader`, then
 `<main id="main">`, then `SiteFooter` outside `main`.
 `--site-header-inset-end` narrows the header beside a docked panel, animated over
 `--site-header-inset-duration`. The menu starts below the app's `--chrome-offset` (default `--nav-clearance`); page offsets read
 `--nav-clearance` from `base.css`.
 
 `Wordmark` is the name plus accent dot with the `wordmarkHover` effects (`autoPlay` plays one on
-mount). `LanguageToggle` is the signpost: one board per locale, linking to `href(next)`.
-`preserveState` keeps scroll and page state (`data-sveltekit-reset="false"`) and then resets focus
-like a normal navigation through `onNavigate`; `reload` asks for a full document load.
+mount). `LanguageToggle` is a plain signpost link: one board per locale, linking to `href(next)`.
+Its required `names` map supplies an autonym for every supported locale; no language names ship
+in the component. `preserveState` keeps scroll and page state (`data-sveltekit-reset="false"`);
+the lifecycle restores focus after landing. Inside SiteHeader this uses a bound native link ref;
+standalone links pass their `bind:ref` to the lifecycle's optional `languageLink` getter.
+`reload` asks for a full document load. LanguageToggle registers no router hooks.
 `resetFocusAfterNavigation` is the same reset for `goto(url, { reset: false })`.
+The [migration note](https://github.com/mgkdante/yesid.dev-design/blob/v0.32.2/docs/migrations/navigation-lifecycle.md)
+lists the exact copy and integration changes for Transit and yesid.dev in the next release.
 
 ## Site footer and error page
 

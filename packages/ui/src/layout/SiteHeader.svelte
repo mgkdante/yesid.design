@@ -9,7 +9,7 @@
 <script lang="ts" module>
 	import type { Component, Snippet } from 'svelte';
 	import type { LanguageToggleProps } from '../brand/LanguageToggle.svelte';
-	import type { SiteNavigation } from '../brand/navigation.js';
+	import type { NavigationLifecycle } from '../brand/navigation-lifecycle.js';
 
 	export interface SiteHeaderLink {
 		href: string;
@@ -39,36 +39,30 @@
 		theme: string;
 		/** Accessible name of the header's navigation. */
 		nav?: string;
-		/** Defaults to "Navigation · All routes" in the language's locale; an empty string hides it. */
-		menuFooter?: string;
-		/** The skip link's text; defaults to "Skip to content" in the language's locale. */
-		skipToContent?: string;
+		/** An empty string hides the footer. Copy belongs to the consumer. */
+		menuFooter: string;
+		/** The skip link's text, supplied by the consumer. */
+		skipToContent: string;
 	}
 
 	export interface SiteHeaderProps {
-		/** `beforeNavigate`, `onNavigate` and `afterNavigate` from `$app/navigation`. */
-		navigation: SiteNavigation;
+		/** The persistent app layout's single navigation lifecycle. */
+		navigation: NavigationLifecycle;
 		home: string;
 		wordmark?: string;
 		links: readonly SiteHeaderLink[];
 		menuItems: readonly SiteHeaderMenuItem[];
 		labels: SiteHeaderLabels;
-		language?: Omit<LanguageToggleProps, 'onNavigate' | 'class'>;
+		language?: Omit<LanguageToggleProps, 'ref' | 'class'>;
 		/** Shown from a 1024px header; folds away with the links while the menu is open. */
 		search?: Snippet;
 		/** Rendered before the theme, language and menu controls. */
 		actions?: Snippet;
 	}
-
-	const DEFAULT_LABELS = {
-		en: { menuFooter: 'Navigation · All routes', skipToContent: 'Skip to content' },
-		fr: { menuFooter: 'Navigation · Toutes les routes', skipToContent: 'Aller au contenu' },
-		es: { menuFooter: 'Navegación · Todas las rutas', skipToContent: 'Saltar al contenido' },
-	} as const;
 </script>
 
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import { Dialog } from 'bits-ui';
 	import { magnetic } from '@yesid/motion/actions';
 	import { isPrefersReducedMotion } from '@yesid/motion/stores/reducedMotion';
@@ -82,11 +76,10 @@
 
 	const contentId = $props.id();
 	const linksFrom = $derived(Math.min(...links.map((link) => link.priority ?? 1)));
-	const defaults = $derived(DEFAULT_LABELS[(language?.locale ?? 'en') as keyof typeof DEFAULT_LABELS] ?? DEFAULT_LABELS.en);
-	const menuFooter = $derived(labels.menuFooter ?? defaults.menuFooter);
-	const skipToContent = $derived(labels.skipToContent ?? defaults.skipToContent);
+	const menuFooter = $derived(labels.menuFooter);
+	const skipToContent = $derived(labels.skipToContent);
 
-	let pill: HTMLElement;
+	let languageLink = $state<HTMLAnchorElement | null>(null);
 	let menuToggle: HTMLButtonElement;
 	let overlay: HTMLElement | undefined = $state();
 
@@ -96,57 +89,28 @@
 	let entering = $state(false);
 	let closing = $state(false);
 
-	let navigationVersion = 0;
 	let dismissVersion = 0;
-	let localeNavigation = false;
-	const closingNavigations = new Set<() => void>();
-
-	const languageToggle = () => pill.querySelector<HTMLAnchorElement>('[data-testid="language-toggle"]');
 
 	function toggleMenu() {
-		if (closingNavigations.size) return;
+		if (navigation.pending) return;
+		dismissVersion = navigation.version;
 		menuOpen = !menuOpen;
 		if (menuOpen) {
-			dismissVersion = navigationVersion;
 			active = true;
 		}
 	}
 
 	// svelte-ignore state_referenced_locally
-	const { beforeNavigate, onNavigate, afterNavigate } = navigation;
-
-	beforeNavigate(({ to, type, shallow }) => {
-		if (shallow && type === 'goto') return;
-		// Stop a smooth scroll still in flight, or it carries on and scrolls the next page.
-		const lenis = getLenis();
-		if (lenis?.isScrolling) lenis.scrollTo(lenis.scroll, { immediate: true });
-		navigationVersion++;
-		// A language switch from the open menu keeps it open on the translated page.
-		localeNavigation = menuOpen && type === 'link' && to?.url.href === languageToggle()?.href;
-		if (!localeNavigation) menuOpen = false;
-	});
-
-	// Hold the navigation until the menu has finished closing.
-	onNavigate(({ shallow, type }) => {
-		if (shallow && type === 'goto') return;
-		if (!active || localeNavigation) return;
-		menuOpen = false;
-		return new Promise<void>((resolve) => closingNavigations.add(resolve));
-	});
-
-	afterNavigate(async ({ shallow, type }) => {
-		if (shallow && type === 'goto') return;
-		if (!localeNavigation || !menuOpen) return;
-		localeNavigation = false;
-		dismissVersion = navigationVersion;
-		await tick();
-		languageToggle()?.focus({ preventScroll: true });
-	});
+	onDestroy(navigation.attachMenu({
+		get open() { return menuOpen; },
+		get active() { return active; },
+		close: () => { menuOpen = false; },
+		languageLink: () => languageLink,
+	}));
 
 	$effect(() => {
 		if (active) return;
-		for (const resolve of closingNavigations) resolve();
-		closingNavigations.clear();
+		navigation.menuClosed();
 	});
 
 	$effect(() => {
@@ -186,6 +150,7 @@
 	}
 
 	function close() {
+		if (menuOpen) dismissVersion = navigation.version;
 		menuOpen = false;
 	}
 
@@ -193,7 +158,7 @@
 		event.preventDefault();
 		const version = dismissVersion;
 		await tick();
-		if (!active && !menuOpen && version === navigationVersion) menuToggle.focus({ preventScroll: true });
+		if (!active && !menuOpen && version === navigation.version) menuToggle.focus({ preventScroll: true });
 	}
 </script>
 
@@ -240,7 +205,6 @@
 					style:z-index={active ? 'var(--z-nav)' : 'var(--z-sheet)'}
 				>
 					<nav
-						bind:this={pill}
 						data-testid="nav-pill"
 						data-links-from={linksFrom}
 						aria-label={labels.nav}
@@ -278,7 +242,7 @@
 						{@render actions?.()}
 						<ThemeToggle label={labels.theme} />
 						{#if language}
-							<LanguageToggle {...language} {onNavigate} />
+							<LanguageToggle {...language} bind:ref={languageLink} />
 						{/if}
 						<button
 							bind:this={menuToggle}
