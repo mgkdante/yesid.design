@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.35.0-rc.1
+## 0.35.0
 
 <!-- release-fragment: connect-kit3-truth -->
 - `@yesid/ui` (patch), `@yesid/config` (minor): Document Kit 3 as the supported app target, with TypeScript 6 for SvelteKit consumers and
