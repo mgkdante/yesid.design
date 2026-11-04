@@ -46,6 +46,64 @@ function addTargetOnlyPackage(repo: TempCheckout, name = '@yesid/retired-widget'
 }
 
 describe('release packing', () => {
+	it('rehearses prepare, check and real packing through rc.1, rc.2 and stable without publishing', () => {
+		const repo = checkout('1.2.3');
+		const root = fileURLToPath(new URL('../../..', import.meta.url));
+		// Keep the fixture's package contents small, but exercise the current sibling peer graph.
+		for (const { directory } of RELEASE_PACKAGES) {
+			const path = `packages/${directory}/package.json`;
+			const current = JSON.parse(readFileSync(join(root, path), 'utf8'));
+			const fixture = JSON.parse(repo.read(path));
+			fixture.peerDependencies = current.peerDependencies ?? {};
+			repo.write(path, `${JSON.stringify(fixture, null, 2)}\n`);
+		}
+		for (const [version, fragment] of [
+			['1.3.0-rc.1', 'candidate'],
+			['1.3.0-rc.2', 'candidate-fix'],
+			['1.3.0', undefined],
+		] as const) {
+			if (fragment) {
+				repo.write(`.changes/${fragment}.md`, `---\n"@yesid/ui": minor\n---\n\n${fragment}.\n`);
+			}
+			expect(runReleaseCommand(['prepare', '--version', version], repo.root))
+				.toBe(`Release ${version} prepared`);
+			expect(runReleaseCommand(['check', '--version', version, '--tag', `v${version}`], repo.root))
+				.toBe(`Release ${version} is prepared for v${version}`);
+			const paths = ['package.json', 'bun.lock', 'CHANGELOG.md', ...RELEASE_PACKAGES.flatMap(({ directory }) => [
+				`packages/${directory}/package.json`, `packages/${directory}/README.md`,
+			])];
+			const before = paths.map((path) => repo.read(path));
+			expect(runReleaseCommand(['pack', '--tag', `v${version}`, '--repository', 'example/design'], repo.root))
+				.toBe(`Packed ${RELEASE_PACKAGES.length} packages for v${version} into dist`);
+			expect(readdirSync(join(repo.root, 'dist')).sort()).toEqual(
+				RELEASE_PACKAGES.map(({ directory }) => `yesid-${directory}-${version}.tgz`).sort(),
+			);
+			for (const { directory } of RELEASE_PACKAGES) {
+				const asset = join(repo.root, `dist/yesid-${directory}-${version}.tgz`);
+				const packed = JSON.parse(tarballFile(asset, 'package.json'));
+				const source = JSON.parse(repo.read(`packages/${directory}/package.json`));
+				expect(packed.version).toBe(version);
+				expect(packed.peerDependencies).toEqual(Object.fromEntries(
+					Object.entries(source.peerDependencies).map(([name, range]) => [name,
+						name.startsWith('@yesid/')
+							? `https://github.com/example/design/releases/download/v${version}/yesid-${name.slice('@yesid/'.length)}-${version}.tgz`
+							: range,
+					]),
+				));
+				expect(tarballFile(asset, 'src/index.ts')).toBe('export const value = 1;\n');
+			}
+			expect(paths.map((path) => repo.read(path))).toEqual(before);
+			expect(JSON.parse(repo.read('apps/gallery/package.json')).version).toBe('0.1.0');
+			rmSync(join(repo.root, 'dist'), { recursive: true });
+		}
+		const changelog = repo.read('CHANGELOG.md');
+		expect(changelog).toContain('## 1.3.0\n');
+		expect(changelog).not.toContain('## 1.3.0-rc.2\n');
+		for (const id of ['candidate', 'candidate-fix']) {
+			expect(changelog.match(new RegExp(`<!-- release-fragment: ${id} -->`, 'gu'))).toHaveLength(1);
+		}
+	}, 30_000);
+
 	it('recovers a target predating a package added to the runner inventory', () => {
 		const target = checkout();
 		rmSync(join(target.root, 'packages/analytics'), { recursive: true });
