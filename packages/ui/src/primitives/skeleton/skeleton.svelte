@@ -12,9 +12,9 @@
 </script>
 
 <!--
-Loading placeholder. Surface = bg-muted (solid, no alpha — surfaces stay
-opaque per doctrine). Pulse animation from tw-animate-css; the scoped
-reduced-motion guard below halts it for users who opt out.
+Loading placeholder. Surface = bg-muted (solid, no alpha; surfaces stay
+opaque per doctrine). The scoped pulse and reduced-motion guard below
+halt animation for users who opt out.
 -->
 <div
 	bind:this={ref}

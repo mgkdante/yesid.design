@@ -1,4 +1,5 @@
 /* Shared app base styles. */
+@import 'tw-animate-css';
 @import '@yesid/tokens/theme.css';
 @import '@yesid/motion/tap-feedback.css';
 @import '@yesid/motion/lenis.css';

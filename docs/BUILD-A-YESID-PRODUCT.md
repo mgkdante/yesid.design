@@ -70,14 +70,14 @@ Import the styles in this order in the app stylesheet. `@yesid/ui/base.css` brin
 ```css
 @import '@yesid/tokens/tokens.css';
 @import 'tailwindcss';
-@import 'tw-animate-css';
 @import '@yesid/ui/base.css';
 @source '../node_modules/@yesid/ui/src';
 ```
 
 Adjust the `@source` path to where the app's `node_modules` sits relative to the stylesheet.
 
-Install `tw-animate-css` alongside Tailwind. Import `@yesid/tokens/fonts.css` from the root
+`@yesid/ui/base.css` loads the Sheet animation styles from its own `tw-animate-css` dependency;
+products do not install or import it separately. Import `@yesid/tokens/fonts.css` from the root
 layout. The single server hook in section 4 preloads only the latin font faces.
 
 Dense products opt into the compact type scale with `data-density="compact"` on `<html>`.
@@ -342,6 +342,10 @@ leaves scroll restoration, analytics, view transitions and routing policy with t
 Render `SeoHead` from `@yesid/ui/head` once with the route's resolved `title`, `description`,
 `siteName`, `ogLocale` and absolute `image` (`url` and `alt`), plus `canonical` and `alternates`
 where appropriate. The share card, favicon, robots and header utilities come from `@yesid/seo-kit`.
+
+Every in-house product shows the yesid dot in its browser tab. On load, `SiteRoot` repaints every
+`link[rel="icon"]` with that mark in `--primary`, replacing the supplied href even without a
+theme change. Later theme changes repaint it too.
 The app owns the actual URLs and metadata.
 
 ## 5. Apply the motion policy

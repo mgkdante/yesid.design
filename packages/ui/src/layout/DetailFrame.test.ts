@@ -151,6 +151,14 @@ describe('root attributes', () => {
 });
 
 describe('toc pill', () => {
+	it('tracks entries without rendering a pill when caller labels are omitted', async () => {
+		const view = frame({ children: targets, toc: { entries: tocProps.entries, selector: '[data-target]' } });
+		expect(pill(view)).toBeNull();
+		await vi.waitFor(() => expect(observers.at(-1)?.targets).toHaveLength(2));
+		await view.rerender({ toc: tocProps });
+		expect(pill(view)).not.toBeNull();
+	});
+
 	it('shows the pill only with toc entries and no caller rail', () => {
 		const rail = part('rail');
 		expect(pill(frame({ toc: tocProps }))).not.toBeNull();

@@ -128,6 +128,10 @@
 - `svelte` → `./src/table/index.ts`
 - `default` → `./src/table/index.ts`
 
+### `./station-tabs.css`
+
+- `default` → `./station-tabs.css`
+
 ### `./base.css`
 
 - `default` → `./base.css`
@@ -138,7 +142,8 @@
 
 ## Direct public assets
 
-- `./base.css` — direct asset `./base.css` (`default`), sha256 `f50f50d90e4ffba59b9088fb2b29320553a79eb7e97938bec86f4bc46b0a420d`
+- `./station-tabs.css` — direct asset `./station-tabs.css` (`default`), sha256 `00af002eb573b00f418b0d9bc9c8755cf8e07a64a51fdfcda8e6a60e9ca7b0d4`
+- `./base.css` — direct asset `./base.css` (`default`), sha256 `d8f52f3a39e5d0cb3979142624e969bc8473b78d159b86a509dae0b4069ea1ae`
 - `./boot.json` — direct asset `./src/head/boot.json` (`default`), sha256 `fa6a3d0b4682d1f2529ca9d0db35722afd4cf7136ca7d74fe07c2364106551d4`
 
 ## Declaration namespaces
@@ -1355,20 +1360,20 @@ interface DetailFrameProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>
 }
 
 // @public (undocumented)
-interface DetailFrameToc {
-    // (undocumented)
-    closeAria: string;
-    // (undocumented)
+type DetailFrameToc = {
     entries: TocEntry[];
-    landFragments?: boolean;
-    navigation?: SectionJump;
-    // (undocumented)
-    onNavigate?: (id: string) => void;
-    // (undocumented)
-    openAria: string;
     pillEntries?: TocEntry[];
+    onNavigate?: (id: string) => void;
+    navigation?: SectionJump;
     selector?: string;
-}
+    landFragments?: boolean;
+} & ({
+    openAria: string;
+    closeAria: string;
+} | {
+    openAria?: never;
+    closeAria?: never;
+});
 
 // @public (undocumented)
 const ErrorIllustration: Component<ErrorIllustrationProps, {}, "">;
@@ -2376,10 +2381,14 @@ type SheetContent = ReturnType<typeof SheetContent>;
 type SheetContentProps = WithoutChildrenOrChild<Dialog.ContentProps> & {
     side?: SheetSide;
     portalProps?: WithoutChildren<Dialog.PortalProps>;
-    showCloseButton?: boolean;
-    closeLabel?: string;
     children: Snippet;
-};
+} & ({
+    showCloseButton?: boolean;
+    closeLabel: string;
+} | {
+    showCloseButton: false;
+    closeLabel?: string;
+});
 
 // @public (undocumented)
 const SheetDescription: Component<Omit<Dialog.DescriptionProps, "child">, {}, "ref">;
