@@ -269,8 +269,11 @@ const detailFrameProps: DetailFrameProps = {
 		onNavigate: (id) => expectTypeOf(id).toEqualTypeOf<string>(),
 	},
 };
-// @ts-expect-error the contents pill needs the caller's accessible names
-const invalidDetailToc: DetailFrameProps = { children: ignoredChildren, toc: { entries: [] } };
+const detailWithoutPill: DetailFrameProps = { children: ignoredChildren, toc: { entries: [] } };
+// @ts-expect-error supply both pill labels or neither
+const invalidDetailToc: DetailFrameProps = { children: ignoredChildren, toc: { entries: [], openAria: 'Open contents' } };
+// @ts-expect-error supply both pill labels or neither
+const invalidDetailClose: DetailFrameProps = { children: ignoredChildren, toc: { entries: [], closeAria: 'Close contents' } };
 
 const errorPageProps: ErrorPageProps = {
 	status: 404,
@@ -334,6 +337,13 @@ const sheetContent: SheetContentProps = {
 	portalProps: { disabled: true },
 	closeLabel: 'Close panel',
 };
+const sheetWithoutClose: SheetContentProps = { children: ignoredChildren, showCloseButton: false };
+// @ts-expect-error the default visible close button needs caller-owned copy
+const unnamedSheet: SheetContentProps = { children: ignoredChildren };
+// @ts-expect-error an explicitly visible button also needs caller-owned copy
+const unnamedVisibleSheet: SheetContentProps = { children: ignoredChildren, showCloseButton: true };
+// @ts-expect-error a dynamic flag can show the button, so it needs copy
+const unnamedDynamicSheet: SheetContentProps = { children: ignoredChildren, showCloseButton: Boolean(1) };
 const sheetOverlay: SheetOverlayProps = {};
 const sheetHeader: SheetHeaderProps = {};
 const sheetFooter: SheetFooterProps = {};
@@ -341,6 +351,7 @@ const sheetTitle: SheetTitleProps = {};
 const sheetDescription: SheetDescriptionProps = {};
 const invalidPortalChildren: SheetContentProps = {
 	children: ignoredChildren,
+	closeLabel: 'Close panel',
 	// @ts-expect-error SheetContent owns Portal children
 	portalProps: { children: ignoredChildren },
 };

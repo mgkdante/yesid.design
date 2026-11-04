@@ -77,8 +77,9 @@ Labels use the shared station label vocabulary.
 
 Sheet exports named prop types for Root, Trigger, Close, Portal, Content, Overlay, Header, Footer,
 Title, and Description. `SheetContentProps.portalProps` excludes portal children because Content
-owns the portal body. `closeLabel` owns the close button's accessible copy and defaults to
-`"Close"`; callers supply localized copy where required.
+owns the portal body. `closeLabel` is required caller-owned accessible copy whenever the close
+button can appear (including the default). Only `showCloseButton={false}` permits omitting it.
+There is no built-in English label.
 
 ## UI configuration
 
@@ -418,7 +419,9 @@ caller's own element, such as a rail that becomes a sheet on mobile. `railScroll
 viewport with internal scrolling; `paneOwnedRail` stacks the left rail above the center. With
 both rails the grid is `1fr 2fr 1fr`, or uses `measure` as the center maximum. With `toc` the
 frame tracks the active entry (bind `activeId`), lands same-page fragments when `landFragments` is
-set, and shows `TocPill` below 1024px unless `rail` is set. Create one controller with
+set, and shows `TocPill` below 1024px when both `toc.openAria` and `toc.closeAria` are supplied,
+the pill entries are nonempty, and `rail` is absent. Supply both labels or neither; omitting
+them keeps active tracking and fragment handling without rendering a pill. Create one controller with
 `useSectionJump(afterNavigate)` and pass it as `toc.navigation`, sharing it with `TocNav` where both
 appear. The root takes ordinary attributes such as `class`, `style` and `data-testid`.
 
@@ -553,7 +556,10 @@ inline. Pass `role` and `aria-live` when the notice reports a change. With a `ro
 
 `@yesid/ui/layout` exports `SiteRoot`, the app root. Disclosure components use their declared
 per-mount defaults. On mount SiteRoot adopts the theme the boot script applied and starts Lenis
-through `@yesid/motion`; it cleans up on unmount and renders no element of its own. Props:
+through `@yesid/motion`; it cleans up on unmount and renders no element of its own. Every in-house
+product shows the yesid dot in its browser tab. On load, `SiteRoot` calls `theme.init()`, which
+repaints every `link[rel="icon"]` with that mark in `--primary`, replacing the supplied href even
+without a theme change; later theme changes repaint it too. Props:
 
 - `smoothScroll` (default `true`): `false` leaves native scrolling.
 - `scroller`: `{ wrapper, content }` selectors for an element scroller. `content` must wrap the
@@ -628,7 +634,8 @@ style their own), scrollbar, circuit grid, shared keyframes, label styles, `.gla
 forced colors and the
 View Transitions route crossfade (off under reduced motion; pair it with `onNavigate(viewTransition)`
 from `@yesid/motion/utils/viewTransition`). It imports
-`@yesid/tokens/theme.css`, which provides the Tailwind theme and the semantic color utilities
+`tw-animate-css` from its own dependency for Sheet motion, plus `@yesid/tokens/theme.css`,
+which provides the Tailwind theme and the semantic color utilities
 (`bg-primary`, `text-muted-foreground` and the rest). It uses Tailwind v4 directives, so import it
 from the app stylesheet after Tailwind:
 

@@ -5,9 +5,9 @@ import SheetContractFixture from './test-fixtures/SheetContractFixture.svelte';
 afterEach(() => cleanup());
 
 describe('Sheet content contract', () => {
-	it('preserves the existing close label fallback', () => {
-		render(SheetContractFixture);
-		expect(screen.getByText('Close')).toBeInTheDocument();
+	it('omits the close button when the caller hides it without supplying copy', () => {
+		render(SheetContractFixture, { props: { showCloseButton: false } });
+		expect(screen.queryByRole('button')).toBeNull();
 	});
 
 	it('accepts caller-owned localized close copy', () => {
@@ -19,7 +19,7 @@ describe('Sheet content contract', () => {
 	it('tears down an open dismissible layer without stale reactive work', async () => {
 		const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 		try {
-			render(SheetContractFixture);
+			render(SheetContractFixture, { props: { closeLabel: 'Fermer' } });
 			cleanup();
 			await new Promise((resolve) => setTimeout(resolve, 20));
 			expect(warning).not.toHaveBeenCalled();

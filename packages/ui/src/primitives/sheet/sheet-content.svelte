@@ -38,10 +38,11 @@
 	export type SheetContentProps = WithoutChildrenOrChild<SheetPrimitive.ContentProps> & {
 		side?: SheetSide;
 		portalProps?: WithoutChildren<SheetPrimitive.PortalProps>;
-		showCloseButton?: boolean;
-		closeLabel?: string;
 		children: Snippet;
-	};
+	} & (
+		| { showCloseButton?: boolean; closeLabel: string }
+		| { showCloseButton: false; closeLabel?: string }
+	);
 
 	let {
 		ref = $bindable(null),
@@ -49,7 +50,7 @@
 		side = 'bottom',
 		portalProps,
 		showCloseButton = true,
-		closeLabel = 'Close',
+		closeLabel,
 		children,
 		...restProps
 	}: SheetContentProps = $props();

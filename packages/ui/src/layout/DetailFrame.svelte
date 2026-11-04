@@ -4,7 +4,7 @@
   below the site chrome (`--detail-rail-top`, default `--chrome-offset`) and hide below 1024px
   unless `leftMobile`. `rail` replaces the left cell with the caller's own element, such as a rail
   that turns into a sheet on mobile. With `toc`, the frame tracks the active entry and shows
-  TocPill below 1024px unless `rail` is set.
+  TocPill below 1024px when both pill labels are supplied and `rail` is absent.
 -->
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
@@ -12,12 +12,10 @@
 	import type { TocEntry } from '../brand/toc.js';
 	import type { SectionJump } from '../brand/section-jump.js';
 
-	export interface DetailFrameToc {
+	export type DetailFrameToc = {
 		entries: TocEntry[];
 		/** Entries for the mobile pill, when they differ. */
 		pillEntries?: TocEntry[];
-		openAria: string;
-		closeAria: string;
 		onNavigate?: (id: string) => void;
 		/** Share a routed page controller with TocNav and other section views. */
 		navigation?: SectionJump;
@@ -25,7 +23,7 @@
 		selector?: string;
 		/** Let the controller correct same-page fragment landings. */
 		landFragments?: boolean;
-	}
+	} & ({ openAria: string; closeAria: string } | { openAria?: never; closeAria?: never });
 
 	export interface DetailFrameProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
 		header?: Snippet;
@@ -170,7 +168,7 @@
 	{@render after?.()}
 </article>
 
-{#if toc && !rail && pillEntries.length > 0}
+{#if toc && toc.openAria !== undefined && toc.closeAria !== undefined && !rail && pillEntries.length > 0}
 	<TocPill
 		entries={pillEntries}
 		{activeId}

@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../index.js';
 
-	interface Props {
-		closeLabel?: string;
-	}
+	type Props =
+		| { closeLabel: string; showCloseButton?: boolean }
+		| { closeLabel?: string; showCloseButton: false };
 
-	let { closeLabel }: Props = $props();
+	let props: Props = $props();
 	let open = $state(true);
 </script>
 
 <Sheet bind:open>
-	<SheetContent portalProps={{ disabled: true }} {closeLabel}>
+	<SheetContent portalProps={{ disabled: true }} {...props}>
 		<SheetTitle>Fixture title</SheetTitle>
 		<SheetDescription>Fixture description</SheetDescription>
 		<p>Fixture body</p>
