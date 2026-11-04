@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.34.0
+
+<!-- release-fragment: deepen-primitive-cleanup -->
+- `@yesid/tokens` (minor), `@yesid/ui` (minor): Remove unused Toggle/ToggleGroup subpaths, Button variants secondary/destructive/link and sizes
+  xs/lg/icon/icon-xs/icon-sm/icon-lg, Badge variants secondary/ghost/link, Sheet left, and unused
+  inline-icon, button-group and invalid-state selectors. Use bits-ui directly for toggle behavior;
+  choose an existing supported variant/size or own a product-specific treatment locally. FilterGroup
+  keeps its DOM, classes and keyboard/selection behavior through bits-ui directly. Declared defaults,
+  Gallery-only destructive Badge/right Sheet, and Button ghost's dark hover remain.
+
+  Remove the eight sidebar color mappings, exact --radius, --secondary and --color-secondary.
+  Use semantic color tokens directly, --radius-md instead of --radius, and --popover instead of
+  --secondary. Keep --secondary-foreground and named radius tokens. Transit must migrate its
+  MetricInfo radius before adopting this token output. See docs/migrations/deepen-primitives.md.
+  These owner-approved removals have no deprecation window.
+
+<!-- release-fragment: deepen-section-independent -->
+- `@yesid/ui` (minor): Add `CollapsibleSection.independent` for filter and control panels that keep their own open
+  state and stay outside content-section bulk actions, counts and the all-closed calculation.
+  Use `<CollapsibleSection independent bind:open={panelOpen}>` without changing the card's
+  rendering or storing disclosure state. Explicit section jumps still reveal the target panel
+  and its containing disclosures. Included in the coordinated v0.34.0 minor with primitive cleanup.
+  When content TOC entries exist, independent targets do not replace their active entry, counter
+  or pill label through observation or explicit jumps. Empty-entry controllers retain target activity.
+  Static independent panels have the same TOC protection; reveal requests leave their bound `open` unchanged.
+
+<!-- release-fragment: section-jump-cancel -->
+- `@yesid/ui` (patch): Keep in-flight section jumps through non-navigating clicks, including reopening the mobile TOC
+  while layout settles. Navigation links, newer jumps, history, route changes, root changes and
+  disposal still cancel stale landings. Real-component browser coverage reproduces the mobile
+  regression; cancellation tests preserve navigation and history restoration.
+
 ## 0.33.0
 
 <!-- release-fragment: deepen-disclosure -->

@@ -53,11 +53,11 @@
 		onclick={onToggle}
 	>
 		<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-			<path class="q-wave" d="M8.4 8.4a5 5 0 0 0 0 7.2" />
-			<path class="q-wave" d="M15.6 8.4a5 5 0 0 1 0 7.2" />
-			<path class="q-wave q-wave--far" d="M5.7 5.7a8.9 8.9 0 0 0 0 12.6" />
-			<path class="q-wave q-wave--far" d="M18.3 5.7a8.9 8.9 0 0 1 0 12.6" />
-			<circle class="q-core" cx="12" cy="12" r="2.3" />
+			<path class="wave" d="M8.4 8.4a5 5 0 0 0 0 7.2" />
+			<path class="wave" d="M15.6 8.4a5 5 0 0 1 0 7.2" />
+			<path class="wave wave--far" d="M5.7 5.7a8.9 8.9 0 0 0 0 12.6" />
+			<path class="wave wave--far" d="M18.3 5.7a8.9 8.9 0 0 1 0 12.6" />
+			<circle class="core" cx="12" cy="12" r="2.3" />
 		</svg>
 		<span>{label}</span>
 	</button>
@@ -112,8 +112,8 @@
 		outline-offset: 3px;
 	}
 
-	.q-wave,
-	.q-core {
+	.wave,
+	.core {
 		fill: none;
 		stroke: currentColor;
 		stroke-width: 1.5;
@@ -126,27 +126,27 @@
 			filter var(--duration-normal) var(--ease-default);
 	}
 
-	.q-wave--far {
+	.wave--far {
 		opacity: 0.5;
 	}
 
-	.sections-toggle[data-collapsed='true'] .q-wave {
+	.sections-toggle[data-collapsed='true'] .wave {
 		opacity: 0;
 	}
 
-	.sections-toggle[data-collapsed='true'] .q-core {
+	.sections-toggle[data-collapsed='true'] .core {
 		fill: var(--primary);
 		stroke: var(--primary);
 	}
 
-	.sections-controls--glow .sections-toggle[data-collapsed='true'] .q-core {
+	.sections-controls--glow .sections-toggle[data-collapsed='true'] .core {
 		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--glow) 60%, transparent));
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.sections-toggle,
-		.q-wave,
-		.q-core {
+		.wave,
+		.core {
 			transition: none;
 		}
 	}
