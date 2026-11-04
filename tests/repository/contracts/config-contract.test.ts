@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +7,18 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { projectRunes } from '../../../packages/config/svelte/project-runes.js';
 
 const CONFIG_ROOT = fileURLToPath(new URL('../../../packages/config/', import.meta.url));
+const CONFIG_DOC = readFileSync(join(CONFIG_ROOT, 'README.md'), 'utf8');
+function documentedRange(contract: string, tool: string): string {
+	const row = CONFIG_DOC.split('\n').find((line) => line.startsWith(`| \`${contract}\` |`));
+	const range = [...(row ?? '').matchAll(/(TypeScript|SvelteKit) `([^`]+)`/g)]
+		.find(([, name]) => name === tool)?.[2];
+	if (!range) throw new Error(`Missing ${tool} support range for ${contract}`);
+	return range;
+}
+const LIBRARY_TYPESCRIPT = documentedRange('tsconfig/library.json', 'TypeScript');
+const APP_TYPESCRIPT = documentedRange('tsconfig/svelte-kit.json', 'TypeScript');
+const APP_KIT = documentedRange('tsconfig/svelte-kit.json', 'SvelteKit');
+const KIT_PACKAGE = fileURLToPath(new URL('../../../apps/gallery/node_modules/@sveltejs/kit/package.json', import.meta.url));
 const COMPILERS = [
 	{
 		name: 'TypeScript 5.9 (libraries/tools)',
@@ -37,7 +49,30 @@ function consumer(): string {
 	return root;
 }
 
-function showConfig(root: string, compiler: string): Record<string, unknown> {
+function assertSupportedVersion(tool: string, version: string, range: string): void {
+	// The support table uses stable lower bounds and an exclusive next-major bound.
+	const bounds = /^>=(\d+)(?:\.(\d+))?(?:\.(\d+))? <(\d+)$/.exec(range);
+	const parts = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+	if (!bounds || !parts) throw new Error(`Unrecognized ${tool} version/range: ${version}, ${range}`);
+	const major = Number(parts[1]);
+	const minor = Number(parts[2]);
+	const patch = Number(parts[3]);
+	const minMajor = Number(bounds[1]);
+	const minMinor = Number(bounds[2] ?? 0);
+	const minPatch = Number(bounds[3] ?? 0);
+	const aboveMinimum = major > minMajor || (major === minMajor &&
+		(minor > minMinor || (minor === minMinor && patch >= minPatch)));
+	if (!aboveMinimum || major >= Number(bounds[4])) {
+		throw new Error(`${tool} ${version} is outside documented range ${range}`);
+	}
+}
+
+function showConfig(root: string, compiler: string, range = LIBRARY_TYPESCRIPT): Record<string, unknown> {
+	const resolved = spawnSync('bun', [compiler, '--version'], { encoding: 'utf8' });
+	expect(resolved.status, `${resolved.stdout}\n${resolved.stderr}`).toBe(0);
+	const version = /^Version (\S+)\s*$/.exec(resolved.stdout)?.[1];
+	if (!version) throw new Error(`Compiler did not report a version: ${compiler}`);
+	assertSupportedVersion('TypeScript', version, range);
 	const result = spawnSync('bun', [compiler, '--showConfig', '--project', 'tsconfig.json'], {
 		cwd: root,
 		encoding: 'utf8',
@@ -83,6 +118,8 @@ describe('@yesid/config neutral contracts', () => {
 	});
 
 	it('composes after the real Kit 3 generated config on TypeScript 6', () => {
+		const kit: { version: string } = JSON.parse(readFileSync(KIT_PACKAGE, 'utf8'));
+		assertSupportedVersion('SvelteKit', kit.version, APP_KIT);
 		const compiler = COMPILERS[1]!.path;
 		const root = consumer();
 		write(
@@ -93,7 +130,7 @@ describe('@yesid/config neutral contracts', () => {
 				include: ['index.ts'],
 			}, null, '\t')}\n`,
 		);
-		const shown = showConfig(root, compiler).compilerOptions as Record<string, unknown>;
+		const shown = showConfig(root, compiler, APP_TYPESCRIPT).compilerOptions as Record<string, unknown>;
 		expect(shown).toMatchObject({
 			allowJs: true,
 			checkJs: true,
@@ -110,5 +147,23 @@ describe('@yesid/config neutral contracts', () => {
 			target: 'esnext',
 			verbatimModuleSyntax: true,
 		});
+	});
+
+	it('rejects a TypeScript 5.9 executable substituted into the Kit 3 composition check', () => {
+		const root = consumer();
+		write(join(root, 'tsconfig.json'), JSON.stringify({
+			extends: '@yesid/config/tsconfig/library.json',
+			compilerOptions: { module: 'ESNext', lib: ['ES2022'], types: [] },
+			include: ['index.ts'],
+		}));
+		expect(() => showConfig(root, COMPILERS[0]!.path, APP_TYPESCRIPT))
+			.toThrow(/TypeScript 5\.9\.\d+.*outside documented range >=6 <7/);
+	});
+
+	it('rejects Kit 2 or a future major outside the documented Kit 3 range', () => {
+		for (const version of ['2.70.3', '4.0.0']) {
+			expect(() => assertSupportedVersion('SvelteKit', version, APP_KIT))
+				.toThrow(`SvelteKit ${version} is outside documented range >=3 <4`);
+		}
 	});
 });

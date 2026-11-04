@@ -41,7 +41,8 @@ Each release carries one tarball per package. Add the packages with the same tag
     "@yesid/motion": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-motion-X.Y.Z.tgz",
     "@yesid/seo-kit": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-seo-kit-X.Y.Z.tgz",
     "@yesid/tokens": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-tokens-X.Y.Z.tgz",
-    "@yesid/ui": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-ui-X.Y.Z.tgz"
+    "@yesid/ui": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-ui-X.Y.Z.tgz",
+    "satori": "0.33.5"
   },
   "devDependencies": {
     "@yesid/config": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-config-X.Y.Z.tgz",
@@ -54,7 +55,9 @@ Run `bun install`. The lockfile records each tarball's integrity, so CI installs
 the release published. `@yesid/ui` takes `@yesid/tokens`, `@yesid/motion` and `@yesid/seo-kit` as
 peer dependencies pinned to the same release. `@yesid/seo-kit` takes `@yesid/tokens` and
 `satori >=0.33.5 <1`: list them explicitly, even one the product never imports, so the app
-holds a single copy. Add `satori` to dependencies (or devDependencies for a wholly static build).
+holds a single copy. Pin `satori` to `0.33.5`, the version tested in this repository and both
+products, as in the dependency block above (or devDependencies for a wholly static build).
+The wider peer range is a compatibility declaration, not a recommendation to resolve an untested version.
 Add `shiki >=4 <5` only if importing the optional server-side `@yesid/seo-kit/highlight` subpath. The packages ship TypeScript and Svelte
 source that Vite compiles (see `ssr.noExternal` in section 4).
 `gh attestation verify <tarball> --repo mgkdante/yesid.dev-design` proves a tarball came from the
@@ -146,7 +149,8 @@ an internal diagnostic.
 ### Kit 3 config and source imports
 
 Keep the app's adapter and runes policy in `kit.config.js`, then pass that object to
-`sveltekit(kit)` in `vite.config.ts`. Kit 3 no longer reads `svelte.config.js` or a nested
+`sveltekit(kit)` in `vite.config.ts`. Kit 3 refuses `svelte.config.js` with
+`config_file_unsupported`; pass the config through the Vite plugin, without a nested
 `kit: { ... }` object. This static example uses `@sveltejs/adapter-static`; select the
 adapter for the product's deployment. A static product also exports `prerender = true`
 from its root `+layout.ts` and supplies entries for dynamic locale routes.
@@ -168,7 +172,7 @@ export default {
     mode: 'hash',
     directives: {
       'default-src': ['self'],
-      'script-src': ['self', boot.hash],
+      'script-src': ['self', /** @type {`sha256-${string}`} */ (boot.hash)],
       'connect-src': ['self', 'https://plausible.io'],
       'style-src': ['self', 'unsafe-inline'],
       'img-src': ['self', 'data:'],
