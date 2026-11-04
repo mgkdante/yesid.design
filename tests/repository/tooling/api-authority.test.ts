@@ -127,6 +127,34 @@ describe('API report approval', () => {
 		).toThrow('API report changes require a new release fragment for: @yesid/ui');
 	});
 
+	it('requires API fixes to merge with their fragment before a separate rc release PR', () => {
+		const checkout = createReleaseCheckout('0.7.0-rc.1');
+		scratch.push(checkout);
+		checkout.write('CHANGELOG.md', '# Changelog\n\n## 0.7.0-rc.1\n\n<!-- release-fragment: original -->\n');
+		for (const { name, directory } of API_PACKAGES) {
+			checkout.write(`api-reports/${directory}.api.md`, BASE_REPORTS[name]);
+		}
+		checkout.git('init');
+		checkout.git('add', '.');
+		checkout.git('-c', 'user.name=Release Test', '-c', 'user.email=release@example.test', 'commit', '-m', 'candidate baseline');
+		const base = checkout.git('rev-parse', 'HEAD');
+		checkout.write('api-reports/ui.api.md', 'ui-v2');
+		checkout.write('.changes/candidate-fix.md', fragment({ '@yesid/ui': 'minor' }));
+		expect(approveRepositoryApiChanges(checkout.root, base).changedPackages).toEqual(['@yesid/ui']);
+		checkout.git('add', '.');
+		checkout.git('-c', 'user.name=Release Test', '-c', 'user.email=release@example.test', 'commit', '-m', 'merge API fix with fragment');
+		const sourceHead = checkout.git('rev-parse', 'HEAD');
+
+		prepareRelease(checkout.root, '0.7.0-rc.2');
+
+		// Combining the API fix and preparation in one PR loses the required new fragment.
+		expect(() => approveRepositoryApiChanges(checkout.root, base))
+			.toThrow('API report changes require a new release fragment for: @yesid/ui');
+		// The release-only PR compares against the already-merged source/report/fragment commit.
+		expect(approveRepositoryApiChanges(checkout.root, sourceHead))
+			.toEqual({ changedPackages: [], newFragments: [] });
+	});
+
 	it('does not let a fragment for another package authorize the changed report', () => {
 		expect(() =>
 			authorizeApiChanges({
