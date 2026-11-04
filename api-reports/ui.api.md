@@ -2038,7 +2038,6 @@ declare namespace PrimitivesTabs {
         TabsContent as Content,
         TabsList as List,
         TabsTrigger as Trigger,
-        tabsListVariants,
         TabsListVariant,
         Tabs,
         TabsContent,
