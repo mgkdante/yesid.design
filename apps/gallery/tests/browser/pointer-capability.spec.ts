@@ -40,3 +40,38 @@ for (const device of ['mouse', 'touchscreen laptop with mouse', 'touch-only'] as
 		}
 	});
 }
+
+test.describe('combined hover and press feedback on a hybrid', () => {
+	test.use({ isMobile: false, hasTouch: false });
+	for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+		test(`holding a segment keeps press feedback after the hover timer (${reducedMotion})`, async ({ page }) => {
+			await page.addInitScript(() => {
+				Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 10 });
+			});
+			await page.emulateMedia({ reducedMotion });
+			await page.clock.install();
+			await openGallery(page);
+			const segment = page.getByRole('radiogroup', { name: 'Grain', exact: true }).getByRole('radio').first();
+			await segment.hover();
+			expect(await page.evaluate(() => matchMedia('(any-hover: hover) and (any-pointer: fine)').matches)).toBe(true);
+			await page.mouse.down();
+			try {
+				// Advance beyond boop's 300ms reset while holding the mouse. This
+				// exercises the real GSAP ticker, not the unit-test GSAP mock.
+				await page.clock.runFor(650);
+				const held = await segment.evaluate(node => {
+					const style = getComputedStyle(node);
+					return { transform: style.transform, transition: style.transitionProperty };
+				});
+				expect(held.transform).toBe('matrix(0.94, 0, 0, 0.94, 0, 0)');
+				expect(held.transition.split(',').map(value => value.trim())).not.toContain('transform');
+			} finally {
+				await page.mouse.up();
+			}
+			await page.clock.runFor(650);
+			await expect(segment).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
+			await expect(segment).toBeFocused();
+			await expect(segment).toBeEnabled();
+		});
+	}
+});

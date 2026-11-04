@@ -102,6 +102,43 @@ describe('boop action', () => {
 		expect(el.style.transform).toContain('scale(1.2)');
 		action.destroy();
 	});
+
+	it('owns scale and rotation without resetting another action\'s transform', async () => {
+		const { boop } = await import('./boop.js');
+		const el = document.createElement('button');
+		el.style.scale = '1.02';
+		el.style.rotate = '2deg';
+		el.style.transition = 'color 150ms linear';
+		const action = boop(el, { scale: 1.04, rotation: 5 });
+		el.dispatchEvent(new MouseEvent('mouseenter'));
+		// Another action owns this channel while a press is held.
+		el.style.transform = 'scale(0.94)';
+		expect(el.style.scale).toBe('1.04');
+		expect(el.style.rotate).toBe('5deg');
+		expect(el.style.transition).toContain('color 150ms linear');
+		expect(el.style.transition).not.toContain('transform');
+		vi.advanceTimersByTime(650);
+		expect(el.style.scale).toBe('1.02');
+		expect(el.style.rotate).toBe('2deg');
+		expect(el.style.transform).toBe('scale(0.94)');
+		action.destroy();
+		expect(el.style.transition).toBe('color 150ms linear');
+		expect(el.style.transform).toBe('scale(0.94)');
+	});
+
+	it('destroy restores only its own styles and cancels its reset timer', async () => {
+		const { boop } = await import('./boop.js');
+		const el = document.createElement('button');
+		const action = boop(el);
+		el.dispatchEvent(new MouseEvent('mouseenter'));
+		el.style.transform = 'scale(0.94)';
+		action.destroy();
+		vi.advanceTimersByTime(650);
+		expect(el.style.scale).toBe('');
+		expect(el.style.rotate).toBe('');
+		expect(el.style.transition).toBe('');
+		expect(el.style.transform).toBe('scale(0.94)');
+	});
 });
 
 describe('boop device gating', () => {
