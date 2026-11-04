@@ -1,5 +1,68 @@
 # Changelog
 
+## 0.35.0-rc.1
+
+<!-- release-fragment: connect-kit3-truth -->
+- `@yesid/ui` (patch), `@yesid/config` (minor): Document Kit 3 as the supported app target, with TypeScript 6 for SvelteKit consumers and
+  TypeScript 5.9/6 for the library config. Config flags and package runtime source are unchanged.
+  The repository contract suite composes the real Kit 3 config on TypeScript 6, and Gallery now
+  runs Kit 3, Vite 8 and the hook-only navigation lifecycle. The optional accepted-start adapter
+  retains fake-router coverage; eventless language redirects close the menu on Kit 3.
+
+  Follow the composed product guide for boot hooks, fonts, theme and language injection, Kit/Vite
+  config, header/navigation/language/section controls, source scanning and required peers. The UI
+  README uses Kit 3 and the existing tap-size token; migration/deprecation notes name shipped
+  v0.33.0 and v0.34.0 changes. This does not establish consumer adoption or deployed acceptance.
+
+<!-- release-fragment: connect-module-fixes -->
+- `@yesid/ui` (minor): Sheet animation CSS now comes from `@yesid/ui/base.css` and its package-owned
+  `tw-animate-css` dependency. Products can remove their direct dependency and stylesheet import.
+
+  Breaking: Sheet Content requires caller-owned `closeLabel` whenever its close button can appear.
+  Pass localized copy, or explicitly set `showCloseButton={false}` to omit the button and label.
+  The owner approved this coordinated transition without a deprecation wait for v0.35.0.
+
+  DetailFrame accepts both `toc.openAria` and `toc.closeAria`, or neither. Omitting both disables
+  the mobile contents pill while retaining active tracking and fragment handling. Existing labelled
+  callers and `pillEntries: []` remain valid.
+
+  Document the yesid dot favicon repaint on SiteRoot mount and the CI-decided lockfile rule.
+  See `docs/migrations/connect-module-fixes.md` for both products' bump requirements and checks.
+
+<!-- release-fragment: connect-prune -->
+- `@yesid/tokens` (minor), `@yesid/gates` (minor), `@yesid/seo-kit` (minor), `@yesid/ui` (minor), `@yesid/analytics` (minor): Remove unused public contracts under the connect c-8 owner-approved deprecation-window
+  exception. Card keeps its root; compose children with ordinary markup. Sticky panels use
+  product layout and the retained scrollChain action. Button, Badge and Sheet keep their
+  props and types while their variant functions stop being index exports. Remove the unused
+  color-mix floor engine, CSP serializer and token parse subpath. Analytics referrer reduction
+  and property filtering remain private behind createAnalytics with unchanged request behavior.
+  See docs/migrations/connect-prune.md for exact exports, source scans and verification limits.
+
+<!-- release-fragment: connect-station-tab-look -->
+- `@yesid/ui` (minor): Add the opt-in `@yesid/ui/station-tabs.css` signage look for Tabs triggers and native navigation
+  links. Import it after base.css and apply `station-tabs` to the rail and `station-tab` to controls.
+  Active state follows bits-ui's `data-state="active"` or a link's `aria-current="page"`.
+  Weight, inactive ink and inactive hover-rule color remain independently adjustable CSS variables.
+  Hover keeps full-strength text and shows the existing 3px bottom rule. The inset focus outline
+  uses the control's text color for visible keyboard focus on both inactive rails and active chips.
+  Existing Tabs variants are unchanged. Product copy removal and regression checks happen at adoption.
+
+<!-- release-fragment: motion-pointer-capability -->
+- `@yesid/motion` (minor): Unify device capability policy through the existing `shouldAnimate(tier, input?)` export from
+  both the root and `@yesid/motion/policy`. Its optional input is `pointer` or `touch-only`;
+  existing calls without an input keep their motion-only behavior.
+
+  All six hover effects require a hover-capable fine pointer, including a mouse on a touchscreen
+  laptop or touch-primary tablet. PressBounce now runs only on touch devices without that
+  capability, so boop and pressBounce are mutually exclusive. Hybrids use the same CSS press
+  baseline as desktops; retain `tap-press` or a deliberate CSS alternative on pressBounce callers.
+  The original transform-based action bodies and touch-only phone behavior are preserved.
+
+  Existing reduced-motion tiers and Lenis behavior remain. Missing matchMedia makes input-gated
+  actions inert, including on fresh imports. Checks apply at mount time. The device table covers
+  all seven actions under both motion preferences, and browser tests verify desktop/hybrid CSS
+  press feedback through the hover pulse and after it.
+
 ## 0.34.0
 
 <!-- release-fragment: deepen-primitive-cleanup -->
