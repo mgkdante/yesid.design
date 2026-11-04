@@ -29,6 +29,17 @@ export function openSectionContaining(target: Element): boolean {
 
 const sections = new SvelteMap<symbol, SectionRegistration>();
 
+/** Whether the target belongs to an independent panel rather than a nested content section. */
+export function isIndependentTarget(target: Element): boolean {
+	let owner: SectionRegistration | undefined;
+	for (const section of sections.values()) {
+		const element = section.element?.();
+		if (!element?.contains(target)) continue;
+		if (!owner || owner.element?.()?.contains(element)) owner = section;
+	}
+	return owner?.independent ?? false;
+}
+
 /** Internal lifecycle shared by CollapsibleSection and the page bulk control. */
 export function registerSection(section: SectionRegistration): () => void {
 	const key = Symbol();

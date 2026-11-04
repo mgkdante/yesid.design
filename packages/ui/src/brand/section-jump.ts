@@ -1,6 +1,6 @@
 import { tick, untrack } from 'svelte';
 import { fromStore, writable } from 'svelte/store';
-import { openSection, openSectionContaining } from './sections-registry.js';
+import { isIndependentTarget, openSection, openSectionContaining } from './sections-registry.js';
 import { flattenToc, type TocEntry } from './toc.js';
 
 interface SectionJumpOptions {
@@ -178,7 +178,8 @@ function createNavigation() {
 		pending?.abort();
 		pending = undefined;
 	};
-	const setActive = (id: string) => {
+	const setActive = (id: string, target?: Element) => {
+		if (previousIds.length && target && isIndependentTarget(target)) return;
 		active.current = id;
 		untrack(() => notify?.(id));
 	};
@@ -216,7 +217,7 @@ function createNavigation() {
 					for (const record of records) {
 						if (!record.isIntersecting) continue;
 						const id = targetId(record.target);
-						if (id) setActive(id);
+						if (id) setActive(id, record.target);
 					}
 				}, { rootMargin: '-' + height * LANDING_LINE + 'px 0px -' + (height * (1 - LANDING_LINE) - 1) + 'px 0px' });
 				targets.forEach((target) => observer!.observe(target));
@@ -271,7 +272,7 @@ function createNavigation() {
 				await settle(target, abort.signal);
 				if (pageDisposed || generation !== request || !target.isConnected) return false;
 				land(target, reducedMotion() ? 'auto' : options.behavior ?? 'smooth');
-				setActive(id);
+				setActive(id, target);
 				return true;
 			} finally {
 				if (pending === abort) pending = undefined;
