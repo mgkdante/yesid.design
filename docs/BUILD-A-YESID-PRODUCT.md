@@ -2,7 +2,7 @@
 
 Use this checklist in the new product:
 
-- [ ] Start from Bun, SvelteKit, Svelte 5, and Tailwind CSS v4.
+- [ ] Start from Bun, SvelteKit 3, TypeScript 6, Svelte 5, Vite 8 and Tailwind CSS v4.
 - [ ] Pick one exact `yesid.dev-design` release tag.
 - [ ] Add the package tarball URLs for that tag to `package.json` and run `bun install`.
 - [ ] Load the package token styles and bundled fonts.
@@ -17,10 +17,16 @@ Use this checklist in the new product:
 Use:
 
 - Bun 1.3 or newer;
-- SvelteKit with Svelte 5;
+- Node 22.17 or newer (CI uses Node 22);
+- SvelteKit `>=3 <4`, TypeScript `>=6 <7`, Svelte `>=5.57.1 <6`, Vite `>=8.0.12 <9`
+  and `@sveltejs/vite-plugin-svelte >=7 <8`;
 - Tailwind CSS v4 through `@tailwindcss/vite`.
 
 Create the SvelteKit app first. Confirm its normal test, check, and build commands pass before adding the design packages.
+
+This is the Kit 3 setup path for the next coordinated v0.35.0 release. The examples use
+contracts already present in v0.34.0; v0.35.0 must be published and reviewed before installing
+its URLs. Gallery remains workspace evidence, never product acceptance.
 
 ## 2. Install one exact release
 
@@ -35,7 +41,8 @@ Each release carries one tarball per package. Add the packages with the same tag
     "@yesid/motion": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-motion-X.Y.Z.tgz",
     "@yesid/seo-kit": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-seo-kit-X.Y.Z.tgz",
     "@yesid/tokens": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-tokens-X.Y.Z.tgz",
-    "@yesid/ui": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-ui-X.Y.Z.tgz"
+    "@yesid/ui": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-ui-X.Y.Z.tgz",
+    "satori": "0.33.5"
   },
   "devDependencies": {
     "@yesid/config": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-config-X.Y.Z.tgz",
@@ -46,8 +53,12 @@ Each release carries one tarball per package. Add the packages with the same tag
 
 Run `bun install`. The lockfile records each tarball's integrity, so CI installs exactly the bytes
 the release published. `@yesid/ui` takes `@yesid/tokens`, `@yesid/motion` and `@yesid/seo-kit` as
-peer dependencies pinned to the same release, and `@yesid/seo-kit` takes `@yesid/tokens`: list all
-of them, even one the product never imports, so the app holds a single copy. The packages ship TypeScript and Svelte
+peer dependencies pinned to the same release. `@yesid/seo-kit` takes `@yesid/tokens` and
+`satori >=0.33.5 <1`: list them explicitly, even one the product never imports, so the app
+holds a single copy. Pin `satori` to `0.33.5`, the version tested in this repository and both
+products, as in the dependency block above (or devDependencies for a wholly static build).
+The wider peer range is a compatibility declaration, not a recommendation to resolve an untested version.
+Add `shiki >=4 <5` only if importing the optional server-side `@yesid/seo-kit/highlight` subpath. The packages ship TypeScript and Svelte
 source that Vite compiles (see `ssr.noExternal` in section 4).
 `gh attestation verify <tarball> --repo mgkdante/yesid.dev-design` proves a tarball came from the
 release workflow.
@@ -59,19 +70,15 @@ Import the styles in this order in the app stylesheet. `@yesid/ui/base.css` brin
 ```css
 @import '@yesid/tokens/tokens.css';
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import '@yesid/ui/base.css';
 @source '../node_modules/@yesid/ui/src';
 ```
 
 Adjust the `@source` path to where the app's `node_modules` sits relative to the stylesheet.
 
-Import `@yesid/tokens/fonts.css` from the root layout. Preload only the latin faces in `hooks.server.ts`:
-
-```ts
-import { preloadFont } from '@yesid/tokens/fonts';
-
-resolve(event, { preload: ({ type, path }) => type !== 'font' || preloadFont(path) });
-```
+Install `tw-animate-css` alongside Tailwind. Import `@yesid/tokens/fonts.css` from the root
+layout. The single server hook in section 4 preloads only the latin font faces.
 
 Dense products opt into the compact type scale with `data-density="compact"` on `<html>`.
 
@@ -104,24 +111,16 @@ Import that same initializer from both SvelteKit boot hooks. In
 `src/hooks.client.ts`:
 
 ```ts
-import type { ClientInit } from '@sveltejs/kit';
-import { initializeUi } from '$lib/ui-initialization';
+import type { ClientInit } from '@sveltejs/kit/hooks';
+import { initializeUi } from '#lib/ui-initialization.ts';
 
 export const init: ClientInit = () => {
   initializeUi();
 };
 ```
 
-In `src/hooks.server.ts`:
-
-```ts
-import type { ServerInit } from '@sveltejs/kit';
-import { initializeUi } from '$lib/ui-initialization';
-
-export const init: ServerInit = () => {
-  initializeUi();
-};
-```
+The server initializer is composed with font preloading, language replacement and theme boot
+in the single `hooks.server.ts` below. Keep one `handle` export.
 
 Do not put `configureUi` in a root layout instance script. The client and server
 hooks are the explicit initialization boundaries. They import one initializer
@@ -147,38 +146,203 @@ configuration is deferred and is not part of the current public API.
 `ConfigureUiResult = 'initialized' | 'unchanged'` is observable public API, not
 an internal diagnostic.
 
-### Boot the theme and write the head
+### Kit 3 config and source imports
 
-Put `%yesid.themeBoot%` in `src/app.html` before `%sveltekit.head%`, and swap it
-in the server hook so the stored theme and section states paint first:
+Keep the app's adapter and runes policy in `kit.config.js`, then pass that object to
+`sveltekit(kit)` in `vite.config.ts`. Kit 3 refuses `svelte.config.js` with
+`config_file_unsupported`; pass the config through the Vite plugin, without a nested
+`kit: { ... }` object. This static example uses `@sveltejs/adapter-static`; select the
+adapter for the product's deployment. A static product also exports `prerender = true`
+from its root `+layout.ts` and supplies entries for dynamic locale routes.
 
-```ts
-import { injectThemeBoot } from '@yesid/ui/head';
-
-export const handle: Handle = ({ event, resolve }) =>
-  resolve(event, { transformPageChunk: ({ html }) => injectThemeBoot(html) });
-```
-
-Use SvelteKit's `kit.csp` in hash mode and add the boot script's hash from `@yesid/ui/boot.json`
-to `script-src`; the product owns the rest of its directive list:
+`kit.config.js`:
 
 ```js
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { projectRunes } from '@yesid/config/svelte/project-runes.js';
 import boot from '@yesid/ui/boot.json' with { type: 'json' };
 
-const csp = {
-  mode: 'hash',
-  directives: {
-    'script-src': ['self', boot.hash],
-    'connect-src': ['self', 'https://plausible.io'],
+/** @type {import('@sveltejs/kit/vite').Config} */
+export default {
+  adapter: adapter(),
+  preprocess: vitePreprocess(),
+  compilerOptions: { runes: projectRunes(import.meta.dirname) },
+  csp: {
+    mode: 'hash',
+    directives: {
+      'default-src': ['self'],
+      'script-src': ['self', /** @type {`sha256-${string}`} */ (boot.hash)],
+      'connect-src': ['self', 'https://plausible.io'],
+      'style-src': ['self', 'unsafe-inline'],
+      'img-src': ['self', 'data:'],
+      'font-src': ['self'],
+      'object-src': ['none'],
+      'base-uri': ['self'],
+      'frame-ancestors': ['none'],
+    },
   },
 };
 ```
-List `@yesid/tokens` and `@yesid/seo-kit` in Vite's `ssr.noExternal`: they ship
-TypeScript, and the Svelte plugin otherwise externalizes `@yesid/ui`'s
-dependencies in dev and tests, where Node can't load them.
-Render `SeoHead` from `@yesid/ui/head` once in the root layout with the page's
-resolved title, description, canonical and alternates. The share card, favicon
-mark, robots and security headers come from `@yesid/seo-kit`.
+
+The product owns its CSP: add only the origins its features need. Hash mode suits prerendered
+HTML; use the current release's `boot.hash` instead of copying an old hash.
+
+`vite.config.ts`:
+
+```ts
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
+import kit from './kit.config.js';
+
+export default defineConfig({
+  plugins: [tailwindcss(), sveltekit(kit)],
+  ssr: { noExternal: ['@yesid/tokens', '@yesid/seo-kit', 'bits-ui', 'gsap'] },
+});
+```
+
+These source/ESM dependencies must compile in dev, SSR and tests too. Configure the same Kit
+plugin when a Vitest config does not inherit Vite. Keep bundler choices in the product; no
+shared bundler preset is required.
+
+Add `"imports": { "#lib/*": "./src/lib/*" }` to the app's `package.json`. Kit 3 uses package
+imports instead of `$lib`. Use `$app/env` for `browser`/`dev`, `$app/env/public` for public
+environment values, and `$app/state` for `page`. `$app/stores` is removed. Hook types come
+from `@sveltejs/kit/hooks`, not the package root.
+
+After `svelte-kit sync`, compose the app's `tsconfig.json` with the generated config:
+
+```json
+{
+  "extends": ["$app/tsconfig", "@yesid/config/tsconfig/svelte-kit.json"],
+  "compilerOptions": { "rewriteRelativeImportExtensions": false },
+  "include": ["src", "tests", "*.ts", "*.js"]
+}
+```
+
+This no-emit app override permits `#lib/*.ts` imports. The shared library defaults stay intact.
+Kit 3's `page.url` and search parameters are readonly: create `new URL(page.url.href)` or
+`new URLSearchParams(page.url.searchParams.toString())` before editing a local copy.
+
+### One server hook: initialization, fonts, language and theme
+
+Put `%yesid.themeBoot%` before `%sveltekit.head%` in `src/app.html`, and set
+`<html lang="%lang%">`. Only the stored theme is restored before paint; disclosure state
+resets to declared defaults on each mount.
+
+This example's product supports EN/FR paths. Add `src/lib/site.ts`:
+
+```ts
+export const locales = ['en', 'fr'] as const;
+export type Locale = (typeof locales)[number];
+export function localeFromPath(path: string): Locale {
+  return path.split('/')[1] === 'fr' ? 'fr' : 'en';
+}
+export function localizeUrl(input: { href: string }, locale: string): string {
+  const url = new URL(input.href);
+  const path = url.pathname.replace(/^\/(en|fr)(?=\/|$)/, '');
+  url.pathname = '/' + locale + (path || '/');
+  return url.pathname + url.search + url.hash;
+}
+```
+
+The app owns route creation, locale validation, translated copy and redirects. Replace these
+helpers with its real routing policy when paths differ. `src/hooks.server.ts` composes every
+operation in one `resolve` call:
+
+```ts
+import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
+import { injectThemeBoot } from '@yesid/ui/head';
+import { preloadFont } from '@yesid/tokens/fonts';
+import { initializeUi } from '#lib/ui-initialization.ts';
+import { localeFromPath } from '#lib/site.ts';
+
+export const init: ServerInit = () => { initializeUi(); };
+export const handle: Handle = ({ event, resolve }) => {
+  const locale = localeFromPath(event.url.pathname);
+  return resolve(event, {
+    preload: ({ type, path }) => type !== 'font' || preloadFont(path),
+    transformPageChunk: ({ html }) => injectThemeBoot(html.replace('%lang%', locale)),
+  });
+};
+```
+
+For dynamic documents, apply the product's approved response headers around this same resolve
+call. Static HTML/assets need the host's headers file or deployment configuration too; a server
+hook alone does not cover them. `@yesid/seo-kit/headers` exports `SECURITY_HEADERS` and
+`contentSecurityPolicy`; review HSTS/includeSubDomains/preload for the deployment before
+adopting it. This guide does not change an existing host's HSTS policy.
+
+### One persistent root layout: header, navigation and sections
+
+Create the lifecycle once during root-layout initialization, outside any pathname key, conditional
+header or `onMount`. Pass it through app props or context when the shell is a wrapper.
+The following shell uses example English chrome; supply translated app-local labels/copy for
+every locale before enabling those routes.
+
+```svelte
+<script lang="ts">
+  import { page } from '$app/state';
+  import { beforeNavigate, onNavigate, afterNavigate } from '$app/navigation';
+  import { SiteRoot, SiteHeader, SiteFooter } from '@yesid/ui/layout';
+  import { createNavigationLifecycle, SectionsToggle } from '@yesid/ui/brand';
+  import { localeFromPath, locales, localizeUrl } from '#lib/site.ts';
+  import '@yesid/tokens/fonts.css';
+  import '../app.css';
+
+  let { children } = $props();
+  const locale = $derived(localeFromPath(page.url.pathname));
+  const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate });
+  const names = { en: 'English', fr: 'Français' };
+  const home = $derived('/' + locale + '/');
+  const links = $derived([{ href: home, label: 'Home', current: page.url.pathname === home }]);
+  const labels = {
+    openMenu: 'Open menu', closeMenu: 'Close menu', menu: 'Site menu', theme: 'Dark theme',
+    menuFooter: 'Navigation · All routes', skipToContent: 'Skip to content',
+  };
+  const sectionCopy = {
+    collapse: 'Collapse sections', expand: 'Expand sections',
+    collapseTitle: 'Collapse all content sections', expandTitle: 'Expand all content sections',
+  };
+</script>
+
+<SiteRoot lang={locale}>
+  <SiteHeader {navigation} {home} {links} menuItems={links} {labels}
+    language={{ locale, locales, href: (next) => localizeUrl(page.url, next),
+      label: 'Language', names, preserveState: true }}>
+    {#snippet actions()}<SectionsToggle copy={sectionCopy} />{/snippet}
+  </SiteHeader>
+  <main id="main">{@render children()}</main>
+  <SiteFooter tagline="Example product" groups={[]} statusPrefix="System" liveLabel="Online">
+    {#snippet brand()}<a href={home}>Example product</a>{/snippet}
+  </SiteFooter>
+</SiteRoot>
+```
+
+`SiteHeader.language` renders `LanguageToggle`; a second language control is unnecessary.
+Standalone `LanguageToggle` from `@yesid/ui/brand` accepts the same `locale`, `locales`,
+`href`, `label` and required `names`. For a standalone `preserveState` link, bind its `ref`
+and pass a live `languageLink` getter as the lifecycle's second argument. `reload` performs
+a document load instead.
+
+`SectionsToggle` uses shared in-memory sections state. It appears with at least two mounted
+content `CollapsibleSection` instances and expands all only when all are closed. TOC/filter/control
+panels stay independent and disclosure state is never remembered. Put the control in page actions
+if sections belong only to a detail route.
+
+Kit 3 integrations omit the optional `subscribeNavigation`: there is no public accepted-start
+stream carrying native events. Direct language switches keep an open menu and refocus its link.
+An eventless language redirect closes it and restores ordinary page focus. Do not fabricate a
+subscription from `$app/state` or document clicks. A custom router may supply a complete
+accepted-start subscription under the [migration contract](migrations/navigation-lifecycle.md);
+that optional path retains fake-adapter coverage. The lifecycle interrupts Lenis momentum but
+leaves scroll restoration, analytics, view transitions and routing policy with the product.
+
+Render `SeoHead` from `@yesid/ui/head` once with the route's resolved `title`, `description`,
+`siteName`, `ogLocale` and absolute `image` (`url` and `alt`), plus `canonical` and `alternates`
+where appropriate. The share card, favicon, robots and header utilities come from `@yesid/seo-kit`.
+The app owns the actual URLs and metadata.
 
 ## 5. Apply the motion policy
 
@@ -204,7 +368,8 @@ Use the store when the component must render reduced-motion state:
 {/if}
 ```
 
-Opt in to the Layer 1 `.tap-press` and `.tap-feedback` utilities directly:
+`@yesid/ui/base.css` already imports the Layer 1 `.tap-press` and `.tap-feedback` utilities.
+Only a product that does not load that base stylesheet needs this direct import:
 
 ```css
 @import '@yesid/motion/tap-feedback.css';
@@ -390,12 +555,14 @@ Do not add product-specific locale checks, copy policy, or framework virtual-mod
 ```svelte
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { env } from '$env/dynamic/public';
+  import * as env from '$app/env/public';
   import { createAnalytics, defineAnalyticsPreset } from '@yesid/analytics';
 
   const preset = defineAnalyticsPreset({ events: [] });
+  const domain = 'PUBLIC_PLAUSIBLE_DOMAIN' in env &&
+    typeof env.PUBLIC_PLAUSIBLE_DOMAIN === 'string' ? env.PUBLIC_PLAUSIBLE_DOMAIN : '';
   onMount(() => {
-    createAnalytics(preset, { domain: env.PUBLIC_PLAUSIBLE_DOMAIN ?? '' });
+    createAnalytics(preset, { domain });
   });
 </script>
 ```

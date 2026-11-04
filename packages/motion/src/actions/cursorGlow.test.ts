@@ -1,15 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cursorGlow } from './cursorGlow.js';
-
-// Mock reduced-motion store
-vi.mock('../stores/reducedMotion.js', () => ({
-	isPrefersReducedMotion: vi.fn(() => false)
-}));
 
 describe('cursorGlow', () => {
 	let node: HTMLDivElement;
 
+	afterEach(() => vi.restoreAllMocks());
+
 	beforeEach(() => {
+		vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+			matches: query === '(any-hover: hover) and (any-pointer: fine)',
+			media: query, onchange: null, addListener() {}, removeListener() {},
+			addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true,
+		}));
 		node = document.createElement('div');
 		vi.spyOn(node, 'getBoundingClientRect').mockReturnValue({
 			left: 0, top: 0, width: 200, height: 100,
@@ -35,18 +37,22 @@ describe('cursorGlow', () => {
 		action.destroy();
 	});
 
-	it('returns no-op on touch devices', () => {
-		Object.defineProperty(navigator, 'maxTouchPoints', { value: 1, configurable: true });
+	it('returns no-op on touch-only devices', () => {
+		vi.mocked(window.matchMedia).mockImplementation((query) => ({
+			matches: false, media: query, onchange: null, addListener() {}, removeListener() {},
+			addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true,
+		}));
 		const action = cursorGlow(node);
 		node.dispatchEvent(new PointerEvent('pointermove', { clientX: 50, clientY: 50 }));
 		expect(node.style.getPropertyValue('--glow-x')).toBe('');
 		action.destroy();
-		Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
 	});
 
 	it('stays active under reduced motion as SAFE-ALWAYS opacity-only light', async () => {
-		const { isPrefersReducedMotion } = await import('../stores/reducedMotion.js');
-		(isPrefersReducedMotion as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
+		vi.mocked(window.matchMedia).mockImplementation((query) => ({
+			matches: true, media: query, onchange: null, addListener() {}, removeListener() {},
+			addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true,
+		}));
 		const action = cursorGlow(node);
 		node.dispatchEvent(new PointerEvent('pointermove', { clientX: 50, clientY: 50 }));
 		expect(node.style.getPropertyValue('--glow-x')).toBe('50px');

@@ -47,7 +47,7 @@ confirms a tarball came from the release workflow.
 
 ## Develop
 
-You need Bun 1.3.11 ([`.bun-version`](.bun-version)) and Node 22 ([`.nvmrc`](.nvmrc)).
+You need Bun 1.3.11 ([`.bun-version`](.bun-version)) and Node 22.17 or newer ([`.nvmrc`](.nvmrc)).
 
 ```sh
 git clone https://github.com/mgkdante/yesid.dev-design.git

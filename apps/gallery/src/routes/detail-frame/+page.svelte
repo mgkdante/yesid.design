@@ -18,7 +18,7 @@
 		'Sample copy for a long section, repeated so the page scrolls far enough to keep the side rails stuck below the navigation bar while the center column moves.';
 
 	let params = $state(new URLSearchParams());
-	onMount(() => (params = page.url.searchParams));
+	onMount(() => (params = new URLSearchParams(page.url.searchParams.toString())));
 	const layout = $derived(params.get('layout'));
 	const sectionFixture = $derived(params.get('sections') === '1');
 	const railTop = $derived(Number(params.get('railTop')));

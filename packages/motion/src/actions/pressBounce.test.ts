@@ -22,6 +22,10 @@ vi.mock('$lib/motion/stores/reducedMotion', () => ({
 describe('pressBounce action', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(window, 'matchMedia').mockReturnValue({
+			matches: false, media: '', onchange: null, addListener() {}, removeListener() {},
+			addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true,
+		});
 		mockIsTouchDevice.mockReturnValue(true);
 		mockIsPrefersReducedMotion.mockReturnValue(false);
 	});

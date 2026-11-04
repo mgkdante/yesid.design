@@ -16,7 +16,7 @@ describe('motion/actions/cardParallax', () => {
 		document.body.appendChild(node);
 		// Default matchMedia stub: hover-capable, reduced-motion off.
 		window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-			matches: query === '(hover: hover)',
+			matches: query === '(any-hover: hover) and (any-pointer: fine)',
 			media: query,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn(),
@@ -84,7 +84,7 @@ describe('motion/actions/cardParallax', () => {
 	it('no-op under prefers-reduced-motion', () => {
 		window.matchMedia = vi.fn().mockImplementation((query: string) => ({
 			matches:
-				query === '(prefers-reduced-motion: reduce)' || query === '(hover: hover)',
+				query === '(prefers-reduced-motion: reduce)' || query === '(any-hover: hover) and (any-pointer: fine)',
 			media: query,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn(),

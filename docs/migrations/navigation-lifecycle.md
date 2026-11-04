@@ -1,11 +1,11 @@
 # Navigation lifecycle migration (deepen D-c)
 
-This is an owner-approved breaking transition for the next coordinated minor release. The owner
+This owner-approved breaking transition shipped in v0.33.0. The owner
 requested immediate removal of package-owned header/language copy on 2026-11-03 (D5/D8/D11),
 alongside the navigation lifecycle change. The owner also confirmed that both apps keep header
 labels and language names in local locale files, never the CMS. The normal 90-day and
-intervening-minor compatibility window is waived for these named contracts. No version is cut
-by this change.
+intervening-minor compatibility window is waived for these named contracts. The entry below
+records that migration; current Kit 3 wiring is hook-only.
 
 ## One lifecycle in the persistent layout
 
@@ -47,21 +47,16 @@ there is no locale refocus or carried-over claim. It restores ordinary page focu
 triggering link disabled Kit's reset with `preserveState`. **The limitation is that a language switch which
 lands on a redirect closes the menu.** No SDK change is needed to use this fallback.
 
-**Transit / Kit 2.70.3:** include the accepted-start subscription to preserve locale continuity
-through redirects and superseding navigations. Gallery uses this same public store:
+**Current Kit 3 integrations:** Transit (Kit 3.1.1), yesid.dev (Kit 3.1.0) and Gallery
+omit `subscribeNavigation`, as in the first example. `$app/stores` was removed, and public
+`$app/state.navigating` omits the native event. Direct language switches still keep the menu open;
+language redirects close it. A Kit 3 bridge/SDK change remains optional future work, not an
+adoption prerequisite. The supported app target is Kit 3 only.
 
-```ts
-import { navigating } from '$app/stores';
-const navigation = createNavigationLifecycle({
-  beforeNavigate, onNavigate, afterNavigate,
-  subscribeNavigation: navigating.subscribe,
-});
-```
-
-**yesid.dev / Kit 3.1.0:** omit `subscribeNavigation`, as in the first example. `$app/stores` is
-removed and public `$app/state.navigating` omits the native event. Direct language switches still
-keep the menu open; language redirects close it. A Kit 3 bridge/SDK change is optional future work,
-not an adoption prerequisite. Keep the existing local-copy and test migrations listed below.
+The optional subscription remains part of the package contract and is tested through the private
+fake-router adapter in `packages/ui/src/brand/test-fixtures/fake-router.ts`, including redirects,
+superseding navigations, cancellation, duplicate events and unsubscribe cleanup. Do not construct
+a partial stream from `$app/state` or add a DOM click observer to imitate accepted starts.
 
 **Custom adapter contract:** a supplied subscription must publish every router-accepted start
 before loading or redirecting, including superseding links whose before hook is skipped. Every
@@ -211,8 +206,8 @@ Update the consumer test integrations with the production calls during each bump
   renders NavPill with no lifecycle and mocks the three raw `$app/navigation` hooks as no-ops.
   Create the real lifecycle with an app-local fake router adapter and supply it through the new
   NavPill prop or app context, matching the production layout integration. Implement
-  `subscribeNavigation` in that fake adapter for the Transit subscription path, emitting only
-  accepted starts with their original native event. Exercise omission as the Kit 3 fallback. Give
+  optional accepted-start behavior only in a compliant fake adapter. Production Kit 3 omits
+  `subscribeNavigation`; exercise that path in the consumer. Give
   each test a fresh adapter/lifecycle and exercise the relevant callbacks when asserting navigation.
   Do not import this repository's private fake-router fixture from the released package.
 - **yesid.dev, `apps/web/tests/header.spec.ts` and `apps/web/tests/accessibility.spec.ts`:**
@@ -221,7 +216,10 @@ Update the consumer test integrations with the production calls during each bump
   for open/close/menu/skip/language labels, using the exact keys and strings above. Keep CMS imports
   that still serve unrelated content expectations.
 
-Neither consumer is edited or accepted by this source PR. At each eventual package bump, run
+The caller inventories above are dated migration inputs from 2026-11-03, not a current code map.
+Current Kit versions were checked against Transit b5b28378 and yesid.dev 2892360e on 2026-11-04.
+This documentation/Gallery update edits neither consumer and does not re-accept either product.
+At each eventual package bump, run
 that app's full source guards, generated-output checks, unit tests, build and accessibility/browser
 gates. Exercise EN/FR/ES as applicable, both window and element scrolling, menu closure during
 navigation, language switching while opening/closing, focus after a closed-menu switch, Escape

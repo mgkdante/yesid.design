@@ -302,7 +302,7 @@ function sectionGlow(node: HTMLElement): {
 };
 
 // @public
-function shouldAnimate(tier: MotionTier): boolean;
+function shouldAnimate(tier: MotionTier, input?: 'pointer' | 'touch-only'): boolean;
 
 declare namespace StoresReducedMotion {
     export {

@@ -31,9 +31,9 @@ installed source, relative to the stylesheet that holds the directive:
 @source "../node_modules/@yesid/ui/src";
 ```
 
-`Combobox` preserves a 44px minimum tap target through `var(--size-tap-min)`. Products must define
-`--size-tap-min: 44px` in application CSS. Product copy, placeholders, labels, options, and
-localized prefixes always stay in the caller.
+`Combobox` preserves a 44px minimum tap target through `var(--size-tap-min)`. Import
+`@yesid/tokens/tokens.css`, which defines `--size-tap-min: 44px`; products do not need to redeclare
+it. Product copy, placeholders, labels, options and localized prefixes always stay in the caller.
 
 ## Current public component contracts
 
@@ -478,7 +478,7 @@ Without a subscription, direct language switches work through matching native ho
 An eventless step discards locale intent: a language switch that lands on a redirect closes the
 menu without locale refocus. The fallback restores ordinary page focus even when a link disabled
 the router reset through `preserveState`. Kit 3 apps omit the subscription and use this fallback; no
-bridge/SDK change is required. Kit 2 apps can pass the navigation store as shown below.
+bridge/SDK change is required. The example below targets Kit 3.
 
 A supplied subscription must publish every accepted start before loading/redirecting, including
 superseding links whose before hook is skipped, with the exact original native `NavigationEvent.event`.
@@ -494,10 +494,10 @@ stop and leaving input available if navigation is canceled.
 <script lang="ts">
 	import { beforeNavigate, onNavigate, afterNavigate } from '$app/navigation';
 	import { createNavigationLifecycle } from '@yesid/ui/brand';
-	import { navigating } from '$app/stores'; // SvelteKit 2 adapter only
+	import { SiteHeader } from '@yesid/ui/layout';
+	import { page } from '$app/state';
 	const navigation = createNavigationLifecycle({
 		beforeNavigate, onNavigate, afterNavigate,
-		subscribeNavigation: navigating.subscribe,
 	});
 </script>
 
@@ -533,7 +533,7 @@ standalone links pass their `bind:ref` to the lifecycle's optional `languageLink
 `reload` asks for a full document load. LanguageToggle registers no router hooks.
 `resetFocusAfterNavigation` is the same reset for `goto(url, { reset: false })`.
 The [migration note](https://github.com/mgkdante/yesid.dev-design/blob/v0.34.0/docs/migrations/navigation-lifecycle.md)
-lists the exact copy and integration changes for Transit and yesid.dev in the next release.
+records the v0.33.0 copy and integration migration for Transit and yesid.dev.
 
 ## Site footer and error page
 
