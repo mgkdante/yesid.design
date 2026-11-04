@@ -7,6 +7,19 @@ open/closed choices between visits. Filter groups and listing filter panels rema
 
 - Remove `sectionKey` from `CollapsibleSection` and `TocNav`. Keep `anchor` for TOC identity.
 - Remove `persistKey` from `FilterGroup` and `filterPersistKey` from `ListingFrame`.
+- For custom filter or control panels, use `<CollapsibleSection independent bind:open={panelOpen}>`.
+  It preserves the existing DOM, classes and toggle mechanics while excluding the panel from
+  bulk actions, the two-content-section threshold and the all-closed calculation. State remains
+  caller-owned and is never persisted. Independent anchors are navigation targets, not content
+  sections: omit them from content TOC entries. An explicit jump to the panel anchor or a nested
+  heading opens that panel and its containing disclosures before landing, without opening
+  unrelated content. This uses the existing jump/reveal contract, not an inert successful jump.
+  With non-empty content entries, panel observation and explicit jumps preserve the content
+  TOC's active entry, counter and pill label. Empty-entry controllers still report target activity;
+  ordinary content headings and selector targets outside independent panels are unaffected.
+  The same protection applies to `independent collapsible={false}`: the panel is already
+  visible, and jumps or reveal helpers do not rewrite its bound `open` value. Ordinary static
+  cards remain outside bulk actions with their existing behavior.
 - Remove `quiet` from `CollapsibleSection` and `TocNav`. Every mounted collapsible content section now
   participates in the page bulk control. TocNav keeps its independent toggle and does not count
   toward the two-content-section threshold. Remove adapter code that separately forwards the quiet

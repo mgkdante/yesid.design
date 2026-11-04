@@ -1101,6 +1101,7 @@ interface CollapsibleSectionProps {
     headerVariant?: 'default' | 'article-summary';
     // (undocumented)
     icon?: Snippet;
+    independent?: boolean;
     index?: number | null;
     // (undocumented)
     open?: boolean;
