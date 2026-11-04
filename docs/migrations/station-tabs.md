@@ -6,13 +6,16 @@ Use bits-ui's `data-state="active"` for Tabs and `aria-current="page"` for navig
 The module supplies no routing, selection, centering, scrolling, swipe guard or persistence.
 
 Provisional defaults awaiting the owner: active weight 700, inactive ink `--primary-foreground`,
-inactive hover opacity 0.7, minimum height `--size-tap-min`. The three visual choices can be
+an inactive 3px bottom rule on hover with full-strength text, minimum height `--size-tap-min`.
+The three visual choices can be
 changed independently through `--station-tab-active-weight`, `--station-tab-ink` and
-`--station-tab-hover-opacity`. Active signage colors remain theme-independent.
+`--station-tab-hover-rule-color` (defaults to `currentColor`; use `transparent` to hide it).
+Active signage colors remain theme-independent. Focus uses a 2px inset outline in the control's
+current text color, contrasting with inactive and active surfaces in both themes.
 
 Keep product strip geometry and overflow wrappers. Do not retain conflicting local visual
-rules or inline opacity on the controls: inline opacity would override the shared hover rule.
-Product-specific distance opacity must allow the inactive hover rule to take precedence.
+rules or opacity on the controls: dimming the text can fail contrast in either theme.
+Product-specific distance effects must preserve text contrast, including on hover and focus.
 
 ## Consumer checks at the bump
 

@@ -189,11 +189,13 @@ opacity and swipe guards remain in the product. Remove the previous local look w
 </nav>
 ```
 
-The shared defaults are active weight 700, inactive ink `--primary-foreground`, inactive hover
-opacity 0.7 and minimum tap height `--size-tap-min`. Active chips use `--signage-bg` and
+The shared defaults are active weight 700, inactive ink `--primary-foreground`, a 3px bottom rule
+on inactive hover (with text at full strength), and minimum tap height `--size-tap-min`. Active chips use `--signage-bg` and
 `--signage-text` in both themes. Set `--station-tab-active-weight`, `--station-tab-ink` and
-`--station-tab-hover-opacity` on the rail to change those three decisions independently.
-Reduced motion removes the opacity transition; keyboard focus keeps an inset ring.
+`--station-tab-hover-rule-color` on the rail to change those three decisions independently.
+The hover rule defaults to `currentColor`; `transparent` hides it without dimming the text.
+Reduced motion removes the rule-color transition. Keyboard focus uses a 2px inset outline in
+the control's current text color so it contrasts with both the inactive rail and active chip.
 Gallery's `/station-tabs` renders both compositions. Ordinary Tabs variants stay unchanged.
 
 The package targets bits-ui's real `data-state="active"` selector and rejects the dead
