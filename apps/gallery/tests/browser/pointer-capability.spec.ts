@@ -41,48 +41,53 @@ for (const device of ['mouse', 'touchscreen laptop with mouse', 'touch-only'] as
 	});
 }
 
-test.describe('combined hover and press feedback on a hybrid', () => {
-	test.use({ isMobile: false, hasTouch: false });
-	for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-		test(`holding a segment keeps press feedback after the hover timer (${reducedMotion})`, async ({ page }) => {
-			await page.addInitScript(() => {
-				Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 10 });
-			});
-			await page.emulateMedia({ reducedMotion });
-			await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
-			await openGallery(page);
-			// install() lets time advance during loading and between protocol
-			// calls. Pause before hover so a slower driver cannot expire boop's
-			// 300ms timer before the 150ms checkpoint.
-			await page.clock.pauseAt(new Date('2026-01-01T00:01:00Z'));
-			const start = await page.evaluate(() => Date.now());
-			const segment = page.getByRole('radiogroup', { name: 'Grain', exact: true }).getByRole('radio').first();
-			await segment.hover();
-			expect(await page.evaluate(() => matchMedia('(any-hover: hover) and (any-pointer: fine)').matches)).toBe(true);
-			await page.mouse.down();
-			try {
-				await page.clock.runFor(150);
-				expect(await page.evaluate(() => Date.now()) - start).toBe(150);
-				expect(await segment.evaluate(node => node.style.scale)).toBe('1.04');
-				await expect(segment).toHaveCSS('transform', 'matrix(0.94, 0, 0, 0.94, 0, 0)');
-				// Advance beyond boop's 300ms reset while holding the mouse. This
-				// exercises the real GSAP ticker, not the unit-test GSAP mock.
-				await page.clock.runFor(500);
-				expect(await page.evaluate(() => Date.now()) - start).toBe(650);
-				const held = await segment.evaluate(node => {
-					const style = getComputedStyle(node);
-					return { transform: style.transform, transition: style.transitionProperty };
-				});
-				expect(held.transform).toBe('matrix(0.94, 0, 0, 0.94, 0, 0)');
-				expect(await segment.evaluate(node => node.style.scale)).toBe('');
-				expect(held.transition.split(',').map(value => value.trim())).not.toContain('transform');
-			} finally {
+for (const device of ['desktop', 'hybrid'] as const) {
+	test.describe(`exclusive hover feedback on ${device}`, () => {
+		test.use({ isMobile: false, hasTouch: false });
+		for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+			test(`hover and held press keep the desktop CSS baseline (${reducedMotion})`, async ({ page }) => {
+				if (device === 'hybrid') {
+					await page.addInitScript(() => {
+						Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 10 });
+					});
+				}
+				await page.emulateMedia({ reducedMotion });
+				await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+				await openGallery(page);
+				// Loading may use RAF; freeze only after hydration, before interaction.
+				await page.clock.pauseAt(new Date('2026-01-01T00:01:00Z'));
+				const start = await page.evaluate(() => Date.now());
+				const segment = page.getByRole('radiogroup', { name: 'Grain', exact: true }).getByRole('radio').first();
+				await segment.hover();
+				expect(await page.evaluate(() => matchMedia('(any-hover: hover) and (any-pointer: fine)').matches)).toBe(true);
+				expect.soft(await segment.evaluate(node => node.style.transform), 'boop uses its original transform channel').toBe('scale(1.04)');
+				expect.soft(await segment.evaluate(node => node.style.scale), 'boop must not override the CSS active scale').toBe('');
+				await page.mouse.down();
+				try {
+					await page.clock.runFor(150);
+					expect(await page.evaluate(() => Date.now()) - start).toBe(150);
+					await expect.soft(segment).toHaveCSS('scale', '0.97');
+					// An active pressBounce would replace this with a GSAP transform.
+					expect.soft(await segment.evaluate(node => node.style.transform)).toBe('scale(1.04)');
+					await page.clock.runFor(500);
+					expect(await page.evaluate(() => Date.now()) - start).toBe(650);
+					await expect(segment).toHaveCSS('scale', '0.97');
+					await expect.soft(segment).toHaveCSS('transform', 'none');
+					const transitions = await segment.evaluate(node => getComputedStyle(node).transitionProperty);
+					expect.soft(transitions.split(',').map(value => value.trim())).not.toContain('scale');
+				} finally {
+					await page.mouse.up();
+				}
+				// The finished boop must not leave a scale transition over future presses.
+				await expect(segment).toHaveCSS('scale', 'none');
+				await page.mouse.down();
+				await expect(segment).toHaveCSS('scale', '0.97');
 				await page.mouse.up();
-			}
-			await page.clock.runFor(650);
-			await expect(segment).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
-			await expect(segment).toBeFocused();
-			await expect(segment).toBeEnabled();
-		});
-	}
-});
+				await expect(segment).toHaveCSS('scale', 'none');
+				await expect(segment).toHaveCSS('transform', 'none');
+				await expect(segment).toBeFocused();
+				await expect(segment).toBeEnabled();
+			});
+		}
+	});
+}
