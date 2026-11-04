@@ -10,6 +10,7 @@ function mountAll(actions: typeof import('./index.js')) {
 	node.textContent = 'Example';
 	const mounts = [
 		() => actions.boop(node),
+		() => actions.pressBounce(node),
 		() => actions.cursorGlow(node),
 		() => actions.sectionGlow(node),
 		() => actions.cardParallax(node),
@@ -30,7 +31,7 @@ it('returns inert cleanup objects when matchMedia disappears after import', asyn
 	mountAll(actions);
 });
 
-it('can freshly import and mount all six effects without matchMedia', async () => {
+it('can freshly import and mount all seven effects without matchMedia', async () => {
 	vi.resetModules();
 	vi.stubGlobal('matchMedia', undefined);
 	const actions = await import('./index.js');

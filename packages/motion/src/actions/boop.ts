@@ -10,7 +10,7 @@
 //
 // Usage: <button use:boop={{ scale: 1.05, rotation: 5, timing: 300 }}>
 
-import { shouldAnimatePointerEffect } from '../policy.js';
+import { shouldAnimate } from '../policy.js';
 
 export interface BoopParams {
 	/** Scale multiplier. Default: 1.05 */
@@ -22,35 +22,23 @@ export interface BoopParams {
 }
 
 export function boop(node: HTMLElement, params: BoopParams = {}) {
-	if (!shouldAnimatePointerEffect('safe-always')) return { update() {}, destroy() {} };
+	if (!shouldAnimate('safe-always', 'pointer')) return { update() {}, destroy() {} };
 
 	let { scale = 1.05, rotation = 0, timing = 300 } = params;
 	let timeoutId: ReturnType<typeof setTimeout> | null = null;
-	const initialScale = node.style.scale;
-	const initialRotate = node.style.rotate;
-	const initialTransition = node.style.transition;
-	const baseTransition = initialTransition || getComputedStyle(node).transition;
-
-	function reset() {
-		node.style.scale = initialScale;
-		node.style.rotate = initialRotate;
-	}
 
 	function applyBoop() {
 		if (timeoutId !== null) clearTimeout(timeoutId);
 
-		// Hover owns the individual properties. Press feedback owns transform,
-		// so this timer and these transitions cannot erase or delay a held press.
-		node.style.transition = [
-			baseTransition === 'none' ? '' : baseTransition,
-			`scale ${timing}ms var(--ease-bounce)`,
-			`rotate ${timing}ms var(--ease-bounce)`,
-		].filter(Boolean).join(', ');
-		node.style.scale = String(scale);
-		node.style.rotate = `${rotation}deg`;
+		const parts: string[] = [];
+		if (scale !== 1) parts.push(`scale(${scale})`);
+		if (rotation !== 0) parts.push(`rotate(${rotation}deg)`);
+
+		node.style.transition = `transform ${timing}ms var(--ease-bounce)`;
+		node.style.transform = parts.join(' ') || 'none';
 
 		timeoutId = setTimeout(() => {
-			reset();
+			node.style.transform = '';
 			timeoutId = null;
 		}, timing);
 	}
@@ -66,8 +54,6 @@ export function boop(node: HTMLElement, params: BoopParams = {}) {
 		destroy() {
 			node.removeEventListener('mouseenter', applyBoop);
 			if (timeoutId !== null) clearTimeout(timeoutId);
-			reset();
-			node.style.transition = initialTransition;
 		}
 	};
 }

@@ -2,7 +2,8 @@
 // Layer 2 of the two-layer tactile-feedback system.
 //
 // Gated by:
-//   - isTouchDevice() — pointer-only devices use hover/active CSS instead.
+//   - Touch capability without a hover-capable fine pointer.
+// Pointer-capable devices, including hybrids, use their CSS press baseline.
 //
 // Reduced-motion: pressBounce stays active because it is <200ms scale feedback
 // on user action, not a vestibular trigger.
@@ -12,41 +13,29 @@
 // remains copyable from packages/motion/tap-feedback.css.
 
 import { gsap } from '../utils/gsap';
-import { isTouchDevice } from '../utils/device';
+import { shouldAnimate } from '../policy.js';
 import { durationSec } from '../tokens';
 
 type ActionReturn = { destroy(): void };
 
 export function pressBounce(node: HTMLElement): ActionReturn {
-	if (!isTouchDevice()) {
+	if (!shouldAnimate('safe-always', 'touch-only')) {
 		return { destroy() {} };
 	}
 
-	const initialTransform = node.style.transform;
-	const computedTransform = getComputedStyle(node).transform;
-	const baseTransform = computedTransform === 'none' ? '' : computedTransform;
-	const feedback = { scale: 1 };
-	const render = () => {
-		node.style.transform = `${baseTransform} scale(${feedback.scale})`.trim();
-	};
-	// Animate a value rather than the DOM node. GSAP's CSS plugin otherwise
-	// folds boop's independent scale/rotate into transform and clears them.
-
 	const onDown = () => {
-		gsap.killTweensOf(feedback);
-		gsap.to(feedback, {
+		gsap.killTweensOf(node);
+		gsap.to(node, {
 			scale: 0.94,
-			onUpdate: render,
 			duration: durationSec('instant'),
 			ease: 'power2.out',
 		});
 	};
 
 	const onUp = () => {
-		gsap.killTweensOf(feedback);
-		gsap.to(feedback, {
+		gsap.killTweensOf(node);
+		gsap.to(node, {
 			scale: 1,
-			onUpdate: render,
 			duration: durationSec('fast'),
 			ease: 'back.out(2)', // bounce overshoot
 		});
@@ -61,8 +50,7 @@ export function pressBounce(node: HTMLElement): ActionReturn {
 			node.removeEventListener('pointerdown', onDown);
 			node.removeEventListener('pointerup', onUp);
 			node.removeEventListener('pointercancel', onUp);
-			gsap.killTweensOf(feedback);
-			node.style.transform = initialTransform;
+			gsap.killTweensOf(node);
 		},
 	};
 }

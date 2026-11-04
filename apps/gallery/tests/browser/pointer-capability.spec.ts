@@ -87,6 +87,19 @@ for (const device of ['desktop', 'hybrid'] as const) {
 				await expect(segment).toHaveCSS('transform', 'none');
 				await expect(segment).toBeFocused();
 				await expect(segment).toBeEnabled();
+
+				// A pressBounce-only surface can acquire a consumer hover transform
+				// after mount. An inert action must preserve it through the press.
+				const surface = page.getByRole('button', { name: 'Touch response', exact: true });
+				await surface.evaluate(node => { node.style.transform = 'translateY(-2px)'; });
+				await surface.hover();
+				await page.mouse.down();
+				await page.clock.runFor(150);
+				await expect(surface).toHaveCSS('scale', '0.97');
+				await expect(surface).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -2)');
+				await page.mouse.up();
+				await page.clock.runFor(150);
+				await expect(surface).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -2)');
 			});
 		}
 	});

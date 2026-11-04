@@ -2,15 +2,17 @@
 "@yesid/motion": minor
 ---
 
-Unify the six hover effects behind `shouldAnimatePointerEffect(tier)`, exported from the root and
-`@yesid/motion/policy`. Devices with a hover-capable fine pointer now get every effect, including
-touchscreen laptops and touch-primary tablets with an attached mouse. Touch-only, coarse-only and
-non-hovering devices get none. Existing reduced-motion tiers and Lenis/pressBounce touch gates are preserved.
-No caller changes are required. Capability checks apply at mount time; remount after attaching a
-pointer. The device regression table covers all six actions with and without reduced motion.
+Unify device capability policy through the existing `shouldAnimate(tier, input?)` export from
+both the root and `@yesid/motion/policy`. Its optional input is `pointer` or `touch-only`;
+existing calls without an input keep their motion-only behavior.
 
-Boop and pressBounce now own separate transform channels, so a hover timer cannot clear a held
-press or install a transform transition over GSAP. Boop uses individual scale/rotate properties;
-pressBounce animates a value through GSAP and writes only transform. Both restore their owned
-inline styles on destroy. All pointer effects return inert cleanup objects when matchMedia is
-missing, including when the reduced-motion store is first imported without it.
+All six hover effects require a hover-capable fine pointer, including a mouse on a touchscreen
+laptop or touch-primary tablet. PressBounce now runs only on touch devices without that
+capability, so boop and pressBounce are mutually exclusive. Hybrids use the same CSS press
+baseline as desktops; retain `tap-press` or a deliberate CSS alternative on pressBounce callers.
+The original transform-based action bodies and touch-only phone behavior are preserved.
+
+Existing reduced-motion tiers and Lenis behavior remain. Missing matchMedia makes input-gated
+actions inert, including on fresh imports. Checks apply at mount time. The device table covers
+all seven actions under both motion preferences, and browser tests verify desktop/hybrid CSS
+press feedback through the hover pulse and after it.

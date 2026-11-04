@@ -9,7 +9,7 @@
 //
 // Usage: <a use:magnetic={{ strength: 3, radius: 50 }}>
 
-import { shouldAnimatePointerEffect } from '../policy.js';
+import { shouldAnimate } from '../policy.js';
 
 export interface MagneticParams {
 	/** Max displacement in px. Default: 3 */
@@ -19,7 +19,7 @@ export interface MagneticParams {
 }
 
 export function magnetic(node: HTMLElement, params: MagneticParams = {}) {
-	if (!shouldAnimatePointerEffect('motion-gated')) {
+	if (!shouldAnimate('motion-gated', 'pointer')) {
 		return { update() {}, destroy() {} };
 	}
 

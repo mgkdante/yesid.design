@@ -4,10 +4,7 @@ import { pressBounce } from './pressBounce';
 // Mock GSAP to assert calls without running animation
 vi.mock('$lib/motion/utils/gsap', () => ({
 	gsap: {
-		to: vi.fn((target: { scale: number }, vars: { scale: number; onUpdate?: () => void }) => {
-			target.scale = vars.scale;
-			vars.onUpdate?.();
-		}),
+		to: vi.fn(),
 		killTweensOf: vi.fn(),
 	},
 }));
@@ -25,6 +22,10 @@ vi.mock('$lib/motion/stores/reducedMotion', () => ({
 describe('pressBounce action', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(window, 'matchMedia').mockReturnValue({
+			matches: false, media: '', onchange: null, addListener() {}, removeListener() {},
+			addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true,
+		});
 		mockIsTouchDevice.mockReturnValue(true);
 		mockIsPrefersReducedMotion.mockReturnValue(false);
 	});
@@ -74,10 +75,9 @@ describe('pressBounce action', () => {
 		pressBounce(el);
 
 		el.dispatchEvent(new Event('pointerdown'));
-		expect(el.style.transform).toBe('scale(0.94)');
 
 		expect(mockedGsap.to).toHaveBeenCalledWith(
-			expect.objectContaining({ scale: 0.94 }),
+			el,
 			expect.objectContaining({
 				scale: 0.94,
 				ease: 'power2.out',
@@ -91,10 +91,9 @@ describe('pressBounce action', () => {
 		pressBounce(el);
 
 		el.dispatchEvent(new Event('pointerup'));
-		expect(el.style.transform).toBe('scale(1)');
 
 		expect(mockedGsap.to).toHaveBeenCalledWith(
-			expect.objectContaining({ scale: 1 }),
+			el,
 			expect.objectContaining({
 				scale: 1,
 				ease: 'back.out(2)',
@@ -108,10 +107,9 @@ describe('pressBounce action', () => {
 		pressBounce(el);
 
 		el.dispatchEvent(new Event('pointercancel'));
-		expect(el.style.transform).toBe('scale(1)');
 
 		expect(mockedGsap.to).toHaveBeenCalledWith(
-			expect.objectContaining({ scale: 1 }),
+			el,
 			expect.objectContaining({
 				scale: 1,
 				ease: 'back.out(2)',

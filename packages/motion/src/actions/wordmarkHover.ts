@@ -6,7 +6,7 @@
 //
 // Usage: <span use:wordmarkHover={{ dotEl: dotRef }}>yesid</span>
 
-import { shouldAnimatePointerEffect } from '../policy.js';
+import { shouldAnimate } from '../policy.js';
 import { initScrollTriggerConfig, ensureSplitTextRegistered, gsap, SplitText } from '../utils/gsap.js';
 import { durationSec } from '../tokens';
 
@@ -20,7 +20,7 @@ export interface WordmarkHoverParams {
 }
 
 export function wordmarkHover(node: HTMLElement, params: WordmarkHoverParams) {
-	if (!shouldAnimatePointerEffect('motion-gated')) {
+	if (!shouldAnimate('motion-gated', 'pointer')) {
 		return { destroy() {} };
 	}
 

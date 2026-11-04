@@ -1,4 +1,4 @@
-import { shouldAnimatePointerEffect } from '../policy.js';
+import { shouldAnimate } from '../policy.js';
 
 /**
  * `sectionGlow` — Svelte action.
@@ -31,7 +31,7 @@ import { shouldAnimatePointerEffect } from '../policy.js';
  * trigger a flicker.
  */
 export function sectionGlow(node: HTMLElement) {
-	if (!shouldAnimatePointerEffect('safe-always')) return { destroy: () => {} };
+	if (!shouldAnimate('safe-always', 'pointer')) return { destroy: () => {} };
 
 	let leaveTimer: ReturnType<typeof setTimeout> | null = null;
 

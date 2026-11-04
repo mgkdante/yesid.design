@@ -22,7 +22,7 @@ const devices = [
 ];
 
 const effects = [
-	{ name: 'boop', gated: false, mount: (node: HTMLElement) => boop(node), event: 'mouseenter', active: (node: HTMLElement) => node.style.scale !== '' },
+	{ name: 'boop', gated: false, mount: (node: HTMLElement) => boop(node), event: 'mouseenter', active: (node: HTMLElement) => node.style.transform !== '' },
 	{ name: 'cursorGlow', gated: false, mount: (node: HTMLElement) => cursorGlow(node), event: 'pointermove', active: (node: HTMLElement) => node.style.getPropertyValue('--glow-x') !== '' },
 	{ name: 'sectionGlow', gated: false, mount: (node: HTMLElement) => sectionGlow(node), event: 'pointermove', active: (node: HTMLElement) => node.style.getPropertyValue('--glow-opacity') === '1' },
 	{ name: 'cardParallax', gated: true, mount: (node: HTMLElement) => cardParallax(node), event: 'pointermove', active: (node: HTMLElement) => node.style.getPropertyValue('--parallax-x') !== '' },

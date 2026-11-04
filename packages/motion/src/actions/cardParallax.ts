@@ -1,4 +1,4 @@
-import { shouldAnimatePointerEffect } from '../policy.js';
+import { shouldAnimate } from '../policy.js';
 
 /**
  * `cardParallax` — Svelte action.
@@ -20,7 +20,7 @@ import { shouldAnimatePointerEffect } from '../policy.js';
 const MAX_OFFSET = 4; // px — clamp magnitude on each axis
 
 export function cardParallax(node: HTMLElement) {
-	if (!shouldAnimatePointerEffect('motion-gated')) return { destroy: () => {} };
+	if (!shouldAnimate('motion-gated', 'pointer')) return { destroy: () => {} };
 
 	function onMove(e: PointerEvent) {
 		const rect = node.getBoundingClientRect();

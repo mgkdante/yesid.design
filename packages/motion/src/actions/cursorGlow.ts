@@ -12,7 +12,7 @@
 // Usage: <div use:cursorGlow={{ intensity: 0.06 }}>
 //   That's it — overlay is auto-injected.
 
-import { shouldAnimatePointerEffect } from '../policy.js';
+import { shouldAnimate } from '../policy.js';
 
 export interface CursorGlowParams {
 	/** Glow radius in px (informational — used by CSS, not JS). Default: 200 */
@@ -26,7 +26,7 @@ export interface CursorGlowParams {
 export function cursorGlow(node: HTMLElement, params: CursorGlowParams = {}) {
 	// SAFE-ALWAYS tier: the glow is an opacity-only gradient that
 	// follows the pointer — nothing translates or scales.
-	if (!shouldAnimatePointerEffect('safe-always')) {
+	if (!shouldAnimate('safe-always', 'pointer')) {
 		return { update() {}, destroy() {} };
 	}
 
