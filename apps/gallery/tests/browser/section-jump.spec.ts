@@ -1,5 +1,30 @@
 import { expect, test } from '@playwright/test';
 
+for (const kind of ['open shadow root', 'SVG anchor'] as const) {
+	test('a navigation link in an ' + kind + ' cancels the held jump', async ({ page }) => {
+		// A 204 response proves a real navigation was requested while keeping the fixture mounted.
+		await page.route('**/section-jump-next', (route) => route.fulfill({ status: 204 }));
+		await page.goto('/detail-frame?sections=1&links=1');
+		await page.getByRole('button', { name: 'Begin held jump' }).click();
+		await expect(page.getByTestId('jump-result')).toHaveText('pending');
+		await page.evaluate((kind) => {
+			const host = document.body.appendChild(document.createElement('div'));
+			host.style.cssText = 'position:fixed;top:150px;left:16px;z-index:100';
+			if (kind === 'open shadow root') {
+				host.attachShadow({ mode: 'open' }).innerHTML = '<a href="/section-jump-next" data-sveltekit-reload>Navigate away</a>';
+			} else {
+				host.innerHTML = '<svg width="180" height="44"><a href="/section-jump-next" data-sveltekit-reload><text x="0" y="25">Navigate away</text></a></svg>';
+			}
+		}, kind);
+		const request = page.waitForRequest((request) => request.isNavigationRequest() && request.url().endsWith('/section-jump-next'));
+		await page.getByText('Navigate away', { exact: true }).click({ noWaitAfter: true });
+		await request;
+		await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+		await page.getByRole('button', { name: 'Release held jump' }).click();
+		await expect(page.getByTestId('jump-result')).toHaveText('false');
+	});
+}
+
 for (const motion of ['reduce', 'no-preference'] as const) {
 	test('reopening the mobile TOC during settlement still lands and sets the active item (' + motion + ')', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });

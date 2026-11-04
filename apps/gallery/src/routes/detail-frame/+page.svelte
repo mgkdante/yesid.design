@@ -24,6 +24,15 @@
 	const railTop = $derived(Number(params.get('railTop')));
 	// Space an app leaves under its chrome inside --chrome-offset.
 	const chromeGap = $derived(Number(params.get('chromeGap')));
+	let releaseJump: (() => void) | undefined;
+	let jumpResult = $state('idle');
+	function holdJump() {
+		jumpResult = 'pending';
+		void navigation.jump('platforms', {
+			beforeReveal: () => new Promise<void>((resolve) => { releaseJump = resolve; }),
+			behavior: 'auto',
+		}).then((result) => { jumpResult = String(result); });
+	}
 </script>
 
 <svelte:head>
@@ -31,6 +40,14 @@
 </svelte:head>
 
 <div data-testid="fixture-nav" class="fixed inset-x-0 top-0 z-[60] h-[88px] border-b border-border bg-background"></div>
+
+{#if params.get('links') === '1'}
+	<div class="fixed top-24 left-4 z-[70] bg-background p-2" data-testid="jump-link-probe">
+		<button onclick={holdJump}>Begin held jump</button>
+		<button onclick={() => releaseJump?.()}>Release held jump</button>
+		<output data-testid="jump-result">{jumpResult}</output>
+	</div>
+{/if}
 
 <div class="ml-[calc(50%-50vw)] w-screen pt-[var(--chrome-offset)]" style="--chrome-offset: {88 + chromeGap}px; --chrome-gap: {chromeGap}px">
 	<DetailFrame

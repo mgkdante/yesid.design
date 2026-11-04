@@ -433,3 +433,67 @@ it.each(['new jump', 'fragment link', 'route link outside root', 'stopped link',
 	else expect(view.target.scrollIntoView).not.toHaveBeenCalled();
 	link?.remove();
 });
+
+it('an older link callback cannot cancel a newer jump', async () => {
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'destination'], { root: view.container, landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const link = document.body.appendChild(document.createElement('a'));
+	link.href = '/next';
+	link.click();
+	const result = jump.jump('destination');
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(true);
+	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
+	expect(jump.activeId).toBe('destination');
+	link.remove();
+});
+
+it('an older fragment frame cannot supersede a newer jump', async () => {
+	const stale = section('stale');
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'stale', 'destination'], { landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const link = document.body.appendChild(document.createElement('a'));
+	link.href = '#stale';
+	link.click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	history.replaceState(null, '', '/#stale');
+	const result = jump.jump('destination');
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(true);
+	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
+	expect(stale.target.scrollIntoView).not.toHaveBeenCalled();
+	link.remove();
+});
+
+it.each(['base target', 'reserved target casing'])('uses the effective link target: %s', async (kind) => {
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'destination'], { root: view.container, landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const result = jump.jump('destination');
+	await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0));
+	const base = document.head.appendChild(document.createElement('base'));
+	base.target = '_blank';
+	const link = document.body.appendChild(document.createElement('a'));
+	link.href = '/next';
+	if (kind === 'reserved target casing') link.target = '_SELF';
+	link.click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(kind === 'base target');
+	expect(view.target.scrollIntoView).toHaveBeenCalledTimes(kind === 'base target' ? 1 : 0);
+	link.remove();
+	base.remove();
+});
