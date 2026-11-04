@@ -146,22 +146,27 @@ function fragmentLinks(root: Element | Document, jump: (id: string) => void, can
 	let disposed = false;
 	const clicked = (event: MouseEvent) => {
 		if (event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-		const link = event.composedPath().find((node): node is Element => node instanceof Element && node.localName === 'a' && (node.hasAttribute('href') || node.hasAttribute('xlink:href')));
+		const path = event.composedPath();
+		const link = path.find((node): node is Element => node instanceof Element && node.localName === 'a' && (node.hasAttribute('href') || node.hasAttribute('xlink:href')));
 		if (!link || link.hasAttribute('download')) return;
 		const target = (link.getAttribute('target') ?? link.ownerDocument.querySelector('base[target]')?.getAttribute('target') ?? '').toLowerCase();
 		if (target && !['_self', '_parent', '_top'].includes(target)) return;
+		const view = link.ownerDocument.defaultView;
+		if (target === '_parent' && view?.parent !== view) return;
+		if (target === '_top' && view?.top !== view) return;
 		const url = new URL(link.getAttribute('href') ?? link.getAttribute('xlink:href') ?? '', link.baseURI);
 		if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 		// Capture sees navigation outside the root and stopped bubbling. Wait for the
 		// dispatch to finish so a consumer's preventDefault can keep its current jump.
 		const epoch = historyEpoch;
 		const request = currentRequest();
+		const inRoot = path.includes(root);
 		clicks.set(event, { href: url.href, request });
 		setTimeout(() => {
 			clicks.delete(event);
 			if (disposed || epoch !== historyEpoch || request !== currentRequest() || event.defaultPrevented) return;
 			cancel();
-			if (!root.contains(link)) return;
+			if (!inRoot) return;
 			if (!url.hash || url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
 			let id: string;
 			try { id = decodeURIComponent(url.hash.slice(1)); } catch { return; }
