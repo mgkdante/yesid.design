@@ -2,7 +2,8 @@
 // Layer 2 of the two-layer tactile-feedback system.
 //
 // Gated by:
-//   - isTouchDevice() — pointer-only devices use hover/active CSS instead.
+//   - Touch capability without a hover-capable fine pointer.
+// Pointer-capable devices, including hybrids, use their CSS press baseline.
 //
 // Reduced-motion: pressBounce stays active because it is <200ms scale feedback
 // on user action, not a vestibular trigger.
@@ -12,13 +13,13 @@
 // remains copyable from packages/motion/tap-feedback.css.
 
 import { gsap } from '../utils/gsap';
-import { isTouchDevice } from '../utils/device';
+import { shouldAnimate } from '../policy.js';
 import { durationSec } from '../tokens';
 
 type ActionReturn = { destroy(): void };
 
 export function pressBounce(node: HTMLElement): ActionReturn {
-	if (!isTouchDevice()) {
+	if (!shouldAnimate('safe-always', 'touch-only')) {
 		return { destroy() {} };
 	}
 

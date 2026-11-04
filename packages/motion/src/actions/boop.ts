@@ -10,7 +10,7 @@
 //
 // Usage: <button use:boop={{ scale: 1.05, rotation: 5, timing: 300 }}>
 
-import { isTouchDevice } from '../utils/device.js';
+import { shouldAnimate } from '../policy.js';
 
 export interface BoopParams {
 	/** Scale multiplier. Default: 1.05 */
@@ -22,7 +22,7 @@ export interface BoopParams {
 }
 
 export function boop(node: HTMLElement, params: BoopParams = {}) {
-	if (isTouchDevice()) return { update() {}, destroy() {} };
+	if (!shouldAnimate('safe-always', 'pointer')) return { update() {}, destroy() {} };
 
 	let { scale = 1.05, rotation = 0, timing = 300 } = params;
 	let timeoutId: ReturnType<typeof setTimeout> | null = null;

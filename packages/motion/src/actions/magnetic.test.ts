@@ -1,28 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-function mockMatchMedia(matches: boolean) {
+function mockMatchMedia(reduce: boolean, pointer = true) {
 	Object.defineProperty(window, 'matchMedia', {
 		writable: true,
-		value: vi.fn().mockReturnValue({
-			matches,
+		value: vi.fn().mockImplementation((query: string) => ({
+			matches: query === '(prefers-reduced-motion: reduce)' ? reduce : pointer,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn()
-		})
-	});
-}
-
-function mockTouchDevice(hasTouch: boolean) {
-	Object.defineProperty(navigator, 'maxTouchPoints', {
-		writable: true,
-		configurable: true,
-		value: hasTouch ? 1 : 0
+		}))
 	});
 }
 
 describe('magnetic action', () => {
 	beforeEach(() => {
 		mockMatchMedia(false);
-		mockTouchDevice(false);
 		vi.resetModules();
 	});
 
@@ -114,8 +105,8 @@ describe('magnetic action', () => {
 		expect(el.style.transform).toBe('');
 	});
 
-	it('does nothing on touch devices', async () => {
-		mockTouchDevice(true);
+	it('does nothing without a hover-capable fine pointer', async () => {
+		mockMatchMedia(false, false);
 		vi.resetModules();
 		const { magnetic } = await import('./magnetic.js');
 		const el = document.createElement('a');

@@ -1,4 +1,4 @@
-import { isPrefersReducedMotion } from '../stores/reducedMotion.js';
+import { shouldAnimate } from '../policy.js';
 
 /**
  * `cardParallax` — Svelte action.
@@ -14,15 +14,13 @@ import { isPrefersReducedMotion } from '../stores/reducedMotion.js';
  *
  * On pointerleave the vars reset to 0px so the inner elements snap back.
  * The action is a no-op under `prefers-reduced-motion: reduce` and on
- * touch-only devices (no `(hover: hover)` capability).
+ * devices without a hover-capable fine pointer.
  */
 
 const MAX_OFFSET = 4; // px — clamp magnitude on each axis
 
 export function cardParallax(node: HTMLElement) {
-	if (typeof window === 'undefined') return { destroy: () => {} };
-	if (isPrefersReducedMotion()) return { destroy: () => {} };
-	if (!window.matchMedia('(hover: hover)').matches) return { destroy: () => {} };
+	if (!shouldAnimate('motion-gated', 'pointer')) return { destroy: () => {} };
 
 	function onMove(e: PointerEvent) {
 		const rect = node.getBoundingClientRect();

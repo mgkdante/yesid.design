@@ -18,11 +18,22 @@
 // navigation.
 
 import { isPrefersReducedMotion } from './stores/reducedMotion.js';
+import { isTouchDevice } from './utils/device.js';
 
 export type MotionTier = 'safe-always' | 'motion-gated';
 
-/** Single decision point for "should this animation run right now?". */
-export function shouldAnimate(tier: MotionTier): boolean {
+// Owner default: include secondary mice on touch-primary devices. Keep this
+// capability choice here so every pointer effect changes together.
+const POINTER_EFFECT_QUERY = '(any-hover: hover) and (any-pointer: fine)';
+
+/** Mount-time motion decision, optionally scoped to exclusive input capabilities. */
+export function shouldAnimate(tier: MotionTier, input?: 'pointer' | 'touch-only'): boolean {
+	if (input) {
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+		const pointer = window.matchMedia(POINTER_EFFECT_QUERY).matches;
+		const enabled = input === 'pointer' ? pointer : isTouchDevice() && !pointer;
+		if (!enabled) return false;
+	}
 	if (tier === 'safe-always') return true;
 	return !isPrefersReducedMotion();
 }

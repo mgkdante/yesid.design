@@ -12,12 +12,12 @@ const QUERY = '(prefers-reduced-motion: reduce)';
 
 function getInitialValue(): boolean {
 	// window is not available during SSR — default to false (allow animation).
-	if (typeof window === 'undefined') return false;
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
 	return window.matchMedia(QUERY).matches;
 }
 
 export const prefersReducedMotion = readable<boolean>(getInitialValue(), (set) => {
-	if (typeof window === 'undefined') return;
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
 	const mql = window.matchMedia(QUERY);
 	set(mql.matches);
 	const handler = (e: MediaQueryListEvent) => set(e.matches);
@@ -27,6 +27,6 @@ export const prefersReducedMotion = readable<boolean>(getInitialValue(), (set) =
 
 // Synchronous snapshot for use in Svelte actions (not reactive, one-time read).
 export function isPrefersReducedMotion(): boolean {
-	if (typeof window === 'undefined') return false;
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
 	return window.matchMedia(QUERY).matches;
 }

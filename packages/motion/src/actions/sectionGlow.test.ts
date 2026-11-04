@@ -16,7 +16,7 @@ describe('motion/actions/sectionGlow', () => {
 		// Default matchMedia stub: hover-capable, reduced-motion off.
 		// Individual tests can override to exercise the no-op branches.
 		window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-			matches: query === '(hover: hover)',
+			matches: query === '(any-hover: hover) and (any-pointer: fine)',
 			media: query,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn(),
@@ -65,7 +65,7 @@ describe('motion/actions/sectionGlow', () => {
 		// Reduce ON and hover-capable: the action must still wire up.
 		window.matchMedia = vi.fn().mockImplementation((query: string) => ({
 			matches:
-				query === '(prefers-reduced-motion: reduce)' || query === '(hover: hover)',
+				query === '(prefers-reduced-motion: reduce)' || query === '(any-hover: hover) and (any-pointer: fine)',
 			media: query,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn(),

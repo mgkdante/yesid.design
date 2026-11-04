@@ -1,19 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock isTouchDevice so touch-bail tests can control the return value.
-// Default false keeps existing tests unaffected.
-vi.mock('$lib/motion/utils/device.js', () => ({
-	isTouchDevice: vi.fn().mockReturnValue(false)
-}));
-
-function mockMatchMedia(matches: boolean) {
+function mockMatchMedia(reduce: boolean, pointer = true) {
 	Object.defineProperty(window, 'matchMedia', {
 		writable: true,
-		value: vi.fn().mockReturnValue({
-			matches,
+		value: vi.fn().mockImplementation((query: string) => ({
+			matches: query === '(prefers-reduced-motion: reduce)' ? reduce : pointer,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn()
-		})
+		}))
 	});
 }
 
@@ -122,9 +116,8 @@ describe('boop device gating', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('bails on touch device (no listener attached)', async () => {
-		const deviceMod = await import('$lib/motion/utils/device.js');
-		(deviceMod.isTouchDevice as ReturnType<typeof vi.fn>).mockReturnValue(true);
+	it('bails on touch-only device (no listener attached)', async () => {
+		mockMatchMedia(false, false);
 
 		const { boop } = await import('./boop.js');
 		const el = document.createElement('div');
@@ -133,9 +126,8 @@ describe('boop device gating', () => {
 		expect(addSpy).not.toHaveBeenCalled();
 	});
 
-	it('returns a valid destroy-shaped object on touch bail', async () => {
-		const deviceMod = await import('$lib/motion/utils/device.js');
-		(deviceMod.isTouchDevice as ReturnType<typeof vi.fn>).mockReturnValue(true);
+	it('returns a valid destroy-shaped object on touch-only bail', async () => {
+		mockMatchMedia(false, false);
 
 		const { boop } = await import('./boop.js');
 		const el = document.createElement('div');

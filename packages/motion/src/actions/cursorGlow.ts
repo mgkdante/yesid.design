@@ -7,12 +7,12 @@
 // need a manual <div> with a radial gradient.
 //
 // Pattern: same as tilt.ts — event listeners, cleanup in destroy().
-// Disabled on touch devices. SAFE-ALWAYS under reduced motion.
+// Requires a hover-capable fine pointer. SAFE-ALWAYS under reduced motion.
 //
 // Usage: <div use:cursorGlow={{ intensity: 0.06 }}>
 //   That's it — overlay is auto-injected.
 
-import { isTouchDevice } from '../utils/device.js';
+import { shouldAnimate } from '../policy.js';
 
 export interface CursorGlowParams {
 	/** Glow radius in px (informational — used by CSS, not JS). Default: 200 */
@@ -25,8 +25,8 @@ export interface CursorGlowParams {
 
 export function cursorGlow(node: HTMLElement, params: CursorGlowParams = {}) {
 	// SAFE-ALWAYS tier: the glow is an opacity-only gradient that
-	// follows the pointer — nothing translates or scales. Touch-gated only.
-	if (isTouchDevice()) {
+	// follows the pointer — nothing translates or scales.
+	if (!shouldAnimate('safe-always', 'pointer')) {
 		return { update() {}, destroy() {} };
 	}
 
