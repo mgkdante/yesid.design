@@ -1,13 +1,14 @@
 import { SvelteMap } from 'svelte/reactivity';
 
 interface SectionRegistration {
+	independent?: boolean;
 	id?: string;
 	element?: () => HTMLElement | null;
 	isOpen(): boolean;
 	setOpen(open: boolean): void;
 }
 
-/** Opens the content-section chain exposing a heading, section anchor or numbered wrapper. */
+/** Opens the disclosure chain exposing a heading, section anchor or numbered wrapper. */
 export function openSectionContaining(target: Element): boolean {
 	let descendant: SectionRegistration | undefined;
 	for (const section of sections.values()) {
@@ -38,18 +39,23 @@ export function registerSection(section: SectionRegistration): () => void {
 }
 
 export function countSections(): number {
-	return sections.size;
+	return contentSections().length;
 }
 
 export function allSectionsCollapsed(): boolean | undefined {
-	return sections.size ? [...sections.values()].every((section) => !section.isOpen()) : undefined;
+	const content = contentSections();
+	return content.length ? content.every((section) => !section.isOpen()) : undefined;
 }
 
 export function setSectionsOpen(open: boolean): void {
-	for (const section of sections.values()) section.setOpen(open);
+	for (const section of contentSections()) section.setOpen(open);
 }
 
-/** Opens matching content sections, optionally limited to a page's root. Returns whether any matched. */
+function contentSections(): SectionRegistration[] {
+	return [...sections.values()].filter((section) => !section.independent);
+}
+
+/** Opens matching disclosures, optionally limited to a page's root. Returns whether any matched. */
 export function openSection(id: string, root?: Element | Document): boolean {
 	let found = false;
 	for (const section of sections.values()) {

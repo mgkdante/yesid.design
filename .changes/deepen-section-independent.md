@@ -1,0 +1,9 @@
+---
+"@yesid/ui": minor
+---
+
+Add `CollapsibleSection.independent` for filter and control panels that keep their own open
+state and stay outside content-section bulk actions, counts and the all-closed calculation.
+Use `<CollapsibleSection independent bind:open={panelOpen}>` without changing the card's
+rendering or storing disclosure state. Explicit section jumps still reveal the target panel
+and its containing disclosures. Included in the coordinated v0.34.0 minor with primitive cleanup.

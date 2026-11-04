@@ -12,6 +12,8 @@
 		index?: number | null;
 		accentColor?: string;
 		collapsible?: boolean;
+		/** Excludes a control panel from page bulk actions and counts; explicit jumps can still open it. */
+		independent?: boolean;
 		/** Emits `data-toc` so TocNav and TocPill can target this section. */
 		anchor?: string;
 		/** A product signal that opens the section whenever it changes, like a reader click. */
@@ -26,12 +28,13 @@
 	import SectionCard from './SectionCard.svelte';
 	import { registerSection } from './sections-registry.js';
 
-	let { open = $bindable(true), ...props }: CollapsibleSectionProps = $props();
+	let { open = $bindable(true), independent = false, ...props }: CollapsibleSectionProps = $props();
 	let element = $state<HTMLDivElement | null>(null);
 
 	$effect(() => {
 		if (props.collapsible === false) return;
 		return registerSection({
+			independent,
 			id: props.anchor,
 			element: () => element,
 			isOpen: () => open,
