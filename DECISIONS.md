@@ -134,3 +134,9 @@ Call `createNavigationLifecycle` once during initialization of the persistent ap
 pass the resulting instance to `SiteHeader` across route changes. `subscribeNavigation` is optional:
 Kit 2 apps pass the navigation subscription; Kit 3 apps omit it and use the safe fallback, where
 a language switch that lands on a redirect closes the menu.
+
+## D17: Primitives are owned code
+
+The primitives are owned code derived from shadcn-svelte under MIT, with no CLI,
+registry or package dependency. Token names such as `--card` and `--muted` remain
+brand vocabulary. A primitive stays only while a product uses it or it holds real behavior.

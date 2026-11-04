@@ -27,7 +27,7 @@
 
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { ToggleGroup, ToggleGroupItem } from '../primitives/toggle-group/index.js';
+	import { ToggleGroup } from 'bits-ui';
 	import ChevronToggle from './ChevronToggle.svelte';
 
 	let {
@@ -87,15 +87,26 @@
 		aria-hidden={collapsible && !isOpen ? 'true' : undefined}
 	>
 		<div class="filter-collapse-inner">
-			<ToggleGroup
+			<ToggleGroup.Root
 				type="single"
 				aria-labelledby={labelId}
 				value={groupValue}
 				onValueChange={handleValueChange}
-				class="mt-2 flex w-full flex-col gap-1"
+				data-slot="toggle-group"
+				data-variant="default"
+				data-size="default"
+				data-spacing="0"
+				style="--gap: 0"
+				class="group/toggle-group items-center rounded-lg data-vertical:flex-col data-vertical:items-stretch data-[size=sm]:rounded-[min(var(--radius-md),10px)] mt-2 flex w-full flex-col gap-1"
 				orientation="vertical"
 			>
-				<ToggleGroupItem value="__all__">
+				<ToggleGroup.Item
+					data-slot="toggle-group-item"
+					data-variant="default"
+					data-size="default"
+					data-spacing="0"
+					value="__all__"
+				>
 					{#snippet child({ props })}
 						<button
 							{...props}
@@ -109,10 +120,16 @@
 							{allLabel}
 						</button>
 					{/snippet}
-				</ToggleGroupItem>
+				</ToggleGroup.Item>
 
 				{#each items as item (item.key)}
-					<ToggleGroupItem value={item.key}>
+					<ToggleGroup.Item
+						data-slot="toggle-group-item"
+						data-variant="default"
+						data-size="default"
+						data-spacing="0"
+						value={item.key}
+					>
 						{#snippet child({ props })}
 							<button
 								{...props}
@@ -127,9 +144,9 @@
 								{item.label}
 							</button>
 						{/snippet}
-					</ToggleGroupItem>
+					</ToggleGroup.Item>
 				{/each}
-			</ToggleGroup>
+			</ToggleGroup.Root>
 		</div>
 	</div>
 </div>

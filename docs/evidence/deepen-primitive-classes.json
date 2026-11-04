@@ -1,0 +1,772 @@
+[
+  {
+    "family": "button",
+    "props": {},
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "has-data-[icon=inline-end]:pr-2",
+      "has-data-[icon=inline-start]:pl-2"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 h-8 gap-1.5 px-2.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "default",
+      "size": "default"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "has-data-[icon=inline-end]:pr-2",
+      "has-data-[icon=inline-start]:pl-2"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 h-8 gap-1.5 px-2.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "default",
+      "size": "sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 border border-transparent bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "in-data-[slot=button-group]:rounded-lg",
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 border border-transparent bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "default",
+      "size": "icon-tap"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 size-11",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 size-11"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "default",
+      "size": "cta-sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 gap-2 px-5 py-2.5 text-small font-semibold hover:-translate-y-px hover:shadow-glow-sm",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 gap-2 px-5 py-2.5 text-small font-semibold hover:-translate-y-px hover:shadow-glow-sm"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "default",
+      "size": "cta"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 gap-2 px-6 py-3 text-body font-semibold hover:-translate-y-px hover:shadow-glow-sm",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 gap-2 px-6 py-3 text-body font-semibold hover:-translate-y-px hover:shadow-glow-sm"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "default",
+      "size": "cta-lg"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 gap-2 px-8 py-4 text-subheading font-semibold hover:-translate-y-px hover:shadow-glow-sm",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover [a]:hover:bg-primary/80 gap-2 px-8 py-4 text-subheading font-semibold hover:-translate-y-px hover:shadow-glow-sm"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "conversion",
+      "size": "default"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "has-data-[icon=inline-end]:pr-2",
+      "has-data-[icon=inline-start]:pl-2"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover h-8 gap-1.5 px-2.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "conversion",
+      "size": "sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 border border-transparent bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "in-data-[slot=button-group]:rounded-lg",
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 border border-transparent bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "conversion",
+      "size": "icon-tap"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover size-11",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover size-11"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "conversion",
+      "size": "cta-sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover gap-2 px-5 py-2.5 text-small font-semibold hover:-translate-y-px hover:shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_35%,transparent)]",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover gap-2 px-5 py-2.5 text-small font-semibold hover:-translate-y-px hover:shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_35%,transparent)]"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "conversion",
+      "size": "cta"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover gap-2 px-6 py-3 text-body font-semibold hover:-translate-y-px hover:shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_35%,transparent)]",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover gap-2 px-6 py-3 text-body font-semibold hover:-translate-y-px hover:shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_35%,transparent)]"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "conversion",
+      "size": "cta-lg"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover gap-2 px-8 py-4 text-subheading font-semibold hover:-translate-y-px hover:shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_35%,transparent)]",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-accent text-signage-bg hover:bg-accent-hover [a]:hover:bg-accent-hover gap-2 px-8 py-4 text-subheading font-semibold hover:-translate-y-px hover:shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_35%,transparent)]"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "outline",
+      "size": "default"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "has-data-[icon=inline-end]:pr-2",
+      "has-data-[icon=inline-start]:pl-2"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary h-8 gap-1.5 px-2.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "outline",
+      "size": "sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 border bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "in-data-[slot=button-group]:rounded-lg",
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 border bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "outline",
+      "size": "icon-tap"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary size-11",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary size-11"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "outline",
+      "size": "cta-sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary gap-2 px-5 py-2.5 text-small font-semibold",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary gap-2 px-5 py-2.5 text-small font-semibold"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "outline",
+      "size": "cta"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary gap-2 px-6 py-3 text-body font-semibold",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary gap-2 px-6 py-3 text-body font-semibold"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "outline",
+      "size": "cta-lg"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary gap-2 px-8 py-4 text-subheading font-semibold",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border-subtle bg-transparent text-foreground hover:border-primary hover:text-primary aria-expanded:border-primary aria-expanded:text-primary gap-2 px-8 py-4 text-subheading font-semibold"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "ghost",
+      "size": "default"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "has-data-[icon=inline-end]:pr-2",
+      "has-data-[icon=inline-start]:pl-2"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground h-8 gap-1.5 px-2.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "ghost",
+      "size": "sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 border border-transparent bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3",
+      "in-data-[slot=button-group]:rounded-lg",
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 border border-transparent bg-clip-padding font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "ghost",
+      "size": "icon-tap"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground size-11",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground size-11"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "ghost",
+      "size": "cta-sm"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground gap-2 px-5 py-2.5 text-small font-semibold",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground gap-2 px-5 py-2.5 text-small font-semibold"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "ghost",
+      "size": "cta"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground gap-2 px-6 py-3 text-body font-semibold",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground gap-2 px-6 py-3 text-body font-semibold"
+  },
+  {
+    "family": "button",
+    "props": {
+      "variant": "ghost",
+      "size": "cta-lg"
+    },
+    "before": "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground gap-2 px-8 py-4 text-subheading font-semibold",
+    "removed": [
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive",
+      "dark:aria-invalid:border-destructive/50",
+      "aria-invalid:ring-3"
+    ],
+    "after": "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding focus-visible:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground gap-2 px-8 py-4 text-subheading font-semibold"
+  },
+  {
+    "family": "badge",
+    "props": {},
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-5 px-2 py-0.5 text-caption",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-5 px-2 py-0.5 text-caption"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "default",
+      "size": "default"
+    },
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-5 px-2 py-0.5 text-caption",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-5 px-2 py-0.5 text-caption"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "default",
+      "size": "xs"
+    },
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-auto px-2 py-0.5 text-[0.6875rem] leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-auto px-2 py-0.5 text-[0.6875rem] leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "default",
+      "size": "sm"
+    },
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-auto px-3 py-1 text-caption leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground [a]:hover:bg-primary/80 [a]:active:bg-primary/70 h-auto px-3 py-1 text-caption leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "destructive",
+      "size": "default"
+    },
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-destructive/10 [a]:hover:bg-destructive/20 [a]:active:bg-destructive/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/15 h-5 px-2 py-0.5 text-caption",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-destructive/10 [a]:hover:bg-destructive/20 [a]:active:bg-destructive/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/15 h-5 px-2 py-0.5 text-caption"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "destructive",
+      "size": "xs"
+    },
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-destructive/10 [a]:hover:bg-destructive/20 [a]:active:bg-destructive/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/15 h-auto px-2 py-0.5 text-[0.6875rem] leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-destructive/10 [a]:hover:bg-destructive/20 [a]:active:bg-destructive/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/15 h-auto px-2 py-0.5 text-[0.6875rem] leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "destructive",
+      "size": "sm"
+    },
+    "before": "gap-1 rounded-4xl border border-transparent font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-destructive/10 [a]:hover:bg-destructive/20 [a]:active:bg-destructive/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/15 h-auto px-3 py-1 text-caption leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border border-transparent font-mono font-medium [&>svg]:size-3! focus-visible:border-ring group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-destructive/10 [a]:hover:bg-destructive/20 [a]:active:bg-destructive/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/15 h-auto px-3 py-1 text-caption leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "outline",
+      "size": "default"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-border-subtle text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground [a]:active:bg-muted [a]:active:text-muted-foreground h-5 px-2 py-0.5 text-caption",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-border-subtle text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground [a]:active:bg-muted [a]:active:text-muted-foreground h-5 px-2 py-0.5 text-caption"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "outline",
+      "size": "xs"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-border-subtle text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground [a]:active:bg-muted [a]:active:text-muted-foreground h-auto px-2 py-0.5 text-[0.6875rem] leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-border-subtle text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground [a]:active:bg-muted [a]:active:text-muted-foreground h-auto px-2 py-0.5 text-[0.6875rem] leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "outline",
+      "size": "sm"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-border-subtle text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground [a]:active:bg-muted [a]:active:text-muted-foreground h-auto px-3 py-1 text-caption leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-border-subtle text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground [a]:active:bg-muted [a]:active:text-muted-foreground h-auto px-3 py-1 text-caption leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "tag",
+      "size": "default"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-popover text-secondary-foreground border-border h-5 px-2 py-0.5 text-caption",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-popover text-secondary-foreground border-border h-5 px-2 py-0.5 text-caption"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "tag",
+      "size": "xs"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-popover text-secondary-foreground border-border h-auto px-2 py-0.5 text-[0.6875rem] leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-popover text-secondary-foreground border-border h-auto px-2 py-0.5 text-[0.6875rem] leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "tag",
+      "size": "sm"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-popover text-secondary-foreground border-border h-auto px-3 py-1 text-caption leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-popover text-secondary-foreground border-border h-auto px-3 py-1 text-caption leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "tag-active",
+      "size": "default"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-primary/30 bg-primary/15 text-primary h-5 px-2 py-0.5 text-caption",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-primary/30 bg-primary/15 text-primary h-5 px-2 py-0.5 text-caption"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "tag-active",
+      "size": "xs"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-primary/30 bg-primary/15 text-primary h-auto px-2 py-0.5 text-[0.6875rem] leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-primary/30 bg-primary/15 text-primary h-auto px-2 py-0.5 text-[0.6875rem] leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "tag-active",
+      "size": "sm"
+    },
+    "before": "gap-1 rounded-4xl border font-mono font-medium has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-primary/30 bg-primary/15 text-primary h-auto px-3 py-1 text-caption leading-tight",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 rounded-4xl border font-mono font-medium [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none border-primary/30 bg-primary/15 text-primary h-auto px-3 py-1 text-caption leading-tight"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "number",
+      "size": "default"
+    },
+    "before": "gap-1 border border-transparent font-mono has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground font-bold h-7 w-7 rounded-full p-0 text-micro",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 border border-transparent font-mono [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground font-bold h-7 w-7 rounded-full p-0 text-micro"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "number",
+      "size": "xs"
+    },
+    "before": "gap-1 border border-transparent font-mono has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground font-bold h-7 w-7 rounded-full p-0 text-micro",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 border border-transparent font-mono [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground font-bold h-7 w-7 rounded-full p-0 text-micro"
+  },
+  {
+    "family": "badge",
+    "props": {
+      "variant": "number",
+      "size": "sm"
+    },
+    "before": "gap-1 border border-transparent font-mono has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive group/badge inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground font-bold h-7 w-7 rounded-full p-0 text-micro",
+    "removed": [
+      "has-data-[icon=inline-end]:pr-1.5",
+      "has-data-[icon=inline-start]:pl-1.5",
+      "aria-invalid:ring-destructive/20",
+      "dark:aria-invalid:ring-destructive/40",
+      "aria-invalid:border-destructive"
+    ],
+    "after": "gap-1 border border-transparent font-mono [&>svg]:size-3! focus-visible:border-ring focus-visible:ring-ring/50 group/badge inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap transition-colors focus-visible:ring-[3px] [&>svg]:pointer-events-none bg-primary text-primary-foreground font-bold h-7 w-7 rounded-full p-0 text-micro"
+  },
+  {
+    "family": "tabs",
+    "props": {},
+    "before": "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none bg-card shadow-card",
+    "removed": [],
+    "after": "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none bg-card shadow-card"
+  },
+  {
+    "family": "tabs",
+    "props": {
+      "variant": "default"
+    },
+    "before": "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none bg-card shadow-card",
+    "removed": [],
+    "after": "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none bg-card shadow-card"
+  },
+  {
+    "family": "tabs",
+    "props": {
+      "variant": "line"
+    },
+    "before": "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg text-muted-foreground group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none gap-1 bg-transparent p-0",
+    "removed": [],
+    "after": "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg text-muted-foreground group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none gap-1 bg-transparent p-0"
+  },
+  {
+    "family": "sheet",
+    "props": {},
+    "before": "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[90svh] w-full rounded-t-xl border-t border-border",
+    "removed": [],
+    "after": "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[90svh] w-full rounded-t-xl border-t border-border"
+  },
+  {
+    "family": "sheet",
+    "props": {
+      "side": "right"
+    },
+    "before": "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 max-w-sm border-l border-border",
+    "removed": [],
+    "after": "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 max-w-sm border-l border-border"
+  },
+  {
+    "family": "sheet",
+    "props": {
+      "side": "bottom"
+    },
+    "before": "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[90svh] w-full rounded-t-xl border-t border-border",
+    "removed": [],
+    "after": "bg-popover text-popover-foreground shadow-sheet fixed flex flex-col gap-4 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=closed]:animate-out motion-reduce:transition-none data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[90svh] w-full rounded-t-xl border-t border-border"
+  }
+]

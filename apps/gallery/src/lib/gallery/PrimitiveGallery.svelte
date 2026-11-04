@@ -15,15 +15,11 @@
 	import * as Sheet from '@yesid/ui/sheet';
 	import { Skeleton } from '@yesid/ui/skeleton';
 	import * as Tabs from '@yesid/ui/tabs';
-	import { Toggle } from '@yesid/ui/toggle';
-	import { ToggleGroup, ToggleGroupItem } from '@yesid/ui/toggle-group';
 
 	let collapsibleOpen = $state(true);
 	let comboboxValue = $state<string | null>('operations');
 	let footerStatusRefreshes = $state(0);
 	let sheetOpen = $state(false);
-	let togglePressed = $state(false);
-	let toggleGroupValue = $state('summary');
 
 	const comboboxOptions: readonly ComboboxOption[] = [
 		{
@@ -85,12 +81,6 @@
 					<div data-gallery-family="primitive:badge">
 						<Badge class="text-operational-label" variant="tag">Configured vocabulary</Badge>
 						<Badge class="ml-2" variant="destructive">Attention</Badge>
-					</div>
-					<div data-gallery-family="primitive:toggle">
-						<Toggle bind:pressed={togglePressed} variant="outline">
-							{togglePressed ? 'Pinned' : 'Pin'}
-						</Toggle>
-						<Toggle class="ml-2" disabled>Locked</Toggle>
 					</div>
 				</div>
 
@@ -299,18 +289,5 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root data-gallery-family="primitive:toggle-group">
-			<Card.Header>
-				<Card.Title>ToggleGroup</Card.Title>
-				<Card.Description>One correlated single-selection value.</Card.Description>
-			</Card.Header>
-			<Card.Content>
-				<ToggleGroup type="single" bind:value={toggleGroupValue} variant="outline" spacing={2}>
-					<ToggleGroupItem value="summary">Summary</ToggleGroupItem>
-					<ToggleGroupItem value="timeline">Timeline</ToggleGroupItem>
-					<ToggleGroupItem value="map" disabled>Map</ToggleGroupItem>
-				</ToggleGroup>
-			</Card.Content>
-		</Card.Root>
 	</div>
 </section>

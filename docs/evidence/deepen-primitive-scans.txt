@@ -1,0 +1,249 @@
+
+## Transit 773ae1a976ce476f6de0ff25264b21aff936f0ea
+
+### toggle imports
+Pattern: @yesid/ui/(toggle|toggle-group)(["' /]|$)|primitives/(toggle|toggle-group)/
+ZERO MATCHES
+
+### variant helpers and types
+Pattern: buttonVariants|badgeVariants|ButtonVariant|ButtonSize|BadgeVariant|BadgeSize|TabsListVariant|SheetSide
+ZERO MATCHES
+
+### activation markers
+Pattern: data-icon|button-group|aria-invalid
+apps/web/src/lib/features/map/MapFilterGroup.svelte:33: <span class="mf-group-badge" data-icon={kind} aria-hidden="true">
+apps/web/src/lib/features/map/MapFilters.svelte.test.ts:102: expect(container.querySelectorAll('.mf-group-badge[data-icon]').length).toBeGreaterThanOrEqual(
+
+### exact token references
+Pattern: --secondary([^a-zA-Z0-9_-]|$)|--radius([^a-zA-Z0-9_-]|$)|--(color-)?sidebar|[a-z]+-sidebar|(^|[^a-zA-Z0-9_-])(bg|text|border|ring|fill|stroke|from|via|to)-secondary([^a-zA-Z0-9_-]|$)
+apps/web/src/lib/features/metrics/MetricInfo.svelte:322: border-radius: var(--radius);
+
+### Primitive props (Svelte AST, not a single-line tag grep)
+apps/web/src/lib/components/shell/BottomSheet.svelte
+	import { Button } from '@yesid/ui/button';
+	import * as Sheet from '@yesid/ui/sheet';
+	import { SectionLabel } from '@yesid/ui/brand';
+  Sheet.Content: side="bottom" class={cn('max-h-[85svh] gap-0 p-0', className)} data-slot="bottom-sheet"
+  Button: variant="ghost" size="icon-tap" class="-ml-1 text-muted-foreground" data-slot="bottom-sheet-back"
+  Button: variant="ghost" size="icon-tap" class="-mr-1 text-muted-foreground" data-slot="bottom-sheet-close"
+apps/web/src/lib/components/shell/RightPanel.svelte
+	import { Button } from '@yesid/ui/button';
+	import { ScrollArea } from '@yesid/ui/scroll-area';
+	import { SectionLabel } from '@yesid/ui/brand';
+  Button: variant="ghost" size="icon-tap" class="-ml-1 text-muted-foreground" data-slot="right-panel-toggle"
+  Button: variant="ghost" size="icon-tap" class="text-muted-foreground" data-slot="right-panel-back"
+  Button: variant="ghost" size="icon-tap" class={cn('-mr-1 text-muted-foreground', collapsed && 'sr-only')} data-slot="right-panel-close"
+apps/web/src/lib/components/surface/EntityDetail.svelte
+	import { Tabs, TabsList, TabsTrigger, TabsContent } from '@yesid/ui/tabs';
+	} from '@yesid/ui/brand';
+	import { Surface, DetailFrame, Breadcrumb } from '@yesid/ui/layout';
+	import { Separator } from '@yesid/ui/separator';
+  TabsList: variant="line" class="w-full flex-nowrap justify-start"
+apps/web/src/lib/features/health/sections/SectionHistoryCoverage.svelte
+	import { Badge } from '@yesid/ui/badge';
+	import { DataTable, type DataTableColumn } from '@yesid/ui/table';
+	import { StateNotice } from '@yesid/ui/feedback';
+  Badge: variant="tag"
+  Badge: variant="tag"
+apps/web/src/lib/features/health/sections/SectionLanes.svelte
+	import { Badge } from '@yesid/ui/badge';
+	import { TerminalPanel, StatusDot } from '@yesid/ui/brand';
+  Badge: variant="tag"
+apps/web/src/lib/features/lines/LazyRouteReliabilityPane.svelte
+	import { StateNotice } from '@yesid/ui/feedback';
+	import { desktop } from '@yesid/ui/state';
+	import { Button } from '@yesid/ui/button';
+  Button: variant="outline" size="sm"
+apps/web/src/lib/features/lines/reliability/RouteReliabilityClusters.svelte
+	import { type SurfaceRailContext } from '@yesid/ui/layout';
+	} from '@yesid/ui/brand';
+	import { Button } from '@yesid/ui/button';
+	import { StateNotice } from '@yesid/ui/feedback';
+  Button: variant="outline" size="sm"
+apps/web/src/lib/features/map/MapFilterPill.svelte
+	import { ChevronToggle } from '@yesid/ui/brand';
+	import * as Sheet from '@yesid/ui/sheet';
+	import { desktop } from '@yesid/ui/state';
+  Sheet.Content: side="bottom" class="m6b-controls-drawer inset-x-auto top-auto h-auto w-auto max-w-none gap-0 overflow-y-auto rounded-lg border p-0"
+apps/web/src/lib/features/metrics/MetricsExplainer.svelte
+	import { Badge } from '@yesid/ui/badge';
+	import { ArticleHeader, DetailFrame } from '@yesid/ui/layout';
+	import { StateNotice } from '@yesid/ui/feedback';
+	} from '@yesid/ui/brand';
+	import { desktop } from '@yesid/ui/state';
+  Badge: variant="tag"
+  Badge: variant="tag"
+  Badge: variant="tag"
+apps/web/src/lib/features/receipt/ObservationCopy.svelte
+	import { Button } from '@yesid/ui/button';
+  Button: variant="outline" size="sm"
+apps/web/src/lib/features/stops/StopDetail.svelte
+	import { ToggleChip, SectionLabel, CollapsibleSection, type TocEntry } from '@yesid/ui/brand';
+	import { StateNotice } from '@yesid/ui/feedback';
+	import { ControlsRail, ArticleHeader } from '@yesid/ui/layout';
+	import { Separator } from '@yesid/ui/separator';
+	import { desktop } from '@yesid/ui/state';
+	import { Badge } from '@yesid/ui/badge';
+  Badge: variant="tag" size="sm"
+apps/web/src/lib/features/stops/reliability/sections/StopReliabilitySurface.svelte
+	} from '@yesid/ui/brand';
+	import { Button } from '@yesid/ui/button';
+	import { StateNotice } from '@yesid/ui/feedback';
+  Button: variant="outline" size="sm"
+
+## yesid.dev 8743f41f8645d181f4796feba831f037d3fd6f37
+
+### toggle imports
+Pattern: @yesid/ui/(toggle|toggle-group)(["' /]|$)|primitives/(toggle|toggle-group)/
+ZERO MATCHES
+
+### variant helpers and types
+Pattern: buttonVariants|badgeVariants|ButtonVariant|ButtonSize|BadgeVariant|BadgeSize|TabsListVariant|SheetSide
+ZERO MATCHES
+
+### activation markers
+Pattern: data-icon|button-group|aria-invalid
+apps/web/src/lib/components/contact/ContactPage.svelte:434: 'aria-invalid': error ? true : undefined,
+apps/web/src/lib/components/contact/ContactPage.test.ts:130: expect(field).toHaveAttribute('aria-invalid', 'true');
+apps/web/tests/contact.spec.ts:47: const requiredErrs = form.locator('[aria-invalid="true"]');
+apps/web/tests/contact.spec.ts:306: await expect(terminal.locator('[aria-invalid="true"]')).toHaveCount(Object.keys(contactContent.formTerminal.fields).length - 1);
+apps/web/tests/contact.spec.ts:325: await expect(terminal.locator('[aria-invalid="true"]')).toHaveCount(Object.keys(contactContent.formTerminal.fields).length - 1);
+
+### exact token references
+Pattern: --secondary([^a-zA-Z0-9_-]|$)|--radius([^a-zA-Z0-9_-]|$)|--(color-)?sidebar|[a-z]+-sidebar|(^|[^a-zA-Z0-9_-])(bg|text|border|ring|fill|stroke|from|via|to)-secondary([^a-zA-Z0-9_-]|$)
+apps/web/src/lib/components/blog/BlogFilterSidebar.svelte:50: <aside data-testid="blog-filter-sidebar">
+apps/web/src/lib/components/blog/BlogListingPage.svelte:179: testId="blog-search-sidebar"
+apps/web/src/lib/components/projects/ProjectFilterSidebar.svelte:43: <aside data-testid="project-filter-sidebar">
+apps/web/src/lib/components/projects/ProjectHeroPreview.svelte:81: <div class="project-hero-preview__pane project-hero-preview__pane--secondary">
+apps/web/src/lib/components/projects/ProjectHeroPreview.svelte:118: .project-hero-preview__pane--secondary {
+apps/web/src/lib/components/projects/ProjectListingPage.svelte:168: testId="project-search-sidebar"
+apps/web/tests/analytics.spec.ts:302: .locator('.listing-filter-column [data-testid="project-filter-sidebar"]')
+apps/web/tests/home-cards.spec.ts:24: const search = page.getByTestId('project-search-sidebar');
+apps/web/tests/interactive-filters.spec.ts:9: // listing's beforeEach now waits on its filter-sidebar landmark (web-first,
+apps/web/tests/interactive-filters.spec.ts:32: page.locator('.listing-filter-column [data-testid="project-filter-sidebar"]');
+apps/web/tests/interactive-filters.spec.ts:36: // Wait on the filter-sidebar landmark (web-first, auto-retrying) — the element
+apps/web/tests/interactive-filters.spec.ts:74: // search input is rendered once, so project-search-sidebar is already unique.
+apps/web/tests/interactive-filters.spec.ts:75: const searchInput = page.locator('[data-testid="project-search-sidebar"]');
+apps/web/tests/interactive-filters.spec.ts:124: page.locator('.listing-filter-column [data-testid="blog-filter-sidebar"]');
+apps/web/tests/interactive-filters.spec.ts:128: // Wait on the filter-sidebar landmark (web-first, auto-retrying) — the element
+apps/web/tests/interactive-filters.spec.ts:157: const searchInput = page.locator('[data-testid="blog-search-sidebar"]');
+apps/web/tests/language.spec.ts:84: const search = page.getByTestId('project-search-sidebar');
+apps/web/tests/language.spec.ts:91: await expect(page.getByTestId('project-search-sidebar')).toHaveValue('sveltekit');
+apps/web/tests/language.spec.ts:95: await expect(page.getByTestId('project-search-sidebar')).toHaveValue('sveltekit');
+apps/web/tests/language.spec.ts:100: const search = page.getByTestId('blog-search-sidebar');
+apps/web/tests/language.spec.ts:106: await expect(page.getByTestId('blog-search-sidebar')).toHaveValue('infrastructure');
+apps/web/tests/language.spec.ts:266: .getByTestId('blog-filter-sidebar').filter({ visible: true })
+
+### Primitive props (Svelte AST, not a single-line tag grep)
+apps/web/src/lib/components/about/AboutCta.svelte
+	import { TerminalPanel, TerminalCursor } from '@yesid/ui/brand';
+	import { Button } from '@yesid/ui/button';
+	import { Card } from '@yesid/ui/card';
+  Button: variant="conversion" size="cta"
+apps/web/src/lib/components/blog/BlogRow.svelte
+	import { Badge } from '@yesid/ui/badge';
+	import { MetroStation } from '@yesid/ui/brand';
+	import { Card } from '@yesid/ui/card';
+	import { cn } from '@yesid/ui/cn';
+  Badge: variant="outline" size="xs" class="blog-language-chip"
+  Badge: class="blog-topic-tag" variant="tag-active" size="xs"
+apps/web/src/lib/components/contact/ContactPage.svelte
+	import { clock, persisted } from '@yesid/ui/state';
+	import { TerminalPanel, TerminalCursor } from '@yesid/ui/brand';
+	import { Button } from '@yesid/ui/button';
+	import { ResizablePaneGroup, ResizablePane } from '@yesid/ui/resizable';
+	import { ResizableHandle } from '@yesid/ui/resizable';
+  Button: variant="conversion" size="cta"
+  Button: variant="ghost" class="mt-4 self-start font-mono text-caption tap-feedback min-h-11 px-4"
+apps/web/src/lib/components/home/HeroTextContent.svelte
+	import { desktop } from '@yesid/ui/state';
+	import { Button } from '@yesid/ui/button';
+  Button: variant="default" size="cta-lg"
+  Button: variant="conversion" size="cta-lg" class="tap-press"
+apps/web/src/lib/components/shared/CtaBand.svelte
+	import { Button } from '@yesid/ui/button';
+	import { Separator } from '@yesid/ui/separator';
+  Button: variant="conversion" size="cta-lg"
+  Button: variant="default" size="cta-lg" class="tap-press"
+apps/web/src/lib/components/shared/StationTabs.svelte
+	import { Separator } from '@yesid/ui/separator';
+	import * as Tabs from '@yesid/ui/tabs';
+  Tabs.List: variant="line" class="station-tabs flex w-full overflow-x-auto p-[3px] justify-start xl:justify-center {swipeActive ? 'swipe-lock' : ''}"
+
+## Design working tree
+
+### toggle imports
+Pattern: @yesid/ui/(toggle|toggle-group)(["' /]|$)|primitives/(toggle|toggle-group)/
+ZERO MATCHES
+
+### variant helpers and types
+Pattern: buttonVariants|badgeVariants|ButtonVariant|ButtonSize|BadgeVariant|BadgeSize|TabsListVariant|SheetSide
+packages/ui/src/primitives/badge/badge.svelte:17: export const badgeVariants = tv(
+packages/ui/src/primitives/badge/badge.svelte:52: export type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
+packages/ui/src/primitives/badge/badge.svelte:53: export type BadgeSize = VariantProps<typeof badgeVariants>['size'];
+packages/ui/src/primitives/badge/badge.svelte:56: variant?: BadgeVariant;
+packages/ui/src/primitives/badge/badge.svelte:57: size?: BadgeSize;
+packages/ui/src/primitives/badge/badge.svelte:91: class={cn(badgeVariants({ variant, size }), className)}
+packages/ui/src/primitives/badge/badge.svelte:101: class={cn(badgeVariants({ variant, size }), className)}
+packages/ui/src/primitives/badge/index.ts:3: badgeVariants,
+packages/ui/src/primitives/badge/index.ts:6: type BadgeVariant,
+packages/ui/src/primitives/badge/index.ts:7: type BadgeSize,
+packages/ui/src/primitives/button/button.svelte:12: export const buttonVariants = tv(
+packages/ui/src/primitives/button/button.svelte:56: export type ButtonVariant = VariantProps<typeof buttonVariants>['variant'];
+packages/ui/src/primitives/button/button.svelte:57: export type ButtonSize = VariantProps<typeof buttonVariants>['size'];
+packages/ui/src/primitives/button/button.svelte:60: variant?: ButtonVariant;
+packages/ui/src/primitives/button/button.svelte:61: size?: ButtonSize;
+packages/ui/src/primitives/button/button.svelte:101: class={cn(buttonVariants({ variant, size }), className)}
+packages/ui/src/primitives/button/button.svelte:116: class={cn(buttonVariants({ variant, size }), className)}
+packages/ui/src/primitives/button/index.ts:3: type ButtonSize,
+packages/ui/src/primitives/button/index.ts:4: type ButtonVariant,
+packages/ui/src/primitives/button/index.ts:5: buttonVariants,
+packages/ui/src/primitives/button/index.ts:13: buttonVariants,
+packages/ui/src/primitives/button/index.ts:15: type ButtonSize,
+packages/ui/src/primitives/button/index.ts:16: type ButtonVariant,
+packages/ui/src/primitives/sheet/index.ts:10: type SheetSide,
+packages/ui/src/primitives/sheet/index.ts:45: type SheetSide,
+packages/ui/src/primitives/sheet/sheet-content.svelte:24: export type SheetSide = VariantProps<typeof sheetVariants>['side'];
+packages/ui/src/primitives/sheet/sheet-content.svelte:39: side?: SheetSide;
+packages/ui/src/primitives/tabs/index.ts:3: import List, { tabsListVariants, type TabsListVariant } from './tabs-list.svelte';
+packages/ui/src/primitives/tabs/index.ts:12: type TabsListVariant,
+packages/ui/src/primitives/tabs/tabs-list.svelte:23: export type TabsListVariant = VariantProps<typeof tabsListVariants>['variant'];
+packages/ui/src/primitives/tabs/tabs-list.svelte:36: variant?: TabsListVariant;
+
+### activation markers
+Pattern: data-icon|button-group|aria-invalid
+ZERO MATCHES
+
+### exact token references
+Pattern: --secondary([^a-zA-Z0-9_-]|$)|--radius([^a-zA-Z0-9_-]|$)|--(color-)?sidebar|[a-z]+-sidebar|(^|[^a-zA-Z0-9_-])(bg|text|border|ring|fill|stroke|from|via|to)-secondary([^a-zA-Z0-9_-]|$)
+ZERO MATCHES
+
+### Primitive props (Svelte AST, not a single-line tag grep)
+apps/gallery/src/lib/gallery/PrimitiveGallery.svelte
+	import { Badge } from '@yesid/ui/badge';
+	import { Button } from '@yesid/ui/button';
+	import * as Card from '@yesid/ui/card';
+	import * as Collapsible from '@yesid/ui/collapsible';
+	import { Combobox, type ComboboxOption } from '@yesid/ui/combobox';
+	import { FooterGroup, FooterLink } from '@yesid/ui/footer';
+	} from '@yesid/ui/resizable';
+	import { ScrollArea } from '@yesid/ui/scroll-area';
+	import { Separator } from '@yesid/ui/separator';
+	import * as Sheet from '@yesid/ui/sheet';
+	import { Skeleton } from '@yesid/ui/skeleton';
+	import * as Tabs from '@yesid/ui/tabs';
+  Button: variant="conversion" size="cta-sm"
+  Button: class="ml-2" size="icon-tap"
+  Button: class="ml-2" variant="outline"
+  Badge: class="text-operational-label" variant="tag"
+  Badge: class="ml-2" variant="destructive"
+  Tabs.List: variant="line"
+  Sheet.Content: side="right"
+apps/gallery/src/routes/data-page/+page.svelte
+	import { Badge } from '@yesid/ui/badge';
+	import { CornerMeta, SegmentedChoice, ToggleChip } from '@yesid/ui/brand';
+	import * as Card from '@yesid/ui/card';
+	import { StateNotice } from '@yesid/ui/feedback';
+	} from '@yesid/ui/layout';
+	import { DataTable, type DataTableColumn } from '@yesid/ui/table';
+  Badge: variant="tag"

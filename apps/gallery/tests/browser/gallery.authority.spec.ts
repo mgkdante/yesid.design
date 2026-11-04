@@ -203,31 +203,6 @@ const INTERACTIONS: readonly Interaction[] = [
 			await expect(family.getByRole('tabpanel')).toContainText('Caller classes still compose.');
 		},
 	},
-	{
-		name: 'toggle pressed state',
-		async run(page) {
-			const family = page.locator('[data-gallery-family="primitive:toggle"]');
-			const toggle = family.getByRole('button', { name: 'Pin', exact: true });
-			await toggle.click();
-			await expect(family.getByRole('button', { name: 'Pinned' })).toHaveAttribute(
-				'aria-pressed',
-				'true',
-			);
-		},
-	},
-	{
-		name: 'toggle-group single selection',
-		async run(page) {
-			const family = page.locator('[data-gallery-family="primitive:toggle-group"]');
-			const summary = family.getByRole('radio', { name: 'Summary' });
-			const timeline = family.getByRole('radio', { name: 'Timeline' });
-			await expect(summary).toHaveAttribute('aria-checked', 'true');
-			await timeline.click();
-			await expect(summary).toHaveAttribute('aria-checked', 'false');
-			await expect(timeline).toHaveAttribute('aria-checked', 'true');
-			await expect(family.getByRole('radio', { name: 'Map' })).toBeDisabled();
-		},
-	},
 ];
 
 test('directly exercises every complex public primitive family', async ({ page }) => {

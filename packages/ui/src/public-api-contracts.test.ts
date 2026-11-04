@@ -28,12 +28,6 @@ import {
 	type SheetTriggerProps,
 } from '@yesid/ui/sheet';
 import {
-	ToggleGroup,
-	ToggleGroupItem,
-	type ToggleGroupItemProps,
-	type ToggleGroupProps,
-} from '@yesid/ui/toggle-group';
-import {
 	ChevronToggle,
 	CollapsibleSection,
 	CornerMarks,
@@ -331,24 +325,6 @@ const invalidSeparatorChild: SeparatorProps = { variant: 'hazard', child: ignore
 // @ts-expect-error custom visual variants are always decorative
 const invalidSeparatorDecorative: SeparatorProps = { variant: 'gradient', decorative: false };
 
-const singleToggle: ToggleGroupProps = {
-	type: 'single',
-	value: 'one',
-	onValueChange: (value) => expectTypeOf(value).toEqualTypeOf<string>(),
-};
-const multipleToggle: ToggleGroupProps = {
-	type: 'multiple',
-	value: ['one'],
-	onValueChange: (value) => expectTypeOf(value).toEqualTypeOf<string[]>(),
-};
-const toggleItem: ToggleGroupItemProps = { value: 'one' };
-// @ts-expect-error single mode accepts one string
-const invalidSingleToggle: ToggleGroupProps = { type: 'single', value: ['one'] };
-// @ts-expect-error multiple mode accepts an array
-const invalidMultipleToggle: ToggleGroupProps = { type: 'multiple', value: 'one' };
-// @ts-expect-error item value is required input state
-const invalidToggleItem: ToggleGroupItemProps = {};
-
 const sheetRoot: SheetRootProps = { open: false };
 const sheetTrigger: SheetTriggerProps = {};
 const sheetClose: SheetCloseProps = {};
@@ -388,8 +364,6 @@ describe('public UI prop contracts', () => {
 		>();
 		expectTypeOf<BindingsOf<typeof Combobox>>().toEqualTypeOf<'value' | 'open'>();
 		expectTypeOf<BindingsOf<typeof Separator>>().toEqualTypeOf<'ref'>();
-		expectTypeOf<BindingsOf<typeof ToggleGroup>>().toEqualTypeOf<'value' | 'ref'>();
-		expectTypeOf<BindingsOf<typeof ToggleGroupItem>>().toEqualTypeOf<'ref'>();
 		expectTypeOf<BindingsOf<typeof Sheet>>().toEqualTypeOf<'open'>();
 		expectTypeOf<BindingsOf<typeof SheetTrigger>>().toEqualTypeOf<'ref'>();
 		expectTypeOf<BindingsOf<typeof SheetClose>>().toEqualTypeOf<'ref'>();
@@ -417,9 +391,6 @@ describe('public UI prop contracts', () => {
 		expect(separatorDefault.variant).toBe('default');
 		expect(separatorHazard.maxWidth).toBe('100%');
 		expect(separatorGradient.variant).toBe('gradient');
-		expect(singleToggle.type).toBe('single');
-		expect(multipleToggle.type).toBe('multiple');
-		expect(toggleItem.value).toBe('one');
 		expect(sheetRoot.open).toBe(false);
 		expect(sheetTrigger).toEqual({});
 		expect(sheetClose).toEqual({});

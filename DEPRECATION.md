@@ -58,6 +58,19 @@ consumer or clean-room verification.
 
 ### Approved pending transition
 
+- **Upcoming minor release (D-e owner exception, 2026-11-03):** the owner approved folding
+  unused primitive cleanup into the deepen refactor without a deprecation window, waiving
+  both normal removal gates. Remove `@yesid/ui/toggle` and `@yesid/ui/toggle-group`, Button
+  variants `secondary` / `destructive` / `link`, Button sizes `xs` / `lg` / `icon` / `icon-xs` /
+  `icon-sm` / `icon-lg`, Badge variants `secondary` / `ghost` / `link`, Sheet side `left`, unused
+  icon/group/invalid-state selectors, the eight sidebar color mappings, exact `--radius`,
+  `--secondary` and its `--color-secondary` mapping. No consumer uses the removed primitive
+  contracts; FilterGroup retains its behavior directly through bits-ui. Transit's sole exact
+  `--radius` reference must move to its identical resolved value, `--radius-md`, before token
+  adoption. All declared defaults stay. See the [migration and scan evidence](docs/migrations/deepen-primitives.md).
+  This is release paperwork, not release or adoption approval. The owner approves the API report
+  when v0.34.0 is prepared.
+
 - **deepen D-c, owner decision 2026-11-03, next coordinated minor:** `SiteHeader.navigation`
   changes from raw SvelteKit hooks to the app layout's `createNavigationLifecycle` result;
   `LanguageToggle.onNavigate` is removed; `SiteHeader.labels.menuFooter`,
