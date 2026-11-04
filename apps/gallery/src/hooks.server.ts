@@ -1,7 +1,7 @@
-import type { Handle, ServerInit } from '@sveltejs/kit';
+import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { injectThemeBoot } from '@yesid/ui/head';
 import { preloadFont } from '@yesid/tokens/fonts';
-import { initializeUi } from '$lib/ui-initialization.js';
+import { initializeUi } from '#lib/ui-initialization.js';
 
 export const init: ServerInit = () => {
 	initializeUi();

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import BrandGallery from '$lib/gallery/BrandGallery.svelte';
-	import MotionGallery from '$lib/gallery/MotionGallery.svelte';
-	import PrimitiveGallery from '$lib/gallery/PrimitiveGallery.svelte';
-	import TokenGallery from '$lib/gallery/TokenGallery.svelte';
+	import BrandGallery from '#lib/gallery/BrandGallery.svelte';
+	import MotionGallery from '#lib/gallery/MotionGallery.svelte';
+	import PrimitiveGallery from '#lib/gallery/PrimitiveGallery.svelte';
+	import TokenGallery from '#lib/gallery/TokenGallery.svelte';
 </script>
 
 <svelte:head>

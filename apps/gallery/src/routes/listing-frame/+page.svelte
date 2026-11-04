@@ -27,7 +27,7 @@
 	];
 
 	let params = $state(new URLSearchParams());
-	onMount(() => (params = page.url.searchParams));
+	onMount(() => (params = new URLSearchParams(page.url.searchParams.toString())));
 
 	let query = $state('');
 	let mode = $state<string | null>(null);
