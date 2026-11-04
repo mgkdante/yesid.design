@@ -2,8 +2,9 @@
 
 Captured 2026-11-04 in Chromium 149 (Playwright 1.61.1), reduced motion, at widths 1280 and
 390 CSS px, with Gallery's bundled fonts. Each filename gives the look, theme and width.
-The first inactive Tabs trigger is hovered. In the refreshed `new-*.png` screenshots, the
-first inactive native link has keyboard focus. The historical old-look native-link rows are at rest.
+The first inactive Tabs trigger's hover rule is visible in the `new-*-1280.png` captures.
+The 390px captures do not show that rule. In the refreshed `new-*.png` screenshots, the first
+inactive native link has keyboard focus. The historical old-look native-link rows are at rest.
 
 - `old-transit-*.png`: reconstruction of EntityDetail's station-tab CSS from Transit
   `b5b283781a6fe6ab12c424dd685bbb854d515962`.
@@ -20,8 +21,10 @@ placement, strip geometry, swipe, scrolling, localization or release adoption. T
 are the real Gallery implementation. Product copies were read only. Consumer regression checks
 and the remaining adoption limits are in `docs/migrations/station-tabs.md`.
 
-The default remains provisional: active weight 700, inactive ink `--primary-foreground`,
+The owner accepted these defaults on 2026-11-04: active weight 700, inactive ink `--primary-foreground`,
 full-strength hover text with a 3px bottom rule, minimum height from `--size-tap-min`.
 `--station-tab-hover-rule-color` controls the hover rule independently of weight and ink.
 The original opacity 0.7 proposal failed rendered text contrast in both themes and was replaced.
-No owner acceptance is implied.
+The captures predate that decision, so their on-image "Provisional" label is historical.
+Acceptance of the shared look does not establish consumer acceptance; product adoption checks
+are still required.

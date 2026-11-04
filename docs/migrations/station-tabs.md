@@ -5,8 +5,9 @@ rail and tabs. Add `station-tabs` to the rail and `station-tab` to each trigger 
 Use bits-ui's `data-state="active"` for Tabs and `aria-current="page"` for navigation links.
 The module supplies no routing, selection, centering, scrolling, swipe guard or persistence.
 
-Provisional defaults awaiting the owner: active weight 700, inactive ink `--primary-foreground`,
+The owner accepted these defaults on 2026-11-04: active weight 700, inactive ink `--primary-foreground`,
 an inactive 3px bottom rule on hover with full-strength text, minimum height `--size-tap-min`.
+Consumer acceptance still requires each product's adoption checks below.
 The three visual choices can be
 changed independently through `--station-tab-active-weight`, `--station-tab-ink` and
 `--station-tab-hover-rule-color` (defaults to `currentColor`; use `transparent` to hide it).
@@ -22,6 +23,11 @@ Product-specific distance effects must preserve text contrast, including on hove
 These are required adoption checks, not claims of consumer acceptance in this PR. Both consumer
 copies stay unchanged until their release bumps. Gallery `/station-tabs` proves the shared CSS
 on Tabs and links only.
+
+At yesid.dev adoption, revalidate its distance-opacity floor of 0.8: on the shared light-theme
+colors it gives about 4.17:1 text contrast, below the 4.5:1 minimum. Native navigation links also
+need `aria-current="page"` for the shared active state; the product's existing active marker alone
+does not select it.
 
 | Consumer | Existing regression checks | Visual and interaction checks |
 | --- | --- | --- |
