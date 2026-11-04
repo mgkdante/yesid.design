@@ -56,14 +56,18 @@ test.describe('combined hover and press feedback on a hybrid', () => {
 			expect(await page.evaluate(() => matchMedia('(any-hover: hover) and (any-pointer: fine)').matches)).toBe(true);
 			await page.mouse.down();
 			try {
+				await page.clock.runFor(150);
+				expect(await segment.evaluate(node => node.style.scale)).toBe('1.04');
+				await expect(segment).toHaveCSS('transform', 'matrix(0.94, 0, 0, 0.94, 0, 0)');
 				// Advance beyond boop's 300ms reset while holding the mouse. This
 				// exercises the real GSAP ticker, not the unit-test GSAP mock.
-				await page.clock.runFor(650);
+				await page.clock.runFor(500);
 				const held = await segment.evaluate(node => {
 					const style = getComputedStyle(node);
 					return { transform: style.transform, transition: style.transitionProperty };
 				});
 				expect(held.transform).toBe('matrix(0.94, 0, 0, 0.94, 0, 0)');
+				expect(await segment.evaluate(node => node.style.scale)).toBe('');
 				expect(held.transition.split(',').map(value => value.trim())).not.toContain('transform');
 			} finally {
 				await page.mouse.up();

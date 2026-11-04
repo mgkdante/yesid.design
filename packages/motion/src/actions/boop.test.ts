@@ -31,37 +31,37 @@ describe('boop action', () => {
 		expect(typeof result.destroy).toBe('function');
 	});
 
-	it('sets transform on mouseenter', async () => {
+	it('sets scale on mouseenter', async () => {
 		const { boop } = await import('./boop.js');
 		const el = document.createElement('button');
 		boop(el, { scale: 1.05 });
 
 		el.dispatchEvent(new MouseEvent('mouseenter'));
 
-		expect(el.style.transform).toContain('scale(1.05)');
+		expect(el.style.scale).toBe('1.05');
 	});
 
-	it('resets transform after the timing duration', async () => {
+	it('resets scale after the timing duration', async () => {
 		const { boop } = await import('./boop.js');
 		const el = document.createElement('button');
 		boop(el, { scale: 1.1, timing: 300 });
 
 		el.dispatchEvent(new MouseEvent('mouseenter'));
-		expect(el.style.transform).toContain('scale');
+		expect(el.style.scale).toBe('1.1');
 
 		vi.advanceTimersByTime(300);
 
-		expect(el.style.transform).toBe('');
+		expect(el.style.scale).toBe('');
 	});
 
-	it('includes rotation in the transform when specified', async () => {
+	it('includes rotation when specified', async () => {
 		const { boop } = await import('./boop.js');
 		const el = document.createElement('button');
 		boop(el, { rotation: 10 });
 
 		el.dispatchEvent(new MouseEvent('mouseenter'));
 
-		expect(el.style.transform).toContain('rotate(10deg)');
+		expect(el.style.rotate).toBe('10deg');
 	});
 
 	it('clears transform on destroy cleanup', async () => {
@@ -75,8 +75,7 @@ describe('boop action', () => {
 
 		// Timeout should be cancelled — advancing time should not throw.
 		vi.advanceTimersByTime(500);
-		// Transform won't be reset by the timer because it was cleared by destroy.
-		// The point is destroy() doesn't throw.
+		expect(el.style.scale).toBe('');
 	});
 
 	it('boops under prefers-reduced-motion at the SAFE-ALWAYS default scale of ≤1.05', async () => {
@@ -88,7 +87,7 @@ describe('boop action', () => {
 
 		el.dispatchEvent(new MouseEvent('mouseenter'));
 
-		expect(el.style.transform).toContain('scale(1.05)');
+		expect(el.style.scale).toBe('1.05');
 	});
 
 	it('update() changes the params applied on next hover', async () => {
@@ -99,7 +98,7 @@ describe('boop action', () => {
 		action.update({ scale: 1.2 });
 		el.dispatchEvent(new MouseEvent('mouseenter'));
 
-		expect(el.style.transform).toContain('scale(1.2)');
+		expect(el.style.scale).toBe('1.2');
 		action.destroy();
 	});
 

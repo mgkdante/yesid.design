@@ -29,11 +29,18 @@ the mount-time decision for `boop`, `cursorGlow`, `sectionGlow`, `cardParallax`,
 `wordmarkHover`. They require `(any-hover: hover) and (any-pointer: fine)`: a touchscreen laptop
 or touch-primary tablet with an attached mouse gets the same effects as a desktop. Touch-point
 count does not veto a mouse. Touch-only, coarse-only and non-hovering devices get no effect;
-SSR returns false. Capabilities are checked again on the next mount, not live on mouse attachment.
+SSR and browsers without `matchMedia` return false, including on a fresh import. Capabilities
+are checked again on the next mount, not live on mouse attachment.
 
 Reduced motion keeps the existing tiers: `boop`, `cursorGlow` and `sectionGlow` remain safe-always;
 `cardParallax`, `magnetic` and `wordmarkHover` stay motion-gated. `shouldAnimate(tier)` retains its
 motion-only contract. Lenis and `pressBounce` keep their separate touch-device rules.
+
+`boop` owns the individual CSS `scale` and `rotate` properties and their transitions, restoring
+their previous inline values after the hover pulse and on destroy. `pressBounce` owns `transform`
+and animates a plain scale value with GSAP, preserving the host's starting transform. This avoids
+GSAP absorbing boop's individual transforms: on a shared hybrid-device button, ending the hover
+pulse cannot clear held-press feedback. Both actions keep their safe-always reduced-motion tier.
 
 ## GSAP and route transitions
 

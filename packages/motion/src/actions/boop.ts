@@ -26,19 +26,31 @@ export function boop(node: HTMLElement, params: BoopParams = {}) {
 
 	let { scale = 1.05, rotation = 0, timing = 300 } = params;
 	let timeoutId: ReturnType<typeof setTimeout> | null = null;
+	const initialScale = node.style.scale;
+	const initialRotate = node.style.rotate;
+	const initialTransition = node.style.transition;
+	const baseTransition = initialTransition || getComputedStyle(node).transition;
+
+	function reset() {
+		node.style.scale = initialScale;
+		node.style.rotate = initialRotate;
+	}
 
 	function applyBoop() {
 		if (timeoutId !== null) clearTimeout(timeoutId);
 
-		const parts: string[] = [];
-		if (scale !== 1) parts.push(`scale(${scale})`);
-		if (rotation !== 0) parts.push(`rotate(${rotation}deg)`);
-
-		node.style.transition = `transform ${timing}ms var(--ease-bounce)`;
-		node.style.transform = parts.join(' ') || 'none';
+		// Hover owns the individual properties. Press feedback owns transform,
+		// so this timer and these transitions cannot erase or delay a held press.
+		node.style.transition = [
+			baseTransition === 'none' ? '' : baseTransition,
+			`scale ${timing}ms var(--ease-bounce)`,
+			`rotate ${timing}ms var(--ease-bounce)`,
+		].filter(Boolean).join(', ');
+		node.style.scale = String(scale);
+		node.style.rotate = `${rotation}deg`;
 
 		timeoutId = setTimeout(() => {
-			node.style.transform = '';
+			reset();
 			timeoutId = null;
 		}, timing);
 	}
@@ -54,6 +66,8 @@ export function boop(node: HTMLElement, params: BoopParams = {}) {
 		destroy() {
 			node.removeEventListener('mouseenter', applyBoop);
 			if (timeoutId !== null) clearTimeout(timeoutId);
+			reset();
+			node.style.transition = initialTransition;
 		}
 	};
 }

@@ -34,6 +34,7 @@ const POINTER_EFFECT_QUERY = '(any-hover: hover) and (any-pointer: fine)';
 /** Mount-time pointer capability and motion-tier decision; false during SSR. */
 export function shouldAnimatePointerEffect(tier: MotionTier): boolean {
 	return typeof window !== 'undefined'
+		&& typeof window.matchMedia === 'function'
 		&& window.matchMedia(POINTER_EFFECT_QUERY).matches
 		&& shouldAnimate(tier);
 }

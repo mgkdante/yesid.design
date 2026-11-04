@@ -22,19 +22,31 @@ export function pressBounce(node: HTMLElement): ActionReturn {
 		return { destroy() {} };
 	}
 
+	const initialTransform = node.style.transform;
+	const computedTransform = getComputedStyle(node).transform;
+	const baseTransform = computedTransform === 'none' ? '' : computedTransform;
+	const feedback = { scale: 1 };
+	const render = () => {
+		node.style.transform = `${baseTransform} scale(${feedback.scale})`.trim();
+	};
+	// Animate a value rather than the DOM node. GSAP's CSS plugin otherwise
+	// folds boop's independent scale/rotate into transform and clears them.
+
 	const onDown = () => {
-		gsap.killTweensOf(node);
-		gsap.to(node, {
+		gsap.killTweensOf(feedback);
+		gsap.to(feedback, {
 			scale: 0.94,
+			onUpdate: render,
 			duration: durationSec('instant'),
 			ease: 'power2.out',
 		});
 	};
 
 	const onUp = () => {
-		gsap.killTweensOf(node);
-		gsap.to(node, {
+		gsap.killTweensOf(feedback);
+		gsap.to(feedback, {
 			scale: 1,
+			onUpdate: render,
 			duration: durationSec('fast'),
 			ease: 'back.out(2)', // bounce overshoot
 		});
@@ -49,7 +61,8 @@ export function pressBounce(node: HTMLElement): ActionReturn {
 			node.removeEventListener('pointerdown', onDown);
 			node.removeEventListener('pointerup', onUp);
 			node.removeEventListener('pointercancel', onUp);
-			gsap.killTweensOf(node);
+			gsap.killTweensOf(feedback);
+			node.style.transform = initialTransform;
 		},
 	};
 }
