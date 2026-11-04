@@ -170,6 +170,32 @@ not create a package variant. Add an adapter only if a live consumer selector es
 
 ### Tabs
 
+For station signage, import `@yesid/ui/station-tabs.css` after `base.css`. Apply `station-tabs`
+to `Tabs.List` and `station-tab` to each `Tabs.Trigger`, or use the same classes on a native
+`nav` and its links. The CSS module has no Tabs or JavaScript dependency. It reads
+`data-state="active"` on triggers and `aria-current="page"` on links; callers own selection,
+navigation, accessible labels, keyboard behavior, disabled-link handling and overflow scrolling.
+Keep the rail horizontal. Product geometry (strip height, padding, centering, fades), distance
+opacity and swipe guards remain in the product. Remove the previous local look when adopting.
+
+```svelte
+<script lang="ts">
+	import '@yesid/ui/station-tabs.css';
+</script>
+
+<nav class="station-tabs" aria-label="Service pages">
+	<a class="station-tab" href="/overview" aria-current="page">01 Overview</a>
+	<a class="station-tab" href="/connections">02 Connections</a>
+</nav>
+```
+
+The shared defaults are active weight 700, inactive ink `--primary-foreground`, inactive hover
+opacity 0.7 and minimum tap height `--size-tap-min`. Active chips use `--signage-bg` and
+`--signage-text` in both themes. Set `--station-tab-active-weight`, `--station-tab-ink` and
+`--station-tab-hover-opacity` on the rail to change those three decisions independently.
+Reduced motion removes the opacity transition; keyboard focus keeps an inset ring.
+Gallery's `/station-tabs` renders both compositions. Ordinary Tabs variants stay unchanged.
+
 The package targets bits-ui's real `data-state="active"` selector and rejects the dead
 `data-active:` form. A product may keep its rail height, padding, active shadow, underline
 position, and typography locally. Adoption requires visual comparison of those geometry and
