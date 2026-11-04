@@ -43,7 +43,7 @@ copy: apply the reading roles to prose and code in the consumer, keeping compact
 | `./tokens.css` | the tokens as CSS custom properties, plus the breakpoints |
 | `./theme.css` | the Tailwind `@theme` map and semantic color utilities |
 | `./fonts.css`, `./fonts` | the font faces and `preloadFont` |
-| `./parse`, `./generators/design-md` | token parsing and the `DESIGN.md` generator |
+| `./generators/design-md` | the `DESIGN.md` generator |
 
 The exact interface is in
 [`api-reports/tokens.api.md`](https://github.com/mgkdante/yesid.dev-design/blob/v0.34.0/api-reports/tokens.api.md).

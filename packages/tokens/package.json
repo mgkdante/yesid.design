@@ -15,10 +15,6 @@
       "types": "./src/fonts.ts",
       "default": "./src/fonts.ts"
     },
-    "./parse": {
-      "types": "./src/parse.ts",
-      "default": "./src/parse.ts"
-    },
     "./generators/design-md": {
       "types": "./src/generators/design-md.ts",
       "default": "./src/generators/design-md.ts"

@@ -1,6 +1,6 @@
 // @yesid/gates — brand gates as pure, parameterized engines.
-// Provenance: tokens-only (styleRegressions) + contrast floors (colorMixFloors,
-// contrastPairs Engine B math) from yesid.dev @ 2bdb611d; no-raw-brand-hex
+// Provenance: tokens-only (styleRegressions) + contrast floors
+// (contrastPairs Engine B math) from yesid.dev @ 2bdb611d; no-raw-brand-hex
 // (brandHex) + dataviz doctrine (datavizDoctrine) + the dotted-path token
 // accessor from transit; tvOnlyInUi MINTED here. Detection internals are
 // byte-equivalent to the source gates for their default configs.
@@ -38,12 +38,6 @@ export {
 	type PairResult,
 	type TokenIdentity,
 } from './engines/contrastPairs.js';
-export {
-	colorMixViolations,
-	buildColorMixPatterns,
-	DEFAULT_COLOR_MIX_CONFIG,
-	type ColorMixFloorConfig,
-} from './engines/colorMixFloors.js';
 export {
 	tvOnlyInUiViolations,
 	type TvOnlyInUiConfig,

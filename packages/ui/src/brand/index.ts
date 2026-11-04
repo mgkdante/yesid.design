@@ -71,8 +71,6 @@ export type { SegmentedChoiceOption, SegmentedChoiceProps } from './SegmentedCho
 export { default as StatusDot } from './StatusDot.svelte';
 export type { StatusDotColor, StatusDotProps } from './StatusDot.svelte';
 
-export { default as StickyPanel } from './StickyPanel.svelte';
-export type { StickyPanelProps } from './StickyPanel.svelte';
 
 export { default as StopLabel } from './StopLabel.svelte';
 export type { StopLabelProps } from './StopLabel.svelte';

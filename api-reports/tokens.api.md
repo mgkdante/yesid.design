@@ -24,11 +24,6 @@
 - `types` → `./src/fonts.ts`
 - `default` → `./src/fonts.ts`
 
-### `./parse`
-
-- `types` → `./src/parse.ts`
-- `default` → `./src/parse.ts`
-
 ### `./generators/design-md`
 
 - `types` → `./src/generators/design-md.ts`
@@ -44,7 +39,6 @@
 ## Declaration namespaces
 
 - `Fonts` → `./src/fonts.ts` (`./fonts`)
-- `Parse` → `./src/parse.ts` (`./parse`)
 - `GeneratorsDesignMd` → `./src/generators/design-md.ts` (`./generators/design-md`)
 
 ## API Report File for "@yesid/tokens"
@@ -88,27 +82,6 @@ declare namespace GeneratorsDesignMd {
         DesignMdOptions
     }
 }
-
-// @public (undocumented)
-function isClampToken(node: unknown): node is YesidClampToken;
-
-// @public (undocumented)
-function isLeaf(node: unknown): node is Token;
-
-// @public (undocumented)
-function isPrimitive(node: unknown): node is DtcgPrimitive;
-
-declare namespace Parse {
-    export {
-        isPrimitive,
-        isClampToken,
-        parseTokens,
-        isLeaf
-    }
-}
-
-// @public (undocumented)
-function parseTokens(input: unknown): TokenTree;
 
 // @public
 function preloadFont(path: string): boolean;

@@ -139,9 +139,6 @@ interface CollectionPageJsonLdInput extends ContextOption {
     url: string;
 }
 
-// @public
-function contentSecurityPolicy(directives: Readonly<Record<string, readonly string[]>>): string;
-
 // @public (undocumented)
 interface ContextOption {
     // (undocumented)
@@ -176,7 +173,6 @@ function emitSitemapDocument(entries: readonly string[], options?: SitemapDocume
 
 declare namespace Headers_2 {
     export {
-        contentSecurityPolicy,
         SECURITY_HEADERS
     }
 }

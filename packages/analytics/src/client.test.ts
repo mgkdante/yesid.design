@@ -3,9 +3,7 @@ vi.mock('@plausible-analytics/tracker', () => ({ init: vi.fn(), track: vi.fn() }
 import { init, track } from '@plausible-analytics/tracker';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-	allowAnalyticsProps,
 	createAnalytics,
-	sanitizeAnalyticsReferrer,
 	sanitizeAnalyticsUrl,
 } from './client';
 import { defineAnalyticsPreset } from './config';
@@ -73,42 +71,21 @@ describe('sanitizeAnalyticsUrl', () => {
 	});
 });
 
-describe('sanitizeAnalyticsReferrer', () => {
-	it('keeps only the HTTP origin and drops path, query, credentials, and invalid schemes', () => {
-		expect(
-			sanitizeAnalyticsReferrer(
-				'https://user:secret@www.google.com/search?q=user@example.com#private',
-			),
-		).toBe('https://www.google.com/');
-		expect(sanitizeAnalyticsReferrer('mailto:user@example.com')).toBeUndefined();
-		expect(sanitizeAnalyticsReferrer('not a URL')).toBeUndefined();
-		expect(sanitizeAnalyticsReferrer('')).toBeUndefined();
-	});
-});
-
-describe('allowAnalyticsProps', () => {
-	const allowed = { link: ['live', 'repo'], project: ['alpha-project'] };
-
-	it('keeps only allowed keys carrying one of their allowed values', () => {
-		expect(
-			allowAnalyticsProps(allowed, {
-				link: 'repo',
-				project: 'beta-project',
-				email: 'user@example.com',
-				count: 3,
-				toString: 'live',
-			}),
-		).toEqual({ link: 'repo' });
-	});
-
-	it('returns undefined when nothing survives', () => {
-		expect(allowAnalyticsProps(allowed, { link: 'docs' })).toBeUndefined();
-		expect(allowAnalyticsProps(allowed, undefined)).toBeUndefined();
-		expect(allowAnalyticsProps({}, { link: 'live' })).toBeUndefined();
-	});
-});
-
 describe('createAnalytics', () => {
+	it.each([
+		['https://user:secret@www.google.com/search?q=user@example.com#private', 'https://www.google.com/'],
+		['mailto:user@example.com', null],
+		['not a URL', null],
+		['', null],
+	])('reduces the request referrer %s to its public origin', (referrer, expected) => {
+		vi.stubGlobal('location', { hostname: 'example.test' });
+		createAnalytics(preset, { domain: 'example.test' });
+		const transform = vi.mocked(init).mock.calls[0]?.[0].transformRequest;
+		if (!transform) throw new Error('Expected a request transform');
+		expect(transform({ n: 'pageview', d: 'example.test', u: 'https://example.test/a', r: referrer })?.r)
+			.toBe(expected);
+	});
+
 	it.each([undefined, ''])('stays silent with domain %s', (domain) => {
 		vi.stubGlobal('location', { hostname: 'example.test' });
 		const analytics = createAnalytics(preset, { domain });
@@ -211,7 +188,7 @@ describe('createAnalytics', () => {
 
 		const payload = { n: 'event_alpha', d: 'example.test', u: 'https://example.test/a', r: null };
 		expect(
-			transformRequest({ ...payload, p: { locale: 'fr', link: 'docs', secret: 'x' } }),
+			transformRequest({ ...payload, p: { locale: 'fr', link: 'docs', secret: 'x', count: 3, toString: 'repo' } }),
 		).toEqual({ ...payload, p: { locale: 'fr' } });
 	});
 

@@ -39,9 +39,6 @@
 
 ```ts
 
-// @public
-function allowAnalyticsProps(allowed: AnalyticsProps, props: Readonly<Record<string, unknown>> | undefined): Record<string, string> | undefined;
-
 // @public (undocumented)
 interface Analytics<EventName extends string, Props extends AnalyticsProps = AnalyticsProps> {
     // (undocumented)
@@ -75,8 +72,6 @@ type AnalyticsPropValues<Props extends AnalyticsProps> = {
 declare namespace Client {
     export {
         sanitizeAnalyticsUrl,
-        sanitizeAnalyticsReferrer,
-        allowAnalyticsProps,
         createAnalytics,
         AnalyticsOptions,
         Analytics
@@ -102,8 +97,6 @@ function defineAnalyticsPreset<const EventName extends string, const Props exten
 declare namespace Index {
     export {
         sanitizeAnalyticsUrl,
-        sanitizeAnalyticsReferrer,
-        allowAnalyticsProps,
         createAnalytics,
         AnalyticsOptions,
         Analytics,
@@ -150,9 +143,6 @@ function parseVitalsBeacon(input: unknown): VitalsSample[] | null;
 
 // @public (undocumented)
 function parseVitalsSample(input: unknown): VitalsSample | null;
-
-// @public (undocumented)
-function sanitizeAnalyticsReferrer(value: string): string | undefined;
 
 // @public (undocumented)
 function sanitizeAnalyticsUrl(url: URL): string;

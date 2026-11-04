@@ -45,28 +45,7 @@ function brandHexViolations(config: BrandHexConfig): BrandHexResult;
 function buildBrandHexPattern(hexes: readonly string[]): RegExp;
 
 // @public (undocumented)
-function buildColorMixPatterns(brandTokens: readonly string[]): {
-    colorMixText: RegExp;
-    fgMixText: RegExp;
-};
-
-// @public (undocumented)
 function buildFillPatterns(affordanceTokens: readonly string[]): RegExp[];
-
-// @public (undocumented)
-interface ColorMixFloorConfig {
-    // (undocumented)
-    brandFloor?: number;
-    brandTokens?: readonly string[];
-    // (undocumented)
-    exemptMarker?: string;
-    // (undocumented)
-    foregroundFloor?: number;
-    markerWindow?: number;
-}
-
-// @public
-function colorMixViolations(src: string, config?: ColorMixFloorConfig): string[];
 
 // @public
 type ContrastPair = [string, [Mode, string], [Mode, string], number];
@@ -106,15 +85,6 @@ const DEFAULT_AFFORDANCE_TOKENS: readonly ["primary", "success", "destructive", 
 
 // @public
 const DEFAULT_ALLOW_MARKERS: readonly ["dataviz-allow: interactive"];
-
-// @public (undocumented)
-const DEFAULT_COLOR_MIX_CONFIG: {
-    readonly brandTokens: readonly ["primary", "accent"];
-    readonly brandFloor: 85;
-    readonly foregroundFloor: 65;
-    readonly exemptMarker: "contrast-exempt";
-    readonly markerWindow: 3;
-};
 
 // @public (undocumented)
 interface ForbiddenHit {
@@ -162,10 +132,6 @@ declare namespace Index {
         ContrastPair,
         PairResult,
         TokenIdentity,
-        colorMixViolations,
-        buildColorMixPatterns,
-        DEFAULT_COLOR_MIX_CONFIG,
-        ColorMixFloorConfig,
         tvOnlyInUiViolations,
         TvOnlyInUiConfig,
         TvGateResult,

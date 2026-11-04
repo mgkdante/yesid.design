@@ -5,7 +5,6 @@ import Footer, { type SheetFooterProps } from './sheet-footer.svelte';
 import Header, { type SheetHeaderProps } from './sheet-header.svelte';
 import Overlay, { type SheetOverlayProps } from './sheet-overlay.svelte';
 import Content, {
-	sheetVariants,
 	type SheetContentProps,
 	type SheetSide,
 } from './sheet-content.svelte';
@@ -41,7 +40,6 @@ export {
 	Content,
 	Description,
 	Close,
-	sheetVariants,
 	type SheetSide,
 	//
 	Root as Sheet,
