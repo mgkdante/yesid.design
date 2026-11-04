@@ -9,10 +9,3 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
 	'Permissions-Policy':
 		'accelerometer=(), bluetooth=(), camera=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), payment=(), serial=(), usb=()',
 };
-
-/** A directive without sources, such as `upgrade-insecure-requests`, is written on its own. */
-export function contentSecurityPolicy(directives: Readonly<Record<string, readonly string[]>>): string {
-	return Object.entries(directives)
-		.map(([name, sources]) => [name, ...sources].join(' '))
-		.join('; ');
-}

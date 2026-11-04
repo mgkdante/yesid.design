@@ -312,7 +312,7 @@ describe('deterministic package API reports', () => {
 		expect(first['@yesid/analytics']).toContain('function createAnalytics');
 		expect(first['@yesid/analytics']).toContain('function defineAnalyticsPreset');
 		expect(first['@yesid/i18n-core']).toContain('function createLocaleRouting');
-		expect(first['@yesid/tokens']).toContain('function parseTokens');
+		expect(first['@yesid/tokens']).toContain('function preloadFont');
 		expect(first['@yesid/motion']).toContain('function subscribe');
 		expect(first['@yesid/motion']).not.toContain('_resetForTests');
 		expect(first['@yesid/gates']).toContain('function runContrastPairs');
@@ -348,9 +348,9 @@ describe('deterministic package API reports', () => {
 
 		const signatureRoot = createPackageScratch('tokens');
 		replaceInFile(
-			join(signatureRoot, 'packages/tokens/src/parse.ts'),
-			'export function parseTokens(input: unknown): TokenTree {',
-			'export function parseTokens(input: unknown, strict?: boolean): TokenTree {',
+			join(signatureRoot, 'packages/tokens/src/fonts.ts'),
+			'export function preloadFont(path: string): boolean {',
+			'export function preloadFont(path: string, strict?: boolean): boolean {',
 		);
 		const signatureReport = await createApiReport(signatureRoot, '@yesid/tokens');
 		expect(signatureReport).not.toBe(baseline);

@@ -8,7 +8,6 @@ import { join, sep } from 'node:path';
 import { styleRegressionViolations } from '../engines/styleRegressions.js';
 import { brandHexViolations, buildBrandHexPattern } from '../engines/brandHex.js';
 import { datavizViolations } from '../engines/datavizDoctrine.js';
-import { colorMixViolations, buildColorMixPatterns } from '../engines/colorMixFloors.js';
 import { tvOnlyInUiViolations } from '../engines/tvOnlyInUi.js';
 import { ratio } from '../engines/contrastPairs.js';
 import { blankComments } from '../engines/comments.js';
@@ -120,27 +119,6 @@ describe('datavizDoctrine engine', () => {
 	it('catches utility-class fills', () => {
 		expect(datavizViolations('<div class="bg-success"></div>')).toHaveLength(1);
 		expect(datavizViolations('<div class="bg-dataviz-status-on-time"></div>')).toEqual([]);
-	});
-});
-
-describe('colorMixFloors engine', () => {
-	it('compiles the byte-identical default brand pattern', () => {
-		const { colorMixText } = buildColorMixPatterns(['primary', 'accent', 'signal']);
-		expect(colorMixText.source).toBe(
-			'(?<![-\\w])color:\\s*color-mix\\(in srgb,\\s*var\\(--(?:primary|accent|signal)[^)]*\\)\\s*(\\d+(?:\\.\\d+)?)%',
-		);
-	});
-
-	it('fails below the floor, passes at it, and honors the exemption window', () => {
-		expect(colorMixViolations('color: color-mix(in srgb, var(--primary) 80%, transparent);')).toHaveLength(1);
-		expect(colorMixViolations('color: color-mix(in srgb, var(--primary) 85%, transparent);')).toEqual([]);
-		expect(
-			colorMixViolations(
-				'/* contrast-exempt: decorative */\ncolor: color-mix(in srgb, var(--primary) 40%, transparent);',
-			),
-		).toEqual([]);
-		// border-color is a boundary, not text — never scanned
-		expect(colorMixViolations('border-color: color-mix(in srgb, var(--primary) 20%, transparent);')).toEqual([]);
 	});
 });
 

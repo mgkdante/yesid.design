@@ -802,8 +802,6 @@ declare namespace Brand {
         StatusDot,
         StatusDotColor,
         StatusDotProps,
-        StickyPanel,
-        StickyPanelProps,
         StopLabel,
         StopLabelProps,
         TerminalCursor,
@@ -953,42 +951,6 @@ const Card: Component<$$ComponentProps_4, {}, "ref">;
 
 // @public (undocumented)
 type Card = ReturnType<typeof Card>;
-
-// @public (undocumented)
-const CardAction: Component<WithElementRef<HTMLAttributes<HTMLDivElement>>, {}, "ref">;
-
-// @public (undocumented)
-type CardAction = ReturnType<typeof CardAction>;
-
-// @public (undocumented)
-const CardContent: Component<WithElementRef<HTMLAttributes<HTMLDivElement>>, {}, "ref">;
-
-// @public (undocumented)
-type CardContent = ReturnType<typeof CardContent>;
-
-// @public (undocumented)
-const CardDescription: Component<WithElementRef<HTMLAttributes<HTMLParagraphElement>>, {}, "ref">;
-
-// @public (undocumented)
-type CardDescription = ReturnType<typeof CardDescription>;
-
-// @public (undocumented)
-const CardFooter: Component<WithElementRef<HTMLAttributes<HTMLDivElement>>, {}, "ref">;
-
-// @public (undocumented)
-type CardFooter = ReturnType<typeof CardFooter>;
-
-// @public (undocumented)
-const CardHeader: Component<WithElementRef<HTMLAttributes<HTMLDivElement>>, {}, "ref">;
-
-// @public (undocumented)
-type CardHeader = ReturnType<typeof CardHeader>;
-
-// @public (undocumented)
-const CardTitle: Component<WithElementRef<HTMLAttributes<HTMLDivElement>>, {}, "ref">;
-
-// @public (undocumented)
-type CardTitle = ReturnType<typeof CardTitle>;
 
 // @public (undocumented)
 const ChevronToggle: Component<ChevronToggleProps, {}, "">;
@@ -1652,8 +1614,6 @@ declare namespace Index {
         StatusDot,
         StatusDotColor,
         StatusDotProps,
-        StickyPanel,
-        StickyPanelProps,
         StopLabel,
         StopLabelProps,
         TerminalCursor,
@@ -1937,7 +1897,6 @@ const Portal: Component<PortalProps, {}, "">;
 declare namespace PrimitivesBadge {
     export {
         Badge,
-        badgeVariants,
         BadgeProps,
         BadgeProps as Props,
         BadgeVariant,
@@ -1950,7 +1909,6 @@ declare namespace PrimitivesButton {
         Button as Root,
         ButtonProps as Props,
         Button,
-        buttonVariants,
         ButtonProps,
         ButtonSize,
         ButtonVariant
@@ -1960,19 +1918,7 @@ declare namespace PrimitivesButton {
 declare namespace PrimitivesCard {
     export {
         Card as Root,
-        CardContent as Content,
-        CardDescription as Description,
-        CardFooter as Footer,
-        CardHeader as Header,
-        CardTitle as Title,
-        CardAction as Action,
-        Card,
-        CardContent,
-        CardDescription,
-        CardFooter,
-        CardHeader,
-        CardTitle,
-        CardAction
+        Card
     }
 }
 
@@ -2060,7 +2006,6 @@ declare namespace PrimitivesSheet {
         SheetContent as Content,
         SheetDescription as Description,
         Close,
-        sheetVariants,
         SheetSide,
         Root as Sheet,
         SheetTitle,
@@ -2751,19 +2696,6 @@ interface StatusDotProps extends HTMLAttributes<HTMLSpanElement> {
     // (undocumented)
     size?: 'sm' | 'md';
 }
-
-// @public (undocumented)
-const StickyPanel: Component<StickyPanelProps, {}, "ref">;
-
-// @public (undocumented)
-type StickyPanel = ReturnType<typeof StickyPanel>;
-
-// @public (undocumented)
-type StickyPanelProps = WithElementRef<HTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
-    top?: string;
-    children: Snippet;
-    class?: string;
-};
 
 // @public (undocumented)
 const StopLabel: Component<StopLabelProps, {}, "">;

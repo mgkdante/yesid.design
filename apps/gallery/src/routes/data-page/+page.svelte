@@ -2,7 +2,7 @@
 	import { createRawSnippet } from 'svelte';
 	import { Badge } from '@yesid/ui/badge';
 	import { CornerMeta, SegmentedChoice, ToggleChip } from '@yesid/ui/brand';
-	import * as Card from '@yesid/ui/card';
+	import * as Card from '#lib/card/index.js';
 	import { StateNotice } from '@yesid/ui/feedback';
 	import {
 		Breadcrumb,

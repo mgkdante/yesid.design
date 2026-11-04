@@ -10,7 +10,7 @@
 		wordmarkHover,
 	} from '@yesid/motion/actions';
 	import { duration, ease } from '@yesid/motion/tokens';
-	import * as Card from '@yesid/ui/card';
+	import * as Card from '#lib/card/index.js';
 
 	let wordmarkDot = $state<HTMLSpanElement | null>(null);
 </script>

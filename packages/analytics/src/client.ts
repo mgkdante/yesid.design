@@ -29,7 +29,7 @@ export function sanitizeAnalyticsUrl(url: URL): string {
 	return sanitized.toString();
 }
 
-export function sanitizeAnalyticsReferrer(value: string): string | undefined {
+function sanitizeAnalyticsReferrer(value: string): string | undefined {
 	if (value === '') return undefined;
 	try {
 		const referrer = new URL(value);
@@ -43,7 +43,7 @@ export function sanitizeAnalyticsReferrer(value: string): string | undefined {
 }
 
 /** Keeps only allowed keys whose value is one of that key's allowed values. */
-export function allowAnalyticsProps(
+function allowAnalyticsProps(
 	allowed: AnalyticsProps,
 	props: Readonly<Record<string, unknown>> | undefined,
 ): Record<string, string> | undefined {

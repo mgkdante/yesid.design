@@ -20,7 +20,7 @@ Consumers can use the root export (JSON-LD, sitemap and robots, Satori) or the s
 - `./og/files`: `ogFontFiles` and `readOgFonts()` for Bun build scripts. Native Node can't load
   this package's TypeScript from `node_modules`.
 - `./icons`: `brandMarkSvg(color)`, the tab-cut ring and dot, and `touchIconSvg(ground, color)`.
-- `./headers`: `SECURITY_HEADERS` and `contentSecurityPolicy(directives)`. The Permissions-Policy
+- `./headers`: `SECURITY_HEADERS`. Products serialize their own CSP directives. The Permissions-Policy
   denies every listed feature; a product that uses one overrides that header (Transit allows
   `geolocation=(self)` for its locate-me control).
 - `./highlight`: `highlight(code, lang)` resolves to token markup for a `<code>` element in `syn-*`

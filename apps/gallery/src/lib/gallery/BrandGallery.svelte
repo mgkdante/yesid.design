@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Card from '@yesid/ui/card';
+	import * as Card from '#lib/card/index.js';
 	import {
 		BlueprintShell,
 		ChevronToggle,
@@ -25,7 +25,6 @@
 		SegmentedChoice,
 		SliderButton,
 		StatusDot,
-		StickyPanel,
 		StopLabel,
 		TerminalCursor,
 		TerminalPanel,
@@ -207,18 +206,6 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root data-gallery-family="brand:StickyPanel">
-			<Card.Header>
-				<Card.Title>StickyPanel</Card.Title>
-				<Card.Description>Sticky surface-3 panel that chains wheel scrolling to the page.</Card.Description>
-			</Card.Header>
-			<Card.Content>
-				<StickyPanel top="1rem">
-					<SectionLabel text="STICKY PANEL" variant="metric" />
-					<p class="mt-2 text-small">Keyboard-scrollable, sticky below its top offset.</p>
-				</StickyPanel>
-			</Card.Content>
-		</Card.Root>
 
 		<Card.Root data-gallery-family="brand:ThemeToggle">
 			<Card.Header>

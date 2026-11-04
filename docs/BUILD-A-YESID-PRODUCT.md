@@ -270,8 +270,8 @@ export const handle: Handle = ({ event, resolve }) => {
 
 For dynamic documents, apply the product's approved response headers around this same resolve
 call. Static HTML/assets need the host's headers file or deployment configuration too; a server
-hook alone does not cover them. `@yesid/seo-kit/headers` exports `SECURITY_HEADERS` and
-`contentSecurityPolicy`; review HSTS/includeSubDomains/preload for the deployment before
+hook alone does not cover them. `@yesid/seo-kit/headers` exports `SECURITY_HEADERS`; serialize
+the product's own CSP directives and review HSTS/includeSubDomains/preload for the deployment before
 adopting it. This guide does not change an existing host's HSTS policy.
 
 ### One persistent root layout: header, navigation and sections
@@ -440,10 +440,8 @@ runIdentities(tokens, PRODUCT_IDENTITIES).forEach(({ label, pass }, index) => {
 if (failures.length > 0) { console.error(failures.join('\n')); process.exit(1); }
 ```
 
-`@yesid/gates` exports engines and neutral defaults from its root only. A
-consumer with additional semantic color tokens, such as a product-specific
-accent, must pass its full `brandTokens` list to `colorMixViolations` instead
-of relying on the neutral default.
+`@yesid/gates` exports engines and neutral defaults from its root only. Check rendered text
+contrast in the product browser suite; a color-mix percentage alone does not establish contrast.
 
 Run these commands in CI:
 

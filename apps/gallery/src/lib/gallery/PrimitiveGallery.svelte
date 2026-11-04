@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Badge } from '@yesid/ui/badge';
 	import { Button } from '@yesid/ui/button';
-	import * as Card from '@yesid/ui/card';
+	import * as Card from '#lib/card/index.js';
 	import * as Collapsible from '@yesid/ui/collapsible';
 	import { Combobox, type ComboboxOption } from '@yesid/ui/combobox';
 	import { FooterGroup, FooterLink } from '@yesid/ui/footer';

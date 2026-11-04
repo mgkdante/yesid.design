@@ -11,16 +11,20 @@ there is no shadcn CLI, registry or package dependency.
 <script lang="ts">
 	import { Badge } from '@yesid/ui/badge';
 	import { Button } from '@yesid/ui/button';
-	import { Card, CardContent, CardHeader, CardTitle } from '@yesid/ui/card';
+	import { Card } from '@yesid/ui/card';
 	import { Combobox, type ComboboxOption } from '@yesid/ui/combobox';
 </script>
 
 <Card>
-	<CardHeader><CardTitle>Queue status</CardTitle></CardHeader>
-	<CardContent><Badge>Ready</Badge></CardContent>
+	<h2 class="px-4">Queue status</h2>
+	<div class="px-4"><Badge>Ready</Badge></div>
 	<Button>Open queue</Button>
 </Card>
 ```
+
+`@yesid/ui/card` exports only `Card` and its `Root` alias. Compose its content with ordinary
+markup. Variant functions stay internal to the Button, Badge and Sheet implementations; their
+props and public variant types remain available.
 
 ## Source scanning and application tokens
 
@@ -219,11 +223,6 @@ No product locale type or copy table enters the package.
 ### MetroStation
 
 Renders the zero-padded station number in a 2rem signage roundel with a pulse.
-
-### StickyPanel
-
-A sticky, keyboard-scrollable `surface-3` panel below `top`. Wheel scrolling past its end chains
-to the page through `scrollChain`.
 
 ### TocBadge
 

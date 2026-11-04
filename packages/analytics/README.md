@@ -41,7 +41,8 @@ analytics.trackEvent('signup_click', { placement: 'hero' });
 ```
 
 `context` is read on every pageview and event. Keys or values outside the preset are dropped
-before anything is sent. Register the keys under Custom properties in Plausible to see them.
+before anything is sent. Referrer reduction and property filtering are private implementation
+helpers behind `createAnalytics`; they are not standalone exports. Register the keys under Custom properties in Plausible to see them.
 
 It sends nothing unless `domain` is set and the page is served from that host or a subdomain,
 so local, preview and fork deployments stay silent. Call it once per page load in the browser

@@ -56,6 +56,17 @@ consumer or clean-room verification.
 
 ## Removals
 
+### Planned removals
+
+- **v0.35.0 (connect c-8 owner exception, 2026-11-04):** the owner approved removing
+  the unused contracts listed in the [migration and source evidence](docs/migrations/connect-prune.md)
+  without a deprecation window, waiving both the 90-day and intervening-minor gates.
+  Card sub-parts, StickyPanel, the color-mix floor engine, the CSP serializer, the token
+  parse subpath and unused variant and analytics helper exports leave the public API.
+  Card root, config entries, sectionGlow and footer types stay. The API report still needs
+  owner approval before stable release. This source change is not a published release or
+  consumer-adoption receipt.
+
 ### Published removals
 
 - **v0.34.0 (D-e owner exception, 2026-11-03):** the owner approved folding
