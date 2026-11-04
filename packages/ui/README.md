@@ -291,8 +291,9 @@ nodes/traces, warm glow and ripple ink. Companion product grids use the same pro
 `collapse`, `expand`, `collapseTitle` and `expandTitle` copy. State and `onToggle` default to the
 in-memory `sections` state; `collapsed` and `onToggle` support a controlled adapter. The default
 label reflects the mounted sections: Expand all when all are closed, Collapse all otherwise.
-The control is hidden with fewer than two mounted collapsible sections. Registration is client-only,
-so the server omits it until hydration has counted the sections. Static cards and TocNav do not count;
+The control is hidden with fewer than two mounted collapsible content sections. Registration is client-only,
+so the server omits it until hydration has counted the sections. Independent panels, static cards
+and TocNav do not count;
 the TOC keeps its independent toggle and is never changed by expand-all actions.
 `activeEffect="none"` keeps flat marks; `"glow"` adds a scoped core filter.
 
@@ -304,13 +305,28 @@ supplies one fixed `label`; `aria-checked` carries the state.
 ### CollapsibleSection
 
 A card with a toggle header, an optional index badge, `icon` and `headerActions` snippets, and an
-`anchor` that emits `data-toc` for the TOC family. Every mounted collapsible card participates in
-Collapse all / Expand all. Each mount starts at its declared `open` default (true); no disclosure
+`anchor` that emits `data-toc` for the TOC family. By default, every mounted collapsible card participates in
+Collapse all / Expand all. Use `<CollapsibleSection independent bind:open={panelOpen}>` for a
+filter or control panel that keeps its own toggle and stays out of bulk actions, counts and the
+all-closed calculation.
+Each mount starts at its declared `open` default (true); no disclosure
 state is stored or restored. Static cards always show their body. Closed bodies stay mounted,
 inert and hidden from assistive technology; collapsing a focused body returns focus to its header.
 `openSignal` opens a card whenever the consumer counter changes. `openSection(anchor, root?)`
-opens mounted content sections with that anchor, optionally within a page root, and returns
+opens mounted collapsible cards with that anchor, optionally within a page root, and returns
 whether one matched. Registration is removed on unmount and refreshed when the anchor changes. No trigger click or private selector is needed.
+
+Independent panel anchors are navigation targets, not content-section membership. Keep them out
+of content TOC entries; an explicit `jump(anchor)` or jump to a nested heading still opens the
+panel and its containing disclosures before landing, leaving unrelated content closed. The
+collapsible panel's `bind:open` reflects that request and remains caller-owned; nothing is persisted.
+When the controller has content entries, observing or jumping to an independent panel or its
+nested targets preserves the content TOC's active entry, counter and pill label. With empty
+entries, target activity remains available. Ordinary content headings and `options.selector`
+targets outside independent panels keep reporting activity, including unlisted targets.
+This protection also applies with `independent collapsible={false}`. A static panel stays
+visible, and jumps or reveal helpers leave its bound `open` value unchanged. Ordinary static
+cards keep their existing behavior and remain outside bulk actions.
 
 ### TocNav, TocPill, and section navigation
 
