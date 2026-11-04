@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
-import { browser } from '$app/environment';
-import { HOME, LOCALES } from '$lib/gallery/site-header-fixture';
+import { browser } from '$app/env';
+import { HOME, LOCALES } from '#lib/gallery/site-header-fixture.ts';
 import type { PageLoad } from './$types';
 
 /** Private router fixture: browser tests control the delay response and real Kit redirect. */

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import type { NavigationLifecycle } from '@yesid/ui/brand';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { page } from '$app/state';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import FileText from '@lucide/svelte/icons/file-text';
@@ -18,7 +18,7 @@
 		MENU_ITEMS,
 		SEARCH_LABEL,
 		languageHref,
-	} from '$lib/gallery/site-header-fixture';
+	} from '#lib/gallery/site-header-fixture.ts';
 
 	const navigation = getContext<NavigationLifecycle>('gallery-navigation');
 	const ICONS: Record<string, typeof PanelTop> = {

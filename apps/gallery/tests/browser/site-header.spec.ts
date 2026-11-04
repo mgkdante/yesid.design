@@ -160,9 +160,9 @@ test('a state-preserving language switch from the closed header resets page focu
 	await expect(page.locator('body')).toBeFocused();
 });
 
-test.describe('without a navigation subscription', () => {
+test.describe('Kit 3 hook-only navigation', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
-	const fallbackHome = `${HOME}?navigation=fallback`;
+	const fallbackHome = `${HOME}?initial=true`;
 
 	test('a direct language link keeps the menu open and focuses its updated link', async ({ page }) => {
 		await page.goto(fallbackHome);
@@ -283,7 +283,7 @@ test.describe('with motion on', () => {
 		});
 	}
 
-	test('keyboard Enter on a locale redirect keeps the menu open', async ({ page }) => {
+	test('keyboard Enter on an eventless locale redirect closes the menu', async ({ page }) => {
 		await page.goto(HOME);
 		await toggle(page).click();
 		await language(page).evaluate((node, href) => {
@@ -296,11 +296,11 @@ test.describe('with motion on', () => {
 		await page.keyboard.press('Enter');
 		await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
 		await expect(page).toHaveURL((url) => url.searchParams.get('landed') === 'locale');
-		await expect(menu(page)).toBeVisible();
-		await expect(language(page)).toBeFocused();
+		await expect(menu(page)).toBeHidden();
+		await expect(page.locator('body')).toBeFocused();
 	});
 
-	test('a trusted locale redirect keeps the menu open and focuses the updated language link', async ({ page }) => {
+	test('a trusted eventless locale redirect closes the menu and resets focus', async ({ page }) => {
 		await page.goto(HOME);
 		await toggle(page).click();
 		await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ redirect: 'locale' }));
@@ -310,12 +310,12 @@ test.describe('with motion on', () => {
 		await language(page).click();
 		await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
 		await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('lang') === LOCALES[1] && url.searchParams.get('landed') === 'locale');
-		await expect(menu(page)).toBeVisible();
-		await expect(language(page)).toBeFocused();
+		await expect(menu(page)).toBeHidden();
+		await expect(page.locator('body')).toBeFocused();
 		await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[0]));
 	});
 
-	test('a trusted redirected locale switch after a slow ordinary load preserves a reopened menu', async ({ page }) => {
+	test('an eventless locale redirect after a slow ordinary load closes a reopened menu', async ({ page }) => {
 		await page.goto(HOME);
 		const delay = await delayFixtureLoad(page);
 		try {
@@ -334,8 +334,8 @@ test.describe('with motion on', () => {
 			await language(page).click();
 			await expect(page.locator('html')).toHaveAttribute('data-native-click-trusted', 'true');
 			await expect(page).toHaveURL((url) => url.pathname === HOME && url.searchParams.get('lang') === LOCALES[1] && url.searchParams.get('landed') === 'locale');
-			await expect(menu(page)).toBeVisible();
-			await expect(language(page)).toBeFocused();
+			await expect(menu(page)).toBeHidden();
+			await expect(page.locator('body')).toBeFocused();
 			await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[0]));
 		} finally {
 			delay.release();
@@ -392,7 +392,7 @@ test.describe('with motion on', () => {
 			await toggle(page).click();
 			const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
 			const link = menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) });
-			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'off'));
+			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'false'));
 			await link.click({ noWaitAfter: true });
 			await delay.loading;
 			await expect(menu(page)).toBeHidden();
@@ -414,7 +414,7 @@ test.describe('with motion on', () => {
 			await toggle(page).click();
 			const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
 			const link = menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) });
-			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'off'));
+			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'false'));
 			await link.click({ noWaitAfter: true });
 			await delay.loading;
 			await expect(menu(page)).toBeHidden();

@@ -56,11 +56,11 @@ consumer or clean-room verification.
 
 ## Removals
 
-### Approved pending transition
+### Published removals
 
-- **Upcoming minor release (D-e owner exception, 2026-11-03):** the owner approved folding
+- **v0.34.0 (D-e owner exception, 2026-11-03):** the owner approved folding
   unused primitive cleanup into the deepen refactor without a deprecation window, waiving
-  both normal removal gates. Remove `@yesid/ui/toggle` and `@yesid/ui/toggle-group`, Button
+  both normal removal gates. Removed `@yesid/ui/toggle` and `@yesid/ui/toggle-group`, Button
   variants `secondary` / `destructive` / `link`, Button sizes `xs` / `lg` / `icon` / `icon-xs` /
   `icon-sm` / `icon-lg`, Badge variants `secondary` / `ghost` / `link`, Sheet side `left`, unused
   icon/group/invalid-state selectors, the eight sidebar color mappings, exact `--radius`,
@@ -68,10 +68,9 @@ consumer or clean-room verification.
   contracts; FilterGroup retains its behavior directly through bits-ui. Transit's sole exact
   `--radius` reference must move to its identical resolved value, `--radius-md`, before token
   adoption. All declared defaults stay. See the [migration and scan evidence](docs/migrations/deepen-primitives.md).
-  This is release paperwork, not release or adoption approval. The owner approves the API report
-  when v0.34.0 is prepared.
+  Published in v0.34.0; this entry does not establish consumer adoption.
 
-- **deepen D-c, owner decision 2026-11-03, next coordinated minor:** `SiteHeader.navigation`
+- **v0.33.0 (deepen D-c, owner decision 2026-11-03):** `SiteHeader.navigation`
   changes from raw SvelteKit hooks to the app layout's `createNavigationLifecycle` result;
   `LanguageToggle.onNavigate` is removed; `SiteHeader.labels.menuFooter`,
   `SiteHeader.labels.skipToContent` and `LanguageToggle.names` become required with no built-in
@@ -82,9 +81,10 @@ consumer or clean-room verification.
   Kit 3 consumers omit it: direct language switches still work, while eventless language redirects
   close the menu without locale refocus. No SDK change is required for adoption.
   [The migration](docs/migrations/navigation-lifecycle.md) names both consumers' props and strings.
-  This entry records approval, not a published release or consumer adoption.
+  Published in v0.33.0; current Kit 3 integrations omit the subscription.
+  This entry does not establish consumer adoption.
 
-- **Upcoming minor release (section-jump owner exception, 2026-11-03):** the owner-directed
+- **v0.33.0 (section-jump owner exception, 2026-11-03):** the owner-directed
   D-b interface reduction removes `TOC_TARGET_SELECTOR`, `navigateToc`, `observeActiveToc`,
   `onTocNavigate`, `openCollapsedTocTarget`, `reconcileActiveToc`, `revealTocTarget`, `settleLayout`,
   `tocElement` and `RevealTocTargetOptions` from both `@yesid/ui` and `@yesid/ui/brand`, without a
@@ -96,7 +96,7 @@ consumer or clean-room verification.
   its replacement and the read-only consumer caller inventory. Generic history restoration,
   content presence and tab/grain policy remain consumer-owned.
 
-- **Upcoming minor release (owner exception, 2026-11-03):** the owner approved immediate
+- **v0.33.0 (disclosure owner exception, 2026-11-03):** the owner approved immediate
   removal of the following disclosure contracts, explicitly waiving both the 90-day wait and
   the intervening-minor-release gate. From `@yesid/ui` and `@yesid/ui/brand`, remove
   `QuietModeButton`, `QuietModeButtonProps`, `QuietModeButtonCopy` and `QuietModeActiveEffect`;
@@ -113,8 +113,6 @@ consumer or clean-room verification.
   action and boot marks have no replacement; the generic `persisted` store remains available
   for non-disclosure state. The TOC and filter controls remain independent. See the
   [consumer migration](docs/migrations/deepen-disclosure.md) for the full surface and caller list.
-
-### Published removals
 
 - **v0.28.0:** removed the adoption CLI (`tools/adopt.ts` and `tools/adopt/`), its schema-2
   `manifest.json` and the `yesid.dev-design-vX.Y.Z.tar` archive: each package now ships as its own
