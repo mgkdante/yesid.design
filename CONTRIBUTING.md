@@ -58,6 +58,11 @@ What changed for consumers, and how to migrate.
 CI accepts a changed API report only with a fragment added in the same pull request. Removing or
 breaking a public contract follows [DEPRECATION.md](DEPRECATION.md).
 
+A release whose API report or migration notes change must pass the
+[prerelease rehearsal on both consumers](RELEASING.md#4-rehearse-a-contract-change) before stable
+promotion. Package and Gallery checks remain repository evidence; each app verifies the candidate
+tarballs through its own checks and affected callers.
+
 ## Defects found in a product
 
 Reproduce the defect in the product, then fix it here with a regression test in the package that

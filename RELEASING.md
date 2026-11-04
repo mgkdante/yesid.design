@@ -1,7 +1,8 @@
 # Releasing
 
-A release is an annotated `vX.Y.Z` tag on `main` and one immutable GitHub Release carrying eight
-package tarballs. Consumers install those tarballs by URL; nothing is published to npm.
+A release is an annotated `vX.Y.Z` (or `vX.Y.Z-rc.N`) tag on `main` and one immutable GitHub
+Release carrying eight package tarballs. Consumers install those tarballs by URL; nothing is
+published to npm.
 
 ## Rules
 
@@ -13,6 +14,9 @@ package tarballs. Consumers install those tarballs by URL; nothing is published 
   candidate to its stable version, which reuses the candidate's changelog entry.
 - Never move, delete or re-push a tag, and never edit a published Release. Fix forward with a new
   version.
+- Rehearse any release whose API report or migration notes change on both consumers before
+  promoting it to stable. A patch with no contract change can skip the rehearsal. Only the latest
+  stable release is supported; a candidate is temporary verification, not another supported line.
 
 ## 1. Release pull request
 
@@ -35,11 +39,16 @@ bun run release:prepare -- --version X.Y.Z
 bun run release:check -- --version X.Y.Z
 ```
 
+For a release that requires rehearsal, use `X.Y.Z-rc.1` instead of `X.Y.Z` in both commands.
 Prepare bumps every manifest and `bun.lock`, folds the fragments into `CHANGELOG.md` and deletes
 them, and moves the package READMEs' links from `blob/v<previous>/` to `blob/vX.Y.Z/`. Merge the
-release pull request once CI is green and the API report diff has been read.
+release pull request once CI is green and the API report diff has been read. Keep the exact design
+commit, version and API report diff in the release evidence. Stable promotion also needs the
+owner's API report approval and, for a contract change, the rehearsal below.
 
 ## 2. Tag
+
+Use `TAG=vX.Y.Z-rc.N` in the sequence below when tagging a candidate.
 
 ```sh
 git fetch --prune origin main --tags
@@ -78,7 +87,70 @@ the same tag: `gh workflow run release.yml -f tag="$TAG"`. The dispatch runs `ma
 checkout, setup, tests and package sources still come from the tag, so a defect in the tagged
 source needs a new version. A published Release stays as it is.
 
-## 4. Consumers
+## 4. Rehearse a contract change
+
+After the candidate release PR is merged, follow steps 2 and 3 with `TAG=vX.Y.Z-rc.1`.
+The workflow marks versions with a prerelease suffix as GitHub prereleases. Verify its eight
+assets and provenance just as for stable. Do not install local packs, branch archives or assets
+outside a release tag in a consumer.
+
+In **each** of Transit and yesid.dev:
+
+1. Start a throwaway bump branch from the app's current `origin/main`. Record that base SHA.
+2. Change every design tarball URL in `package.json` to the candidate's exact tag and version,
+   including sibling peers, then run `bun install`. Keep the diff to those URLs, `bun.lock` and
+   the adoption changes required by the release's migration notes. Generate dependency lockfile
+   changes with the app's pinned Bun on Linux, following its contribution rules.
+3. Run the app's own required checks on that branch: source/architecture guards, generated-output
+   drift checks, type checks, unit/integration tests, production build, accessibility and browser
+   suites. Follow its scripts and CI definition for the exact commands and required jobs. All jobs
+   must finish green, including every yesid.dev e2e shard. Run local browser suites on dedicated
+   ports with server reuse disabled when sharing a machine.
+4. Exercise the changed contract in the real app callers, including the affected responsive,
+   keyboard/accessibility and reduced-motion behavior. For example, a disclosure or section-jump
+   change needs the app's actual panels and navigation, not just a generic fixture. Record the
+   exact scenarios, results and any unverified behavior. Gallery remains repository evidence and
+   cannot replace either app's acceptance.
+5. On the owning release slice, record the candidate design SHA/tag, both consumer base and tested
+   head SHAs, the URL/lockfile diff, check commands and CI run links, and the contract scenarios.
+   Green evidence belongs to those exact heads; rerun affected checks if the candidate or app
+   changes. Keep these branches out of the apps' `main`; stable adoption gets its own PR.
+
+If either app finds a shared defect, fix it in design with a regression test and a new change
+fragment, prepare `X.Y.Z-rc.2` (then `rc.3`, etc.), merge its release PR and publish its new tag.
+Repeat both app rehearsals against that candidate. Never repair an installed package or replace
+an earlier tag or asset. If adoption needs an owner decision or a contract change outside the
+release scope, stop promotion and record the blocker on the release slice.
+
+### Promote the proven candidate
+
+Once both apps pass on the same candidate and the owner has approved the API report, start a
+stable release PR from current design `main`:
+
+```sh
+bun run release:prepare -- --version X.Y.Z
+bun run release:check -- --version X.Y.Z
+```
+
+With no pending fragments, preparation promotes the latest same-core candidate's changelog
+section rather than consuming it twice. Keep stable package source identical to the tested
+candidate; review the diff for version, lockfile, README link and changelog-heading updates only.
+If new source or pending fragments have landed on `main`, prepare another candidate and rehearse
+it first. Merge the stable PR with green checks, then follow steps 2 and 3 for `vX.Y.Z`.
+Leave candidate tags and releases intact. Publishing stable does not merge or deploy either app.
+
+### Local tooling proof without publishing
+
+```sh
+bun run test:repository tests/repository/tooling/release-core.test.ts tests/repository/tooling/release-pack.test.ts
+```
+
+The release tests prepare and check isolated temporary fixtures, run real `bun pm pack` through
+`rc.1`, a fragment-backed `rc.2` and stable promotion, and inspect all eight asset names and packed
+sibling peer URLs. They restore checkout bytes after packing and never push tags or publish.
+This proves local tooling, not GitHub publication, provenance or consumer acceptance.
+
+## 5. Consumers
 
 Each app takes the release in its own pull request: change the tag and version in every
 `https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
