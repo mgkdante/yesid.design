@@ -30,9 +30,9 @@
   See `docs/migrations/connect-module-fixes.md` for both products' bump requirements and checks.
 
 <!-- release-fragment: connect-prune -->
-- `@yesid/tokens` (minor), `@yesid/gates` (minor), `@yesid/seo-kit` (minor), `@yesid/ui` (minor), `@yesid/analytics` (minor): Remove unused public contracts under the connect c-8 owner-approved deprecation-window
-  exception. Card keeps its root; compose children with ordinary markup. Sticky panels use
-  product layout and the retained scrollChain action. Button, Badge and Sheet keep their
+- `@yesid/tokens` (minor), `@yesid/gates` (minor), `@yesid/seo-kit` (minor), `@yesid/ui` (minor), `@yesid/analytics` (minor): Remove unused public contracts. The owner approved removing them in this one release,
+  without the usual deprecation wait (see DEPRECATION.md). Card keeps its root; compose children with ordinary markup. Sticky panels use
+  product layout and the retained scrollChain action. Button, Badge, Sheet and Tabs keep their
   props and types while their variant functions stop being index exports. Remove the unused
   color-mix floor engine, CSP serializer and token parse subpath. Analytics referrer reduction
   and property filtering remain private behind createAnalytics with unchanged request behavior.
