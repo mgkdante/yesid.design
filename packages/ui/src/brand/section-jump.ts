@@ -127,34 +127,51 @@ function settle(target: HTMLElement, signal: AbortSignal): Promise<void> {
 function fragmentLinks(root: Element | Document, jump: (id: string) => void, cancelJump: () => void): () => void {
 	let frame = 0;
 	let pendingHref = '';
+	let historyEpoch = 0;
+	const clicks = new Map<MouseEvent, string>();
 	const cancel = () => {
 		cancelAnimationFrame(frame);
 		pendingHref = '';
 		cancelJump();
 	};
 	const historyChanged = (event: PopStateEvent) => {
-		if (event.state !== null || location.href !== pendingHref) cancel();
+		// Native fragment navigation can emit popstate before the click task runs.
+		if (event.state === null && (location.href === pendingHref || [...clicks].some(([click, href]) => !click.defaultPrevented && location.href === href))) return;
+		historyEpoch += 1;
+		cancel();
 	};
+	let disposed = false;
 	const clicked = (event: MouseEvent) => {
 		if (event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-		const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
+		const target = event.target instanceof Element ? event.target : (event.target as Node | null)?.parentElement;
+		const link = target?.closest<HTMLAnchorElement>('a[href]');
 		if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
 		const url = new URL(link.href);
-		if (!url.hash || url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
-		let id: string;
-		try { id = decodeURIComponent(url.hash.slice(1)); } catch { return; }
-		cancelAnimationFrame(frame);
-		pendingHref = url.href;
-		frame = requestAnimationFrame(() => {
-			if (location.href === pendingHref) jump(id);
-		});
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+		// Capture sees navigation outside the root and stopped bubbling. Wait for the
+		// dispatch to finish so a consumer's preventDefault can keep its current jump.
+		const epoch = historyEpoch;
+		clicks.set(event, url.href);
+		setTimeout(() => {
+			clicks.delete(event);
+			if (disposed || epoch !== historyEpoch || event.defaultPrevented) return;
+			cancel();
+			if (!root.contains(link)) return;
+			if (!url.hash || url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
+			let id: string;
+			try { id = decodeURIComponent(url.hash.slice(1)); } catch { return; }
+			pendingHref = url.href;
+			frame = requestAnimationFrame(() => {
+				if (location.href === pendingHref) jump(id);
+			});
+		}, 0);
 	};
-	root.addEventListener('click', clicked as EventListener);
-	document.addEventListener('click', cancel, true);
+	document.addEventListener('click', clicked, true);
 	window.addEventListener('popstate', historyChanged);
 	return () => {
-		root.removeEventListener('click', clicked as EventListener);
-		document.removeEventListener('click', cancel, true);
+		disposed = true;
+		clicks.clear();
+		document.removeEventListener('click', clicked, true);
 		window.removeEventListener('popstate', historyChanged);
 		cancelAnimationFrame(frame);
 		pendingHref = '';
