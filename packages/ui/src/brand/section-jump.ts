@@ -124,37 +124,65 @@ function settle(target: HTMLElement, signal: AbortSignal): Promise<void> {
 	});
 }
 
-function fragmentLinks(root: Element | Document, jump: (id: string) => void, cancelJump: () => void): () => void {
+function fragmentLinks(root: Element | Document, jump: (id: string) => void, cancelJump: () => void, currentRequest: () => number): () => void {
 	let frame = 0;
 	let pendingHref = '';
+	let fragmentRequest = -1;
+	let historyEpoch = 0;
+	const clicks = new Map<MouseEvent, { href: string; request: number }>();
 	const cancel = () => {
 		cancelAnimationFrame(frame);
 		pendingHref = '';
+		fragmentRequest = -1;
 		cancelJump();
 	};
 	const historyChanged = (event: PopStateEvent) => {
-		if (event.state !== null || location.href !== pendingHref) cancel();
+		// Native fragment navigation can emit popstate before the click task runs.
+		const request = currentRequest();
+		if (event.state === null && ((fragmentRequest === request && location.href === pendingHref) || [...clicks].some(([click, pending]) => pending.request === request && !click.defaultPrevented && location.href === pending.href))) return;
+		historyEpoch += 1;
+		cancel();
 	};
+	let disposed = false;
 	const clicked = (event: MouseEvent) => {
 		if (event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-		const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
-		if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
-		const url = new URL(link.href);
-		if (!url.hash || url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
-		let id: string;
-		try { id = decodeURIComponent(url.hash.slice(1)); } catch { return; }
-		cancelAnimationFrame(frame);
-		pendingHref = url.href;
-		frame = requestAnimationFrame(() => {
-			if (location.href === pendingHref) jump(id);
-		});
+		const path = event.composedPath();
+		const link = path.find((node): node is Element => node instanceof Element && node.localName === 'a' && (node.hasAttribute('href') || node.hasAttribute('xlink:href')));
+		if (!link || link.hasAttribute('download')) return;
+		const target = (link.getAttribute('target') ?? link.ownerDocument.querySelector('base[target]')?.getAttribute('target') ?? '').toLowerCase();
+		if (target && !['_self', '_parent', '_top'].includes(target)) return;
+		const view = link.ownerDocument.defaultView;
+		if (target === '_parent' && view?.parent !== view) return;
+		if (target === '_top' && view?.top !== view) return;
+		const url = new URL(link.getAttribute('href') ?? link.getAttribute('xlink:href') ?? '', link.baseURI);
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+		// Capture sees navigation outside the root and stopped bubbling. Wait for the
+		// dispatch to finish so a consumer's preventDefault can keep its current jump.
+		const epoch = historyEpoch;
+		const request = currentRequest();
+		const inRoot = path.includes(root);
+		clicks.set(event, { href: url.href, request });
+		setTimeout(() => {
+			clicks.delete(event);
+			if (disposed || epoch !== historyEpoch || request !== currentRequest() || event.defaultPrevented) return;
+			cancel();
+			if (!inRoot) return;
+			if (!url.hash || url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
+			let id: string;
+			try { id = decodeURIComponent(url.hash.slice(1)); } catch { return; }
+			pendingHref = url.href;
+			fragmentRequest = currentRequest();
+			frame = requestAnimationFrame(() => {
+				if (fragmentRequest === currentRequest() && location.href === pendingHref) jump(id);
+			});
+		}, 0);
 	};
-	root.addEventListener('click', clicked as EventListener);
-	document.addEventListener('click', cancel, true);
+	document.addEventListener('click', clicked, true);
 	window.addEventListener('popstate', historyChanged);
 	return () => {
-		root.removeEventListener('click', clicked as EventListener);
-		document.removeEventListener('click', cancel, true);
+		disposed = true;
+		clicks.clear();
+		document.removeEventListener('click', clicked, true);
 		window.removeEventListener('popstate', historyChanged);
 		cancelAnimationFrame(frame);
 		pendingHref = '';
@@ -227,7 +255,7 @@ function createNavigation() {
 				if (disposed) return;
 				refresh();
 				window.addEventListener('resize', refresh);
-				if (options.landFragments) stopLinks = fragmentLinks(scope, (id) => { void controller.jump(id); }, cancelRequest);
+				if (options.landFragments) stopLinks = fragmentLinks(scope, (id) => { void controller.jump(id); }, cancelRequest, () => request);
 			});
 			const stop = () => {
 				if (disposed) return;

@@ -144,6 +144,7 @@ it('ignores canceled, modified, download and external fragment links', async () 
 		link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, [modifier]: true }));
 	}
 	link.href = 'https://other.test/#ignored';
+	link.addEventListener('click', cancel);
 	link.click();
 	await new Promise(requestAnimationFrame);
 	expect(view.target.scrollIntoView).not.toHaveBeenCalled();
@@ -342,7 +343,7 @@ it('the router helper waits for mounted registration and preserves popstate read
 	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
 });
 
-it('lands same-page fragments and cancels corrections on history, another click or cleanup', async () => {
+it('lands same-page fragments through an unrelated click and cancels corrections on history or cleanup', async () => {
 	history.replaceState(null, '', '/#fragment');
 	const view = section('fragment');
 	const root = document.createElement('main');
@@ -356,8 +357,9 @@ it('lands same-page fragments and cancels corrections on history, another click 
 	await tick();
 	link.click();
 	other.click();
-	await new Promise(requestAnimationFrame);
-	expect(view.target.scrollIntoView).not.toHaveBeenCalled();
+	window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+	await vi.waitFor(() => expect(view.target.scrollIntoView).toHaveBeenCalledOnce());
+	vi.mocked(view.target.scrollIntoView).mockClear();
 	link.click();
 	window.dispatchEvent(new PopStateEvent('popstate', { state: { readingPosition: 750 } }));
 	await new Promise(requestAnimationFrame);
@@ -369,4 +371,129 @@ it('lands same-page fragments and cancels corrections on history, another click 
 	await new Promise(requestAnimationFrame);
 	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
 	root.remove();
+});
+
+it.each(['button', 'prevented link', 'modified link', 'download', 'new tab', 'script link', 'non-element target'])('keeps a settling jump through a non-navigating %s click', async (kind) => {
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'destination'], { root: view.container, landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const result = jump.jump('destination');
+	await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0));
+	const control = document.body.appendChild(document.createElement(kind === 'button' || kind === 'non-element target' ? 'button' : 'a'));
+	control.setAttribute('href', '#elsewhere');
+	if (kind === 'script link') control.setAttribute('href', 'javascript:void(0)');
+	if (kind === 'prevented link') control.addEventListener('click', (event) => event.preventDefault());
+	if (kind === 'download') control.setAttribute('download', '');
+	if (kind === 'new tab') control.setAttribute('target', '_blank');
+	const target = kind === 'non-element target' ? control.appendChild(document.createTextNode('Toggle')) : control;
+	target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: kind === 'modified link' }));
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(true);
+	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
+	expect(jump.activeId).toBe('destination');
+	control.remove();
+});
+
+it.each(['new jump', 'fragment link', 'route link outside root', 'stopped link', 'popstate', 'route navigation', 'root change', 'disposal'])('cancels a settling jump on %s', async (kind) => {
+	const view = section('stale');
+	const latest = section('latest');
+	let navigate!: (event: { type: string; to: { url: URL } | null }) => void;
+	const jump = useSectionJump((callback) => { navigate = callback; });
+	const stop = register(jump, ['initial', 'stale'], { root: view.container, landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const result = jump.jump('stale');
+	await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0));
+	let link: HTMLAnchorElement | undefined;
+	let newer: Promise<boolean> | undefined;
+	if (kind === 'new jump') newer = jump.jump('stale');
+	else if (kind === 'popstate') window.dispatchEvent(new PopStateEvent('popstate', { state: { readingPosition: 750 } }));
+	else if (kind === 'route navigation') navigate({ type: 'link', to: { url: new URL('https://example.test/next') } });
+	else if (kind === 'root change') register(jump, ['latest'], { root: latest.container });
+	else if (kind === 'disposal') stop();
+	else {
+		link = (kind === 'fragment link' ? view.container : document.body).appendChild(document.createElement('a'));
+		link.href = kind === 'fragment link' ? '#missing' : '/next';
+		if (kind === 'stopped link') link.addEventListener('click', (event) => event.stopPropagation());
+		link.click();
+	}
+	await Promise.resolve();
+	expect(await result).toBe(false);
+	expect(view.target.scrollIntoView).not.toHaveBeenCalled();
+	expect(jump.activeId).not.toBe('stale');
+	// Flush canceled callbacks too: stale continuations must remain harmless.
+	await tick();
+	while (frames.length) frames.shift()!(performance.now());
+	if (newer) expect(await newer).toBe(true);
+	else expect(view.target.scrollIntoView).not.toHaveBeenCalled();
+	link?.remove();
+});
+
+it('an older link callback cannot cancel a newer jump', async () => {
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'destination'], { root: view.container, landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const link = document.body.appendChild(document.createElement('a'));
+	link.href = '/next';
+	link.click();
+	const result = jump.jump('destination');
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(true);
+	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
+	expect(jump.activeId).toBe('destination');
+	link.remove();
+});
+
+it('an older fragment frame cannot supersede a newer jump', async () => {
+	const stale = section('stale');
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'stale', 'destination'], { landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const link = document.body.appendChild(document.createElement('a'));
+	link.href = '#stale';
+	link.click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	history.replaceState(null, '', '/#stale');
+	const result = jump.jump('destination');
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(true);
+	expect(view.target.scrollIntoView).toHaveBeenCalledOnce();
+	expect(stale.target.scrollIntoView).not.toHaveBeenCalled();
+	link.remove();
+});
+
+it.each(['base target', 'reserved target casing'])('uses the effective link target: %s', async (kind) => {
+	const view = section('destination');
+	const jump = createSectionJump();
+	register(jump, ['start', 'destination'], { root: view.container, landFragments: true });
+	await tick();
+	const frames: FrameRequestCallback[] = [];
+	vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => frames.push(callback));
+	const result = jump.jump('destination');
+	await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0));
+	const base = document.head.appendChild(document.createElement('base'));
+	base.target = '_blank';
+	const link = document.body.appendChild(document.createElement('a'));
+	link.href = '/next';
+	if (kind === 'reserved target casing') link.target = '_SELF';
+	link.click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	while (frames.length) frames.shift()!(performance.now());
+	expect(await result).toBe(kind === 'base target');
+	expect(view.target.scrollIntoView).toHaveBeenCalledTimes(kind === 'base target' ? 1 : 0);
+	link.remove();
+	base.remove();
 });
