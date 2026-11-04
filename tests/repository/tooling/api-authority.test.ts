@@ -377,11 +377,11 @@ describe('deterministic package API reports', () => {
 		const removalManifest = JSON.parse(readFileSync(removalManifestPath, 'utf8')) as {
 			exports: Record<string, unknown>;
 		};
-		delete removalManifest.exports['./parse'];
+		delete removalManifest.exports['./fonts'];
 		writeFileSync(removalManifestPath, `${JSON.stringify(removalManifest, null, 2)}\n`);
 		const removalReport = await createApiReport(removalRoot, '@yesid/tokens');
 		expect(removalReport).not.toBe(baseline);
-		expect(removalReport).not.toContain('### `./parse`');
+		expect(removalReport).not.toContain('### `./fonts`');
 
 		const assetRoot = createPackageScratch('tokens');
 		const assetPath = join(assetRoot, 'packages/tokens/tokens.css');
