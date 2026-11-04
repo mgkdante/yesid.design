@@ -49,19 +49,26 @@ test.describe('combined hover and press feedback on a hybrid', () => {
 				Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 10 });
 			});
 			await page.emulateMedia({ reducedMotion });
-			await page.clock.install();
+			await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
 			await openGallery(page);
+			// install() lets time advance during loading and between protocol
+			// calls. Pause before hover so a slower driver cannot expire boop's
+			// 300ms timer before the 150ms checkpoint.
+			await page.clock.pauseAt(new Date('2026-01-01T00:01:00Z'));
+			const start = await page.evaluate(() => Date.now());
 			const segment = page.getByRole('radiogroup', { name: 'Grain', exact: true }).getByRole('radio').first();
 			await segment.hover();
 			expect(await page.evaluate(() => matchMedia('(any-hover: hover) and (any-pointer: fine)').matches)).toBe(true);
 			await page.mouse.down();
 			try {
 				await page.clock.runFor(150);
+				expect(await page.evaluate(() => Date.now()) - start).toBe(150);
 				expect(await segment.evaluate(node => node.style.scale)).toBe('1.04');
 				await expect(segment).toHaveCSS('transform', 'matrix(0.94, 0, 0, 0.94, 0, 0)');
 				// Advance beyond boop's 300ms reset while holding the mouse. This
 				// exercises the real GSAP ticker, not the unit-test GSAP mock.
 				await page.clock.runFor(500);
+				expect(await page.evaluate(() => Date.now()) - start).toBe(650);
 				const held = await segment.evaluate(node => {
 					const style = getComputedStyle(node);
 					return { transform: style.transform, transition: style.transitionProperty };
