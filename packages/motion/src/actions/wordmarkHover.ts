@@ -6,9 +6,8 @@
 //
 // Usage: <span use:wordmarkHover={{ dotEl: dotRef }}>yesid</span>
 
-import { isPrefersReducedMotion } from '../stores/reducedMotion.js';
+import { shouldAnimatePointerEffect } from '../policy.js';
 import { initScrollTriggerConfig, ensureSplitTextRegistered, gsap, SplitText } from '../utils/gsap.js';
-import { isTouchDevice } from '../utils/device.js';
 import { durationSec } from '../tokens';
 
 export interface WordmarkHoverParams {
@@ -21,8 +20,7 @@ export interface WordmarkHoverParams {
 }
 
 export function wordmarkHover(node: HTMLElement, params: WordmarkHoverParams) {
-	if (isTouchDevice()) return { destroy() {} };
-	if (isPrefersReducedMotion() || typeof window === 'undefined') {
+	if (!shouldAnimatePointerEffect('motion-gated')) {
 		return { destroy() {} };
 	}
 

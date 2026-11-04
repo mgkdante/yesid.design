@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock isTouchDevice so touch-bail tests can control the return value
-vi.mock('$lib/motion/utils/device.js', () => ({
-	isTouchDevice: vi.fn().mockReturnValue(false)
-}));
-
 // Mock GSAP and SplitText since jsdom can't run them
 vi.mock('$lib/motion/utils/gsap.js', () => {
 	const timelineMock = {
@@ -32,14 +27,14 @@ vi.mock('$lib/motion/utils/gsap.js', () => {
 	};
 });
 
-function mockMatchMedia(matches: boolean) {
+function mockMatchMedia(reduce: boolean, pointer = true) {
 	Object.defineProperty(window, 'matchMedia', {
 		writable: true,
-		value: vi.fn().mockReturnValue({
-			matches,
+		value: vi.fn().mockImplementation((query: string) => ({
+			matches: query === '(prefers-reduced-motion: reduce)' ? reduce : pointer,
 			addEventListener: vi.fn(),
 			removeEventListener: vi.fn()
-		})
+		}))
 	});
 }
 
@@ -203,9 +198,8 @@ describe('wordmarkHover device gating', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('bails on touch device (no DOM mutation)', async () => {
-		const deviceMod = await import('$lib/motion/utils/device.js');
-		(deviceMod.isTouchDevice as ReturnType<typeof vi.fn>).mockReturnValue(true);
+	it('bails on touch-only device (no DOM mutation)', async () => {
+		mockMatchMedia(false, false);
 
 		const { wordmarkHover } = await import('./wordmarkHover.js');
 		const el = document.createElement('span');
@@ -218,9 +212,8 @@ describe('wordmarkHover device gating', () => {
 		expect(el.innerHTML).toBe(before);
 	});
 
-	it('bails on touch device (no SplitText instantiation)', async () => {
-		const deviceMod = await import('$lib/motion/utils/device.js');
-		(deviceMod.isTouchDevice as ReturnType<typeof vi.fn>).mockReturnValue(true);
+	it('bails on touch-only device (no SplitText instantiation)', async () => {
+		mockMatchMedia(false, false);
 
 		const gsapMod = await import('$lib/motion/utils/gsap.js');
 		(gsapMod.SplitText as unknown as ReturnType<typeof vi.fn>).mockClear();
@@ -234,9 +227,8 @@ describe('wordmarkHover device gating', () => {
 		expect(gsapMod.SplitText).not.toHaveBeenCalled();
 	});
 
-	it('returns a valid destroy-shaped object on touch bail', async () => {
-		const deviceMod = await import('$lib/motion/utils/device.js');
-		(deviceMod.isTouchDevice as ReturnType<typeof vi.fn>).mockReturnValue(true);
+	it('returns a valid destroy-shaped object on touch-only bail', async () => {
+		mockMatchMedia(false, false);
 
 		const { wordmarkHover } = await import('./wordmarkHover.js');
 		const el = document.createElement('span');

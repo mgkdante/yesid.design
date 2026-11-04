@@ -19,7 +19,7 @@ export {
 	type WordmarkHoverParams,
 } from './actions/index.js';
 
-export { shouldAnimate, type MotionTier } from './policy.js';
+export { shouldAnimate, shouldAnimatePointerEffect, type MotionTier } from './policy.js';
 export { duration, ease, durationSec, type DurationKey, type EaseKey } from './tokens.js';
 export { prefersReducedMotion, isPrefersReducedMotion } from './stores/reducedMotion.js';
 export { isTouchDevice, isViewportAtMost } from './utils/device.js';

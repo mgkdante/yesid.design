@@ -1,3 +1,5 @@
+import { shouldAnimatePointerEffect } from '../policy.js';
+
 /**
  * `sectionGlow` — Svelte action.
  *
@@ -22,15 +24,14 @@
  *
  * SAFE-ALWAYS tier: output is an alpha-only radial gradient, so
  * the action runs under `prefers-reduced-motion: reduce`. It remains a
- * no-op on touch-only devices (no `(hover: hover)` capability).
+ * no-op on devices without a hover-capable fine pointer.
  *
  * Pointerleave debounce: the opacity flip to 0 is delayed 200ms so that
  * a moving cursor that briefly crosses the section boundary doesn't
  * trigger a flicker.
  */
 export function sectionGlow(node: HTMLElement) {
-	if (typeof window === 'undefined') return { destroy: () => {} };
-	if (!window.matchMedia('(hover: hover)').matches) return { destroy: () => {} };
+	if (!shouldAnimatePointerEffect('safe-always')) return { destroy: () => {} };
 
 	let leaveTimer: ReturnType<typeof setTimeout> | null = null;
 

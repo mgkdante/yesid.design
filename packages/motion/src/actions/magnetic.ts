@@ -4,13 +4,12 @@
 // change. A 2-3px pull makes a button feel "aware" and increases perceived interactivity.
 //
 // Disabled on:
-//   - Touch devices (no cursor to track)
+//   - Devices without a hover-capable fine pointer
 //   - Reduced-motion preference
 //
 // Usage: <a use:magnetic={{ strength: 3, radius: 50 }}>
 
-import { isPrefersReducedMotion } from '../stores/reducedMotion.js';
-import { isTouchDevice } from '../utils/device.js';
+import { shouldAnimatePointerEffect } from '../policy.js';
 
 export interface MagneticParams {
 	/** Max displacement in px. Default: 3 */
@@ -20,7 +19,7 @@ export interface MagneticParams {
 }
 
 export function magnetic(node: HTMLElement, params: MagneticParams = {}) {
-	if (isPrefersReducedMotion() || isTouchDevice()) {
+	if (!shouldAnimatePointerEffect('motion-gated')) {
 		return { update() {}, destroy() {} };
 	}
 

@@ -38,14 +38,15 @@ afterEach(() => {
 describe.each(devices)('$name', (device) => {
 	it.each([false, true])('all pointer effects agree (reduced motion: %s)', (reduce) => {
 		vi.spyOn(navigator, 'maxTouchPoints', 'get').mockReturnValue(device.touch);
+		const capabilities: Record<string, boolean> = {
+			'(hover: hover)': device.primaryHover,
+			'(any-hover: hover)': device.hover,
+			'(any-pointer: fine)': device.fine,
+			'(any-hover: hover) and (any-pointer: fine)': device.hover && device.fine,
+			'(prefers-reduced-motion: reduce)': reduce,
+		};
 		vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
-			matches: ({
-				'(hover: hover)': device.primaryHover,
-				'(any-hover: hover)': device.hover,
-				'(any-pointer: fine)': device.fine,
-				'(any-hover: hover) and (any-pointer: fine)': device.hover && device.fine,
-				'(prefers-reduced-motion: reduce)': reduce,
-			}[query] ?? false),
+			matches: capabilities[query] ?? false,
 			media: query, onchange: null, addListener() {}, removeListener() {},
 			addEventListener() {}, removeEventListener() {}, dispatchEvent: () => true,
 		}));
@@ -66,14 +67,14 @@ describe.each(devices)('$name', (device) => {
 });
 
 it('all six actions are inert without a browser', () => {
-	const node = document.createElement('div');
-	node.textContent = 'Example';
 	vi.stubGlobal('window', undefined);
 	for (const effect of effects) {
+		const node = document.createElement('div');
+		node.textContent = 'Example';
 		const action = effect.mount(node);
 		node.dispatchEvent(new PointerEvent(effect.event, { clientX: 60, clientY: 60 }));
 		expect.soft(effect.active(node), effect.name).toBe(false);
 		action.destroy();
+		expect(node.innerHTML).toBe('Example');
 	}
-	expect(node.innerHTML).toBe('Example');
 });

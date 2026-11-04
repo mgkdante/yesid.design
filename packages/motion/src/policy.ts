@@ -26,3 +26,14 @@ export function shouldAnimate(tier: MotionTier): boolean {
 	if (tier === 'safe-always') return true;
 	return !isPrefersReducedMotion();
 }
+
+// Owner default: include secondary mice on touch-primary devices. Keep this
+// capability choice here so every pointer effect changes together.
+const POINTER_EFFECT_QUERY = '(any-hover: hover) and (any-pointer: fine)';
+
+/** Mount-time pointer capability and motion-tier decision; false during SSR. */
+export function shouldAnimatePointerEffect(tier: MotionTier): boolean {
+	return typeof window !== 'undefined'
+		&& window.matchMedia(POINTER_EFFECT_QUERY).matches
+		&& shouldAnimate(tier);
+}

@@ -213,6 +213,7 @@ declare namespace Index {
         CursorGlowParams,
         WordmarkHoverParams,
         shouldAnimate,
+        shouldAnimatePointerEffect,
         MotionTier,
         duration,
         ease,
@@ -281,6 +282,7 @@ type MotionTier = 'safe-always' | 'motion-gated';
 declare namespace Policy {
     export {
         shouldAnimate,
+        shouldAnimatePointerEffect,
         MotionTier
     }
 }
@@ -303,6 +305,9 @@ function sectionGlow(node: HTMLElement): {
 
 // @public
 function shouldAnimate(tier: MotionTier): boolean;
+
+// @public
+function shouldAnimatePointerEffect(tier: MotionTier): boolean;
 
 declare namespace StoresReducedMotion {
     export {
