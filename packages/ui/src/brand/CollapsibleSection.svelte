@@ -32,14 +32,14 @@
 	let element = $state<HTMLDivElement | null>(null);
 
 	$effect(() => {
-		if (props.collapsible === false) return;
+		if (props.collapsible === false && !independent) return;
 		return registerSection({
 			independent,
 			id: props.anchor,
 			element: () => element,
-			isOpen: () => open,
+			isOpen: () => props.collapsible === false || open,
 			setOpen: (next) => {
-				open = next;
+				if (props.collapsible !== false) open = next;
 			},
 		});
 	});

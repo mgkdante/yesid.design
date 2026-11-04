@@ -9,3 +9,4 @@ rendering or storing disclosure state. Explicit section jumps still reveal the t
 and its containing disclosures. Included in the coordinated v0.34.0 minor with primitive cleanup.
 When content TOC entries exist, independent targets do not replace their active entry, counter
 or pill label through observation or explicit jumps. Empty-entry controllers retain target activity.
+Static independent panels have the same TOC protection; reveal requests leave their bound `open` unchanged.

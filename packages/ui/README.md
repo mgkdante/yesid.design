@@ -319,11 +319,14 @@ whether one matched. Registration is removed on unmount and refreshed when the a
 Independent panel anchors are navigation targets, not content-section membership. Keep them out
 of content TOC entries; an explicit `jump(anchor)` or jump to a nested heading still opens the
 panel and its containing disclosures before landing, leaving unrelated content closed. The
-panel's `bind:open` reflects that request and remains caller-owned; nothing is persisted.
+collapsible panel's `bind:open` reflects that request and remains caller-owned; nothing is persisted.
 When the controller has content entries, observing or jumping to an independent panel or its
 nested targets preserves the content TOC's active entry, counter and pill label. With empty
 entries, target activity remains available. Ordinary content headings and `options.selector`
 targets outside independent panels keep reporting activity, including unlisted targets.
+This protection also applies with `independent collapsible={false}`. A static panel stays
+visible, and jumps or reveal helpers leave its bound `open` value unchanged. Ordinary static
+cards keep their existing behavior and remain outside bulk actions.
 
 ### TocNav, TocPill, and section navigation
 

@@ -17,6 +17,9 @@ open/closed choices between visits. Filter groups and listing filter panels rema
   With non-empty content entries, panel observation and explicit jumps preserve the content
   TOC's active entry, counter and pill label. Empty-entry controllers still report target activity;
   ordinary content headings and selector targets outside independent panels are unaffected.
+  The same protection applies to `independent collapsible={false}`: the panel is already
+  visible, and jumps or reveal helpers do not rewrite its bound `open` value. Ordinary static
+  cards remain outside bulk actions with their existing behavior.
 - Remove `quiet` from `CollapsibleSection` and `TocNav`. Every mounted collapsible content section now
   participates in the page bulk control. TocNav keeps its independent toggle and does not count
   toward the two-content-section threshold. Remove adapter code that separately forwards the quiet
