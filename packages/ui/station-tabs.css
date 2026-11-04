@@ -1,0 +1,72 @@
+/* Opt in after base.css. State belongs to the caller or bits-ui, never this module. */
+.station-tabs {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0;
+	border: 0;
+	border-radius: 0;
+	background: var(--primary);
+	box-shadow: none;
+}
+
+.station-tab {
+	position: relative;
+	display: inline-flex;
+	flex: 1 0 max-content;
+	min-width: max-content;
+	min-height: var(--size-tap-min);
+	height: auto;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border: 0;
+	border-bottom: 3px solid transparent;
+	border-radius: 0;
+	background: transparent;
+	color: var(--station-tab-ink, var(--primary-foreground));
+	font-family: var(--font-mono);
+	font-size: var(--text-small);
+	font-weight: 400;
+	line-height: 1.25rem;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	box-shadow: none;
+	transition: border-bottom-color var(--duration-fast) var(--ease-default);
+}
+
+/* Suppress the generic Tabs line marker: signage uses its own border. */
+.station-tab::after {
+	display: none;
+}
+
+.station-tab:is([data-state='active'], [aria-current='page']) {
+	background: var(--signage-bg);
+	color: var(--signage-text);
+	border-bottom-color: var(--signage-text);
+	font-weight: var(--station-tab-active-weight, 700);
+}
+
+.station-tab:not([data-state='active'], [aria-current='page']):hover {
+	border-bottom-color: var(--station-tab-hover-rule-color, currentColor);
+}
+
+.station-tab:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: -2px;
+	border-radius: var(--radius-sm);
+}
+
+.station-tab:is(:disabled, [aria-disabled='true']) {
+	pointer-events: none;
+	opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.station-tab {
+		transition: none;
+	}
+}

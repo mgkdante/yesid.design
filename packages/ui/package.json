@@ -5,7 +5,7 @@
   "type": "module",
   "svelte": "./src/index.ts",
   "description": "Svelte 5 primitives, brand components, page frames and site shell for yesid products, shipped as source.",
-  "files": ["src", "base.css", "!**/*.test.ts", "!**/test-fixtures", "!src/vitest.*", "NOTICE"],
+  "files": ["src", "base.css", "station-tabs.css", "!**/*.test.ts", "!**/test-fixtures", "!src/vitest.*", "NOTICE"],
   "sideEffects": ["**/*.css"],
   "exports": {
     ".": {
@@ -112,6 +112,7 @@
       "svelte": "./src/table/index.ts",
       "default": "./src/table/index.ts"
     },
+    "./station-tabs.css": "./station-tabs.css",
     "./base.css": "./base.css",
     "./boot.json": "./src/head/boot.json"
   },
