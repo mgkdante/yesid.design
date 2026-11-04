@@ -16,7 +16,11 @@
 	const navigation = createNavigationLifecycle({ beforeNavigate, onNavigate, afterNavigate });
 	setContext('gallery-navigation', navigation);
 
-	onMount(() => initGlobalRipple());
+	onMount(() => {
+		// Browser fixtures must wait for hydration before the first interactive click.
+		document.documentElement.dataset.galleryReady = 'true';
+		return initGlobalRipple();
+	});
 </script>
 
 <SiteRoot smoothScroll={false}>

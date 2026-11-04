@@ -21,19 +21,12 @@ const menu = (page: Page) => page.getByRole('dialog', { name: LABELS.menu });
 const menuLinks = (page: Page) => page.getByRole('navigation', { name: LABELS.menu });
 const language = (page: Page) => page.getByRole('link', { name: new RegExp(`^${literal(LANGUAGE_LABEL)}:`) });
 
-async function delayNextRouteModule(page: Page) {
-	let requested!: () => void;
-	let release!: () => void;
-	const loading = new Promise<void>((resolve) => { requested = resolve; });
-	const gate = new Promise<void>((resolve) => { release = resolve; });
-	await page.route('**/_app/immutable/nodes/*.js', async (route) => {
-		requested();
-		await gate;
-		await route.continue();
-	});
-	return { loading, release };
+async function visitHeader(page: Page, url = HOME) {
+	await page.goto(url);
+	await expect(page.locator('html')).toHaveAttribute('data-gallery-ready', 'true');
 }
 
+// Delay the explicit universal load rather than a module Kit may have preloaded.
 async function delayFixtureLoad(page: Page) {
 	let requested!: () => void;
 	let release!: () => void;
@@ -51,7 +44,7 @@ const routerFixture = (params: Record<string, string>) => `/navigation-lifecycle
 
 test('links and search show at the header widths their priority allows', async ({ page }) => {
 	const width = page.viewportSize()!.width;
-	await page.goto(HOME);
+	await visitHeader(page);
 
 	for (const link of LINKS) {
 		const shown = header(page).getByRole('link', { name: link.label, exact: true });
@@ -63,7 +56,7 @@ test('links and search show at the header widths their priority allows', async (
 });
 
 test('the skip link is the first tab stop and moves focus into the main content', async ({ page }) => {
-	await page.goto(HOME);
+	await visitHeader(page);
 	const skip = page.getByRole('link', { name: LABELS.skipToContent });
 	await expect(skip).not.toBeInViewport();
 	await page.keyboard.press('Tab');
@@ -75,7 +68,7 @@ test('the skip link is the first tab stop and moves focus into the main content'
 });
 
 test('the menu opens with every item, traps focus and closes with Escape', async ({ page }) => {
-	await page.goto(HOME);
+	await visitHeader(page);
 	await toggle(page).click();
 
 	await expect(menu(page)).toBeVisible();
@@ -96,7 +89,7 @@ test('the menu opens with every item, traps focus and closes with Escape', async
 });
 
 test('menu items carry icons and only the current item\'s icon is lit', async ({ page }) => {
-	await page.goto(HOME);
+	await visitHeader(page);
 	await toggle(page).click();
 	for (const item of MENU_ITEMS) {
 		const icon = menuLinks(page).getByRole('link', { name: item.ariaLabel ?? new RegExp(`^${literal(item.label)}`) }).locator('svg');
@@ -107,7 +100,7 @@ test('menu items carry icons and only the current item\'s icon is lit', async ({
 });
 
 test('a classless text link is underlined and readable in both themes; header links are not', async ({ page }) => {
-	await page.goto(HOME);
+	await visitHeader(page);
 	const link = page.getByRole('paragraph').getByRole('link');
 	await expect(link).toBeVisible();
 	for (const colorScheme of ['dark', 'light'] as const) {
@@ -139,7 +132,7 @@ test('a classless text link is underlined and readable in both themes; header li
 });
 
 test('a language switch from the open menu keeps it open', async ({ page }) => {
-	await page.goto(HOME);
+	await visitHeader(page);
 	await toggle(page).click();
 	await language(page).click();
 
@@ -153,7 +146,7 @@ test('a language switch from the open menu keeps it open', async ({ page }) => {
 });
 
 test('a state-preserving language switch from the closed header resets page focus', async ({ page }) => {
-	await page.goto(HOME);
+	await visitHeader(page);
 	await language(page).click();
 	await expect(page).toHaveURL(new RegExp(`lang=${LOCALES[1]}$`));
 	await expect(menu(page)).toBeHidden();
@@ -165,7 +158,7 @@ test.describe('Kit 3 hook-only navigation', () => {
 	const fallbackHome = `${HOME}?initial=true`;
 
 	test('a direct language link keeps the menu open and focuses its updated link', async ({ page }) => {
-		await page.goto(fallbackHome);
+		await visitHeader(page, fallbackHome);
 		await toggle(page).click();
 		await language(page).click();
 		await expect(page).toHaveURL(new RegExp(`lang=${LOCALES[1]}$`));
@@ -175,7 +168,7 @@ test.describe('Kit 3 hook-only navigation', () => {
 	});
 
 	test('an eventless language redirect closes the menu without locale focus or stale intent', async ({ page }) => {
-		await page.goto(fallbackHome);
+		await visitHeader(page, fallbackHome);
 		await toggle(page).click();
 		await language(page).evaluate((node, href) => node.setAttribute('href', href), routerFixture({ redirect: 'locale' }));
 		await language(page).click();
@@ -192,7 +185,7 @@ test.describe('Kit 3 hook-only navigation', () => {
 	});
 
 	test('an eventless redirect from a closed state-preserving language link resets page focus', async ({ page }) => {
-		await page.goto(fallbackHome);
+		await visitHeader(page, fallbackHome);
 		await language(page).evaluate((node, href) => node.setAttribute('href', href), routerFixture({ redirect: 'locale' }));
 		await language(page).click();
 		await expect(page).toHaveURL((url) => url.searchParams.get('landed') === 'locale');
@@ -201,7 +194,7 @@ test.describe('Kit 3 hook-only navigation', () => {
 	});
 
 	test('an ordinary navigation closes the menu and completes', async ({ page }) => {
-		await page.goto(fallbackHome);
+		await visitHeader(page, fallbackHome);
 		await toggle(page).click();
 		await header(page).getByRole('link').first().click();
 		await expect(page).toHaveURL((url) => url.pathname === HOME && url.search === '');
@@ -210,7 +203,7 @@ test.describe('Kit 3 hook-only navigation', () => {
 
 	for (const initial of ['locale', 'ordinary'] as const) {
 		test(`a redirect superseding a slow ${initial} navigation closes a reopened menu`, async ({ page }) => {
-			await page.goto(fallbackHome);
+			await visitHeader(page, fallbackHome);
 			const delay = await delayFixtureLoad(page);
 			try {
 				await toggle(page).click();
@@ -249,7 +242,7 @@ test.describe('with motion on', () => {
 		{ name: 'cancelled reload link', stopped: true, reload: true },
 	]) {
 		test(`an app-cancelled trusted locale click cannot poison an ordinary redirect: ${variant.name}`, async ({ page }) => {
-			await page.goto(HOME);
+			await visitHeader(page);
 			const delay = await delayFixtureLoad(page);
 			try {
 				await toggle(page).click();
@@ -284,7 +277,7 @@ test.describe('with motion on', () => {
 	}
 
 	test('keyboard Enter on an eventless locale redirect closes the menu', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		await toggle(page).click();
 		await language(page).evaluate((node, href) => {
 			node.setAttribute('href', href);
@@ -301,7 +294,7 @@ test.describe('with motion on', () => {
 	});
 
 	test('a trusted eventless locale redirect closes the menu and resets focus', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		await toggle(page).click();
 		await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ redirect: 'locale' }));
 		await page.evaluate(() => {
@@ -316,7 +309,7 @@ test.describe('with motion on', () => {
 	});
 
 	test('an eventless locale redirect after a slow ordinary load closes a reopened menu', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		const delay = await delayFixtureLoad(page);
 		try {
 			await toggle(page).click();
@@ -344,7 +337,7 @@ test.describe('with motion on', () => {
 	});
 
 	test('an ordinary redirect superseding a slow locale switch closes the menu', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		const delay = await delayFixtureLoad(page);
 		try {
 			await language(page).evaluate((node, href) => { node.setAttribute('href', href); }, routerFixture({ delay: 'locale' }));
@@ -366,7 +359,7 @@ test.describe('with motion on', () => {
 	});
 
 	test('a redirected locale switch superseding a slow ordinary navigation resets focus', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		const delay = await delayFixtureLoad(page);
 		try {
 			await toggle(page).click();
@@ -386,20 +379,23 @@ test.describe('with motion on', () => {
 	});
 
 	test('a slow navigation re-closes a menu reopened after its first close completes', async ({ page }) => {
-		await page.goto(HOME);
-		const delay = await delayNextRouteModule(page);
+		await visitHeader(page);
+		const delay = await delayFixtureLoad(page);
 		try {
 			await toggle(page).click();
 			const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
 			const link = menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) });
-			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'false'));
+			await link.evaluate((node, href) => {
+				node.setAttribute('href', href);
+				node.setAttribute('data-sveltekit-preload-data', 'false');
+			}, routerFixture({ delay: 'ordinary' }));
 			await link.click({ noWaitAfter: true });
 			await delay.loading;
 			await expect(menu(page)).toBeHidden();
 			await toggle(page).click();
 			await expect(menu(page)).toBeVisible();
 			delay.release();
-			await expect(page).toHaveURL((url) => url.pathname === target.href);
+			await expect(page).toHaveURL((url) => url.pathname === '/navigation-lifecycle-fixture');
 			await expect(menu(page)).toBeHidden();
 		} finally {
 			delay.release();
@@ -408,13 +404,16 @@ test.describe('with motion on', () => {
 	});
 
 	test('a locale click superseding a slow navigation resets focus without another beforeNavigate', async ({ page }) => {
-		await page.goto(HOME);
-		const delay = await delayNextRouteModule(page);
+		await visitHeader(page);
+		const delay = await delayFixtureLoad(page);
 		try {
 			await toggle(page).click();
 			const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
 			const link = menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) });
-			await link.evaluate((node) => node.setAttribute('data-sveltekit-preload-data', 'false'));
+			await link.evaluate((node, href) => {
+				node.setAttribute('href', href);
+				node.setAttribute('data-sveltekit-preload-data', 'false');
+			}, routerFixture({ delay: 'ordinary' }));
 			await link.click({ noWaitAfter: true });
 			await delay.loading;
 			await expect(menu(page)).toBeHidden();
@@ -429,7 +428,7 @@ test.describe('with motion on', () => {
 
 	test('a menu link closes the menu and navigates', async ({ page }) => {
 		const target = MENU_ITEMS.find((item) => !item.external && !item.current)!;
-		await page.goto(HOME);
+		await visitHeader(page);
 		await toggle(page).click();
 		await menuLinks(page).getByRole('link', { name: new RegExp(`^${literal(target.label)}`) }).click();
 
@@ -438,7 +437,7 @@ test.describe('with motion on', () => {
 	});
 
 	test('Back with the menu open closes it, returns to the previous entry and releases the scroll lock', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		const overflow = await page.evaluate(() => getComputedStyle(document.body).overflow);
 		await language(page).click();
 		await expect(page).toHaveURL(new RegExp(`lang=${LOCALES[1]}$`));
@@ -453,7 +452,7 @@ test.describe('with motion on', () => {
 
 	test('reopening while the menu closes keeps the same menu open, and the pill stays clickable above it', async ({ page }) => {
 		await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
-		await page.goto(HOME);
+		await visitHeader(page);
 		await page.clock.pauseAt(new Date('2026-01-01T00:01:00Z'));
 		await toggle(page).click();
 		await page.clock.runFor(100);
@@ -472,7 +471,7 @@ test.describe('in a short viewport', () => {
 	test.use({ viewport: { width: 390, height: 320 } });
 
 	test('the wheel scrolls the menu while the page stays put', async ({ page }) => {
-		await page.goto(HOME);
+		await visitHeader(page);
 		const pageScroll = await page.evaluate(() => window.scrollY);
 		await toggle(page).click();
 		const list = menuLinks(page);
