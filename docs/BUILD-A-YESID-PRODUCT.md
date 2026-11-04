@@ -555,8 +555,10 @@ Do not add product-specific locale checks, copy policy, or framework virtual-mod
   import { createAnalytics, defineAnalyticsPreset } from '@yesid/analytics';
 
   const preset = defineAnalyticsPreset({ events: [] });
+  const domain = 'PUBLIC_PLAUSIBLE_DOMAIN' in env &&
+    typeof env.PUBLIC_PLAUSIBLE_DOMAIN === 'string' ? env.PUBLIC_PLAUSIBLE_DOMAIN : '';
   onMount(() => {
-    createAnalytics(preset, { domain: env.PUBLIC_PLAUSIBLE_DOMAIN ?? '' });
+    createAnalytics(preset, { domain });
   });
 </script>
 ```
