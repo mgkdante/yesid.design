@@ -1,9 +1,10 @@
 # Connect: remove unused public contracts
 
-Planned for v0.35.0. The owner approved connect c-8 on 2026-11-04 without a deprecation
+Published in v0.35.0. The owner approved connect c-8 on 2026-11-04 without a deprecation
 window. Both normal removal gates are waived for this list only. API-report approval before
-stable release and the two-product prerelease rehearsal remain required. This document is
-source evidence, not a release, adoption or deployed-acceptance receipt.
+stable release and the two-product prerelease rehearsal are release-process requirements. This
+document records the source transition; the owning release record holds publication and rehearsal
+receipts, and each product owns adoption and deployed acceptance.
 
 ## Removed surface and migration
 

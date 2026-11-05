@@ -24,9 +24,8 @@ Use:
 
 Create the SvelteKit app first. Confirm its normal test, check, and build commands pass before adding the design packages.
 
-This is the Kit 3 setup path for the next coordinated v0.35.0 release. The examples use
-contracts already present in v0.34.0; v0.35.0 must be published and reviewed before installing
-its URLs. Gallery remains workspace evidence, never product acceptance.
+This is the Kit 3 setup path for v0.35.0. Review the chosen release before installing its
+URLs. Gallery remains workspace evidence, never product acceptance.
 
 ## 2. Install one exact release
 

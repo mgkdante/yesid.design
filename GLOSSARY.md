@@ -14,3 +14,38 @@ _Avoid_: quiet mode, remember collapse
 **Filter group**:
 A collapsible group of filters in a listing rail. Not touched by the expand-all control.
 _Avoid_: section
+
+**Section jump**:
+Navigation to a content section at the shared reading line, opening that section and its
+enclosing sections while preserving every other section's state.
+_Avoid_: TOC scroll helper
+
+**Navigation lifecycle**:
+The shared coordination of page navigation, menu closure, language-switch intent, focus and
+interrupted scrolling.
+_Avoid_: header router
+
+**Station tabs**:
+The shared signage look for tab controls and navigation links. Selection, navigation, strip
+geometry, scrolling and swipe handling belong to the caller.
+_Avoid_: shared tab router
+
+**Pointer effect**:
+A visual response available to a hover-capable fine pointer, including a secondary mouse on a
+touch device. Its motion tier also determines whether reduced motion permits it.
+_Avoid_: desktop-only effect
+
+**Touch-only feedback**:
+Press feedback for a touch-capable device without a hover-capable fine pointer. Devices with
+such a pointer use the same press baseline as desktops.
+_Avoid_: mobile animation
+
+**Release rehearsal**:
+Verification of the same exact prerelease in both products, through their own checks and
+affected real callers before stable promotion. Required when API reports or migration notes change.
+_Avoid_: Gallery acceptance, stable adoption
+
+**Consumer adoption**:
+A product's reviewed integration of one exact stable release. Publication, adoption and deployed
+acceptance each need their own evidence.
+_Avoid_: automatic sync

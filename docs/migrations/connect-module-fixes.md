@@ -1,7 +1,8 @@
 # Connect module fixes
 
-These source changes target v0.35.0. Release rehearsal, publication and both product bumps are
-separate work. The owner approved the breaking Sheet label change on 2026-11-04.
+These changes are published in v0.35.0. The owner approved the breaking Sheet label change on
+2026-11-04. The owning release and product records hold rehearsal, publication and adoption
+receipts; this document defines the migration and required checks.
 
 ## Sheet styles and copy
 

@@ -46,7 +46,9 @@ alternative such as opacity or an active translation). Touch-only phone behavior
 
 ## GSAP and route transitions
 
-`./utils/gsap` registers ScrollTrigger (`initScrollTriggerConfig`) and SplitText eagerly.
+`./utils/gsap` imports ScrollTrigger and SplitText eagerly, but importing it registers nothing.
+Call `initScrollTriggerConfig()` before creating a ScrollTrigger and `ensureSplitTextRegistered()`
+before SplitText; both are idempotent.
 `loadDrawSVG`, `loadMorphSVG` and `loadCustomEase` import and register their plugin on first
 call, so an app that never calls one doesn't bundle it.
 
