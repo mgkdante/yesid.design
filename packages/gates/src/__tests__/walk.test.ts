@@ -95,6 +95,7 @@ describe('gate filesystem walk', () => {
 		expect(() => walk(fixtureRoot, ['.svelte'])).toThrow(/walk: depth.*16/iu);
 	});
 
+	// Creating thousands of fixtures can exceed Vitest's default timeout on Windows.
 	it('accepts 4,096 files and counts the next unmatched file against the budget', () => {
 		for (let index = 0; index < 4_096; index += 1) {
 			writeFileSync(join(fixtureRoot, `${String(index).padStart(4, '0')}.txt`), '');
@@ -103,7 +104,7 @@ describe('gate filesystem walk', () => {
 
 		writeFileSync(join(fixtureRoot, '4096.txt'), '');
 		expect(() => walk(fixtureRoot, ['.svelte'])).toThrow(/walk: file count.*4,?096/iu);
-	});
+	}, 30_000);
 
 	it('accepts 8,192 entries and stops directory enumeration at the next entry', () => {
 		for (let index = 0; index < 8_192; index += 1) {
@@ -113,7 +114,7 @@ describe('gate filesystem walk', () => {
 
 		mkdirSync(join(fixtureRoot, 'd8192'));
 		expect(() => walk(fixtureRoot, ['.svelte'])).toThrow(/walk: entry count.*8,?192/iu);
-	});
+	}, 30_000);
 
 	it('accepts exactly 32 MiB, then fails atomically on the next unmatched byte', () => {
 		const output = ['sentinel'];
