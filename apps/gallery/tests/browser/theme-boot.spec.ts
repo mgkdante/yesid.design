@@ -25,7 +25,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
 		await expect(html).toHaveAttribute('data-theme', 'light');
 		await expect(section).toHaveAttribute('aria-expanded', 'true');
 		const body = page.locator(`[id="${await section.getAttribute('aria-controls')}"]`);
-		await expect(html).toHaveAttribute('data-sections-failed', '');
+		await expect(html).toHaveAttribute('data-sections-recovering', '');
 		await expect(body).toBeVisible();
 
 		// Hydration takes over the boot script's markup: once the theme switch responds, the section is

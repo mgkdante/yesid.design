@@ -11,6 +11,9 @@ geometry before paint. Blocked storage uses declared interactive defaults.
 The body stays visible during parsing. Boot and app-resource failures expose pending bodies;
 stalled startup has a five-second readable fallback. Other-tab choices apply to future mounts,
 and late content adopts the bulk choice while preserving deliberate individual toggles.
+Pending disclosure semantics and the bulk accessible name match their visual state. Recovery
+preserves the control's space, belongs to pending mounts and keeps future route preferences intact.
+The server HTML eligibility scan has forward-only progress on malformed input.
 
 This is the owner-approved D15 behavior change of 2026-11-05. Rebuild with the package's new
 `boot.json` CSP hash, update disclosure expectations and privacy/device-storage copy, and rehearse

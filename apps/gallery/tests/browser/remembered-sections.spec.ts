@@ -10,7 +10,10 @@ test('a parser stall leaves already delivered content visible', async ({ page })
 	const gate = new Promise<void>(resolve => { release = resolve; });
 	await page.route('**/sections', async route => {
 		const response = await route.fetch();
-		await route.fulfill({ response, body: (await response.text()).replace(/(<div(?:"[^"]*"|'[^']*'|[^'">])*\sdata-toc="live")/, '<script src="/parser-hold.js"></script>$1') });
+		const html = await response.text();
+		const card = html.lastIndexOf('<div', html.indexOf('data-toc="live"'));
+		expect(card).toBeGreaterThan(0);
+		await route.fulfill({ response, body: html.slice(0, card) + '<script src="/parser-hold.js"></script>' + html.slice(card) });
 	});
 	await page.route('**/parser-hold.js', async route => { await gate; await route.fulfill({ body: '', contentType: 'text/javascript' }); });
 	try {
@@ -45,6 +48,55 @@ test('a stalled app bundle has a bounded readable fallback that hydration preser
 	} finally { release(); }
 	await ready(page);
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('startup recovery stays on its pending mounts and keeps the control space', async ({ page }) => {
+	await page.clock.install();
+	await page.addInitScript(() => localStorage.setItem('sections-choice', 'collapsed'));
+	let release!: () => void;
+	const gate = new Promise<void>(resolve => { release = resolve; });
+	await page.route('**/_app/**/*.js', async route => { await gate; await route.continue(); });
+	let before = 0;
+	try {
+		await page.goto('/sections', { waitUntil: 'commit' });
+		await expect(page.locator('[data-toc="chart"]')).toHaveAttribute('data-section-initial', 'closed');
+		await page.waitForFunction(() => [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].every(link => link.sheet));
+		await page.evaluate(() => document.fonts.ready);
+		before = await page.locator('[data-toc="chart"]').evaluate(node => node.getBoundingClientRect().top + scrollY);
+		await page.clock.fastForward(6_000);
+		expect(await page.locator('[data-toc="chart"]').evaluate(node => node.getBoundingClientRect().top + scrollY)).toBe(before);
+		expect(await page.getByTestId('sections-controls').evaluate(node => node.getBoundingClientRect().height)).toBe(44);
+	} finally { release(); }
+	await ready(page);
+	expect(await page.locator('[data-toc="chart"]').evaluate(node => node.getBoundingClientRect().top + scrollY)).toBe(before);
+	await page.getByRole('link', { name: 'Next page', exact: true }).click();
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+	expect(await stored(page)).toBe('collapsed');
+});
+
+test('a widget error after hydration does not change future mount preferences', async ({ page }) => {
+	await page.goto('/sections'); await ready(page);
+	const error = page.waitForEvent('pageerror');
+	await page.evaluate(() => { setTimeout(() => { throw new Error('Unrelated widget failure'); }, 0); });
+	await error;
+	await page.getByRole('link', { name: 'Next page', exact: true }).click();
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('pending disclosure and bulk semantics match their visual state', async ({ page }) => {
+	let release!: () => void;
+	const gate = new Promise<void>(resolve => { release = resolve; });
+	await page.route('**/_app/**/*.js', async route => { await gate; await route.continue(); });
+	try {
+		await page.goto('/sections', { waitUntil: 'commit' });
+		await expect(page.locator('[data-toc="chart"]')).toHaveAttribute('data-section-initial', 'closed');
+		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+		const body = page.locator('[data-toc="chart"] > [data-slot="collapsible"] > .section-body');
+		await expect(body).toHaveAttribute('inert', '');
+		await expect(body).toHaveAttribute('aria-hidden', 'true');
+		await expect(page.getByTestId('sections-toggle')).toHaveAccessibleName('Expand all');
+	} finally { release(); }
+	await ready(page);
 });
 
 test('a boot exception leaves all section content readable', async ({ page }) => {

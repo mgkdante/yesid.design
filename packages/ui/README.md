@@ -661,7 +661,10 @@ geometry without a flash. The server supplies eligibility on the injected script
 section has its initial geometry while later HTML is parsing. The body, header and TOC stay
 visible during parsing. Boot exceptions and failed app resources expose pending content; a
 five-second recovery also exposes pending content if app startup stalls. Hydration preserves that
-readable fallback for the view.
+readable fallback on those pending cards. Future mounts adopt the stored choice. Startup error
+listeners and observations are released when the pending mounts finish. Pending triggers, body
+semantics and the bulk accessible name match the visual state. Recovery keeps the control’s
+layout space while the inactive control is hidden and disabled.
 The server renders complete, open section bodies, including declared-closed
 ones, so JavaScript-disabled reading stays available. Interactive closed bodies remain mounted,
 clipped, `inert` and `aria-hidden`; browser find-in-page cannot generally search them until opened.

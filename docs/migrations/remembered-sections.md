@@ -21,8 +21,11 @@ panels and map tools keep their own defaults and actions.
   choice once per mount. The injected script carries eligibility from the complete server markup,
   so the first parsed card can use the bulk choice while later HTML arrives. The body, header and
   TOC remain visible while parsing. Boot exceptions and app-resource failures expose all pending
-  bodies and hide the inactive bulk control. A five-second recovery exposes pending bodies if
-  startup stalls without an error event; hydration preserves that readable fallback. The script also exposes a direct fragment's target and containing
+  bodies and keep the inactive bulk control’s space while it is hidden and disabled. A five-second recovery exposes pending bodies if
+  startup stalls without an error event. Hydration preserves recovery only on those pending
+  cards. Startup error listeners and observers leave when mounts finish; future routes adopt the
+  remembered choice. Pending triggers, body semantics and the bulk accessible name match the
+  visible state. The script also exposes a direct fragment's target and containing
   sections before hydration; the section-jump controller owns final landing and cancellation.
 - Server HTML contains every section body, open and readable even when `open={false}` was
   declared for the interactive view. With JavaScript disabled those bodies stay open. If storage

@@ -1,10 +1,14 @@
 /** Private origin-wide bulk choice. Historical disclosure keys are deliberately unrelated. */
 export const SECTIONS_CHOICE_KEY = 'sections-choice';
+export const SECTIONS_READY_EVENT = '@yesid/ui/sections-ready';
+
+export function noteSectionReady(): void {
+	if (typeof document !== 'undefined') document.dispatchEvent(new Event(SECTIONS_READY_EVENT));
+}
 
 export function rememberSections(open: boolean): void {
 	if (typeof document === 'undefined') return;
 	const choice = open ? 'expanded' : 'collapsed';
-	delete document.documentElement.dataset.sectionsFailed;
 	document.documentElement.dataset.sectionsChoice = choice;
 	try { localStorage.setItem(SECTIONS_CHOICE_KEY, choice); } catch {}
 }
@@ -12,7 +16,7 @@ export function rememberSections(open: boolean): void {
 /** Read once per mount, after all siblings exist. Never writes a visitor's choice. */
 export function initialSectionOpen(element: HTMLElement | null, declared: boolean, independent = false): boolean {
 	if (!element) return declared;
-	if (!independent && document.documentElement.hasAttribute('data-sections-failed')) return true;
+	if (element.hasAttribute('data-section-fallback')) return true;
 	let target: Element | null = null;
 	try {
 		const id = decodeURIComponent(location.hash.slice(1));

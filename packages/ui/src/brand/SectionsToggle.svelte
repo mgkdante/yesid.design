@@ -49,6 +49,10 @@
 	)}
 	data-testid="sections-controls"
 	data-sections-control
+	data-collapse-label={copy.collapse}
+	data-expand-label={copy.expand}
+	data-collapse-title={copy.collapseTitle}
+	data-expand-title={copy.expandTitle}
 	data-sections-ready={ready ? '' : undefined}
 	data-sections-hidden={sections.count < 2 ? '' : undefined}
 >
@@ -58,6 +62,7 @@
 		data-collapsed={collapsed}
 		{title}
 		aria-label={label}
+		disabled={!ready}
 		data-testid="sections-toggle"
 		onclick={onToggle}
 	>
@@ -83,7 +88,8 @@
 	}
 	.sections-controls[data-sections-hidden] { display: none; }
 	:global(html[data-sections-available]) .sections-controls:not([data-sections-ready]) { display: inline-flex; }
-	:global(html[data-sections-failed]) .sections-controls:not([data-sections-ready]) { display: none; }
+	:global(.sections-controls[data-sections-fallback]:not([data-sections-ready])),
+	:global(html[data-sections-recovering]) .sections-controls:not([data-sections-ready]) { visibility: hidden; pointer-events: none; }
 	.sections-label { position: relative; text-align: start; min-width: var(--sections-label-width); }
 	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-label { color: transparent; }
 	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-label::after {

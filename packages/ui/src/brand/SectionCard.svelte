@@ -9,6 +9,7 @@
 	import { Card } from '../primitives/card/index.js';
 	import type { CollapsibleSectionProps } from './CollapsibleSection.svelte';
 	import ChevronToggle from './ChevronToggle.svelte';
+	import { noteSectionReady } from './sections-preference.js';
 
 	let {
 		ref = $bindable(null),
@@ -29,8 +30,13 @@
 		onChoose,
 	}: CollapsibleSectionProps & { ref?: HTMLDivElement | null; bulk?: boolean; initialized?: boolean; onChoose?: () => void } = $props();
 	let mounted = $state(false);
-	$effect.pre(() => { mounted = true; });
+	$effect.pre(() => {
+		if (mounted || !ref) return;
+		if (collapsible && ref.hasAttribute('data-section-fallback')) open = true;
+		mounted = true;
+	});
 	const initialized = $derived(initializedProp ?? mounted);
+	$effect(() => { if (initialized) noteSectionReady(); });
 
 	const headerUid = $props.id();
 	const subtitleId = `${headerUid}-summary`;
@@ -413,7 +419,7 @@
 	:global(.section-card[data-section-initial='open']:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
 		grid-template-rows: 1fr;
 	}
-	:global(html[data-sections-failed]) :global(.section-card:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
+	:global(html[data-sections-recovering]) :global(.section-card:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
 		grid-template-rows: 1fr;
 	}
 	:global(.section-card[data-section-initial='closed']:not([data-section-ready])) > [data-slot='collapsible'] > .section-subtitle--article-summary .section-subtitle__text {

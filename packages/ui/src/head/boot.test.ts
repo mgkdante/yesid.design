@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SECTIONS_READY_EVENT } from '../brand/sections-preference.js';
 import { theme } from '../state/theme.svelte.js';
 import boot from './boot.json';
 import { injectThemeBoot, themeBootScript } from './boot.js';
@@ -27,11 +28,12 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 	document.body.innerHTML = '';
+	document.dispatchEvent(new Event(SECTIONS_READY_EVENT));
 	sessionStorage.clear();
 	localStorage.clear();
 	document.documentElement.dataset.theme = 'dark';
 	delete document.documentElement.dataset.sectionsChoice;
-	delete document.documentElement.dataset.sectionsFailed;
+	delete document.documentElement.dataset.sectionsRecovering;
 });
 
 describe('theme boot script', () => {
@@ -49,13 +51,30 @@ describe('theme boot script', () => {
 	});
 
 	it('exposes pending content even if observer setup and cleanup throw', () => {
+		document.body.innerHTML = '<div class="section-card"></div>';
 		vi.stubGlobal('MutationObserver', class {
 			observe() { throw new Error('Observer setup failed'); }
 			disconnect() { throw new Error('Observer cleanup failed'); }
 		});
 		expect(runBoot).not.toThrow();
-		expect(document.documentElement.hasAttribute('data-sections-failed')).toBe(true);
+		expect(document.querySelector('.section-card')?.hasAttribute('data-section-fallback')).toBe(true);
 		expect(document.documentElement.hasAttribute('data-sections-parsing')).toBe(false);
+	});
+
+	it('releases startup error listeners when pending mounts finish hydration', () => {
+		vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
+		document.body.innerHTML = '<div class="section-card"></div>';
+		const add = vi.spyOn(globalThis, 'addEventListener');
+		const remove = vi.spyOn(globalThis, 'removeEventListener');
+		runBoot();
+		const error = add.mock.calls.find(([type]) => type === 'error')?.[1];
+		const rejection = add.mock.calls.find(([type]) => type === 'unhandledrejection')?.[1];
+		expect(error).toBeDefined();
+		expect(rejection).toBeDefined();
+		document.querySelector('.section-card')!.setAttribute('data-section-ready', '');
+		document.dispatchEvent(new Event(SECTIONS_READY_EVENT));
+		expect(remove).toHaveBeenCalledWith('error', error, true);
+		expect(remove).toHaveBeenCalledWith('unhandledrejection', rejection);
 	});
 	it('paints the stored theme over the markup default', () => {
 		theme.set('light');
@@ -95,5 +114,27 @@ describe('theme boot script', () => {
 		const html = '<head>%yesid.themeBoot%</head><div data-sections-control></div><div class="has-[>img]" data-section-bulk=""></div><div class="has-[>img]" data-section-bulk=""></div>';
 		expect(injectThemeBoot(html)).toContain('<script data-sections-available>');
 		expect(injectThemeBoot(html.replace('<div class="has-[>img]" data-section-bulk=""></div>', ''))).not.toContain('<script data-sections-available>');
+	});
+
+	it.each([
+		['plain', '<a', '<a'],
+		['double-quoted', '<a"', '"<a"'],
+		['single-quoted', "<a'", "'<a'"],
+	])('bounds the %s unterminated-tag input', (_name, prefix, repetition) => {
+		const input = '<head>%yesid.themeBoot%</head>' + prefix + repetition.repeat(100_000);
+		const started = performance.now();
+		const result = injectThemeBoot(input);
+		expect(performance.now() - started).toBeLessThan(500);
+		expect(result).toContain(`<script>${themeBootScript}</script>`);
+	});
+
+	it.each(['script', 'style', 'textarea', 'title'])('ignores marker text inside %s', (tag) => {
+		const html = `<head>%yesid.themeBoot%</head><div data-sections-control></div><div data-section-bulk></div><${tag}><div data-section-bulk></div></${tag}>`;
+		expect(injectThemeBoot(html)).not.toContain('<script data-sections-available>');
+	});
+
+	it('ignores comments, quoted values and repeated attributes when counting sections', () => {
+		const html = `<head>%yesid.themeBoot%</head><div data-sections-control></div><div data-section-bulk data-section-bulk></div><!-- <div data-section-bulk></div> --><div title='<div data-section-bulk>'></div>`;
+		expect(injectThemeBoot(html)).not.toContain('<script data-sections-available>');
 	});
 });
