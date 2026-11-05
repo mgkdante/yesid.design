@@ -24,7 +24,12 @@
 		icon,
 		headerActions,
 		children,
-	}: CollapsibleSectionProps & { ref?: HTMLDivElement | null } = $props();
+		bulk = false,
+		initialized: initializedProp,
+	}: CollapsibleSectionProps & { ref?: HTMLDivElement | null; bulk?: boolean; initialized?: boolean } = $props();
+	let mounted = $state(false);
+	$effect.pre(() => { mounted = true; });
+	const initialized = $derived(initializedProp ?? mounted);
 
 	const headerUid = $props.id();
 	const subtitleId = `${headerUid}-summary`;
@@ -32,7 +37,8 @@
 	const usesArticleSummary = $derived(collapsible && headerVariant === 'article-summary');
 	const hasHeaderMark = $derived(index !== null || icon !== undefined);
 
-	const isOpen = $derived(!collapsible || open);
+	// Server HTML is complete and readable even for a declared-closed section without JavaScript.
+	const isOpen = $derived(!collapsible || !initialized || open);
 	function choose(next: boolean): void {
 		open = next;
 	}
@@ -112,6 +118,9 @@
 		: ''}"
 	style="--accent: {accentColor};"
 	data-toc={anchor}
+	data-section-bulk={bulk ? '' : undefined}
+	data-section-ready={initialized ? '' : undefined}
+	data-section-default={!collapsible || open ? 'open' : 'closed'}
 	data-header-variant={usesArticleSummary ? 'article-summary' : undefined}
 	onclick={collapsible ? onCardClick : undefined}
 >
@@ -389,6 +398,33 @@
 	.collapsible-content__inner {
 		min-height: 0;
 		overflow: hidden;
+	}
+
+	/* Boot sets private geometry marks while parsing. Hydration adopts the same geometry
+	   before removing the override; server markup and children remain untouched. */
+	:global(html[data-sections-parsing] body) {
+		visibility: hidden;
+	}
+	:global(.section-card:not([data-section-ready])) .collapsible-content {
+		transition: none;
+	}
+	:global(.section-card[data-section-initial='closed']:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
+		grid-template-rows: 0fr;
+	}
+	:global(.section-card[data-section-initial='open']:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
+		grid-template-rows: 1fr;
+	}
+	:global(.section-card[data-section-initial='closed']:not([data-section-ready])) > [data-slot='collapsible'] > .section-subtitle--article-summary .section-subtitle__text {
+		display: -webkit-box;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+	}
+	:global(.section-card[data-section-initial='closed']:not([data-section-ready]) > [data-slot='collapsible'] > .section-header .chevron),
+	:global(.section-card[data-section-initial='closed']:not([data-section-ready]) > [data-slot='collapsible'] > .section-heading-row .chevron) {
+		transform: none;
+		transition: none;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

@@ -56,6 +56,14 @@ consumer or clean-room verification.
 
 ## Removals
 
+### Owner-approved behavior changes
+
+- **connect c-10, 2026-11-05:** the owner approved D15's origin-wide remembered bulk choice and
+  collapsed first-visit default on both products. This behavior contract ships in a minor bump;
+  public exports, props and method signatures stay available. The boot asset has a new CSP hash.
+  See [the consumer migration and rehearsal requirements](docs/migrations/remembered-sections.md).
+  This source decision does not establish publication or consumer adoption.
+
 ### Published removals
 
 - **v0.35.0 (connect c-8 owner exception, 2026-11-04):** the owner approved removing

@@ -227,8 +227,12 @@ Kit 3's `page.url` and search parameters are readonly: create `new URL(page.url.
 ### One server hook: initialization, fonts, language and theme
 
 Put `%yesid.themeBoot%` before `%sveltekit.head%` in `src/app.html`, and set
-`<html lang="%lang%">`. Only the stored theme is restored before paint; disclosure state
-resets to declared defaults on each mount.
+`<html lang="%lang%">`. The script restores the theme and the origin-wide `sections-choice` before paint. A page with
+at least two content sections and the bulk control starts collapsed when no choice exists.
+The visitor's bulk choice wins across pages and visits. Keep the script ahead of page content
+and include the package CSS so hydration preserves that geometry. The server keeps complete,
+readable bodies; without JavaScript everything remains readable. Blocked storage uses declared
+defaults. The TOC starts open and stays independent.
 
 This example's product supports EN/FR paths. Add `src/lib/site.ts`:
 
@@ -325,9 +329,14 @@ Standalone `LanguageToggle` from `@yesid/ui/brand` accepts the same `locale`, `l
 and pass a live `languageLink` getter as the lifecycle's second argument. `reload` performs
 a document load instead.
 
-`SectionsToggle` uses shared in-memory sections state. It appears with at least two mounted
+`SectionsToggle` uses shared sections state and one origin-local localStorage preference. It appears with at least two mounted
 content `CollapsibleSection` instances and expands all only when all are closed. TOC/filter/control
-panels stay independent and disclosure state is never remembered. Put the control in page actions
+panels stay independent. Content starts collapsed on a first visit; the collapsed control is
+orange, with `activeEffect="glow"` by default. Bulk choices are stored as `collapsed` or `expanded`
+under `sections-choice` across pages and browser visits; individual toggles affect only the view.
+With fewer than two content sections, the control stays hidden and declared defaults apply.
+List this convenience preference in the product's privacy/device-storage text. It has no cookie,
+expiry, server transmission or CMS setting. Put the control in page actions
 if sections belong only to a detail route.
 
 Kit 3 integrations omit the optional `subscribeNavigation`: there is no public accepted-start

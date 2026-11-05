@@ -1,6 +1,6 @@
 import { fireEvent, render, within } from '@testing-library/svelte';
 import { createRawSnippet, tick } from 'svelte';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { sections } from '../state/sections.svelte.js';
 import CollapsibleSection from './CollapsibleSection.svelte';
 import SectionsToggle from './SectionsToggle.svelte';
@@ -11,6 +11,10 @@ const copy = { collapse: 'Collapse all', expand: 'Expand all', collapseTitle: 'C
 const contentSection = (title: string, open: boolean) => render(CollapsibleSection, { props: { title, open } });
 const expanded = (view: { container: HTMLElement }) => view.container.querySelector('[data-section-trigger]')?.getAttribute('aria-expanded');
 afterEach(() => vi.restoreAllMocks());
+beforeEach(() => {
+	localStorage.clear();
+	delete document.documentElement.dataset.sectionsChoice;
+});
 
 it.each([true, false])('bulk actions leave the caller-owned panel state alone (open=%s)', async (open) => {
 	const first = contentSection('First', true);
@@ -41,7 +45,7 @@ it('does not count an independent panel toward the threshold or all-closed calcu
 	await tick();
 	expect(sections.count).toBe(1);
 	expect(sections.allCollapsed).toBe(true);
-	expect(control.container.querySelector('button')).toBeNull();
+	expect(control.container.querySelector('[data-sections-control]')?.hasAttribute('data-sections-hidden')).toBe(true);
 	const second = contentSection('Second', false);
 	await tick();
 	expect(within(control.container).getByRole('button', { name: copy.expand })).toBeTruthy();
@@ -51,7 +55,7 @@ it('does not count an independent panel toward the threshold or all-closed calcu
 	expect(within(control.container).getByRole('button', { name: copy.collapse })).toBeTruthy();
 	second.unmount();
 	await tick();
-	expect(control.container.querySelector('button')).toBeNull();
+	expect(control.container.querySelector('[data-sections-control]')?.hasAttribute('data-sections-hidden')).toBe(true);
 });
 
 it('updates bulk membership when independence changes and removes it on unmount', async () => {
@@ -72,7 +76,7 @@ it.each(['default', 'article-summary'] as const)('keeps equivalent DOM and class
 	const props = { title: 'Panel', subtitle: 'Description', anchor: 'panel', index: 1, headerVariant, children };
 	const normal = render(CollapsibleSection, { props });
 	const independent = render(CollapsibleSection, { props: { ...props, independent: true } });
-	const markup = (container: HTMLElement) => container.innerHTML.replace(/id="[^"]*"|aria-controls="[^"]*"|aria-describedby="[^"]*"/g, (attribute) => attribute.split('=')[0] + '="generated"');
+	const markup = (container: HTMLElement) => container.innerHTML.replace(/ data-section-bulk=""/g, '').replace(/id="[^"]*"|aria-controls="[^"]*"|aria-describedby="[^"]*"/g, (attribute) => attribute.split('=')[0] + '="generated"');
 	expect(markup(independent.container)).toBe(markup(normal.container));
 	await fireEvent.click(within(normal.container).getByRole('button'));
 	await fireEvent.click(within(independent.container).getByRole('button'));

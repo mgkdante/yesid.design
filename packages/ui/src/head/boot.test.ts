@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { theme } from '../state/theme.svelte.js';
 import boot from './boot.json';
 import { injectThemeBoot, themeBootScript } from './boot.js';
@@ -24,13 +24,28 @@ async function booted(server: string) {
 }
 
 afterEach(() => {
+	vi.unstubAllGlobals();
+	vi.restoreAllMocks();
 	document.body.innerHTML = '';
 	sessionStorage.clear();
 	localStorage.clear();
 	document.documentElement.dataset.theme = 'dark';
+	delete document.documentElement.dataset.sectionsChoice;
 });
 
 describe('theme boot script', () => {
+	it.each([null, 'collapsed', 'expanded', 'false', '{broken'])('reads only a valid bulk choice (%s), without writing a default', (stored) => {
+		if (stored !== null) localStorage.setItem('sections-choice', stored);
+		runBoot();
+		expect(document.documentElement.dataset.sectionsChoice).toBe(stored === 'expanded' ? 'expanded' : 'collapsed');
+		expect(localStorage.getItem('sections-choice')).toBe(stored);
+	});
+
+	it('keeps declared geometry when storage access is blocked', () => {
+		vi.stubGlobal('localStorage', { getItem() { throw new DOMException('Blocked', 'SecurityError'); } });
+		expect(runBoot).not.toThrow();
+		expect(document.documentElement.dataset.sectionsChoice).toBeUndefined();
+	});
 	it('paints the stored theme over the markup default', () => {
 		theme.set('light');
 		document.documentElement.dataset.theme = 'dark';

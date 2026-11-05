@@ -17,7 +17,7 @@ export interface ThemeStore {
 	init(): void;
 }
 
-/** In-memory actions for every mounted collapsible content section on the page. */
+/** Bulk actions for mounted content sections; remember one origin-wide localStorage choice. */
 export interface SectionsState {
 	/** Number of mounted collapsible content sections. */
 	readonly count: number;
