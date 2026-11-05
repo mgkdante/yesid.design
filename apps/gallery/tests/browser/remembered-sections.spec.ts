@@ -5,6 +5,90 @@ const trigger = (page: Page, name: string) => page.getByRole('button', { name, e
 const ready = (page: Page) => expect(page.locator('html')).toHaveAttribute('data-gallery-ready', 'true');
 const stored = (page: Page) => page.evaluate(key => localStorage.getItem(key), key);
 
+test('a parser stall leaves already delivered content visible', async ({ page }) => {
+	let release!: () => void;
+	const gate = new Promise<void>(resolve => { release = resolve; });
+	await page.route('**/sections', async route => {
+		const response = await route.fetch();
+		await route.fulfill({ response, body: (await response.text()).replace(/(<div(?:"[^"]*"|'[^']*'|[^'">])*\sdata-toc="live")/, '<script src="/parser-hold.js"></script>$1') });
+	});
+	await page.route('**/parser-hold.js', async route => { await gate; await route.fulfill({ body: '', contentType: 'text/javascript' }); });
+	try {
+		await page.goto('/sections', { waitUntil: 'commit' });
+		await page.waitForFunction(() => [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].every(link => link.sheet));
+		await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+		await expect(page.getByRole('heading', { name: 'Remembered sections', exact: true })).toBeVisible();
+		await expect.poll(() => page.evaluate(() => performance.getEntriesByType('paint').some(entry => entry.name === 'first-contentful-paint'))).toBe(true);
+		expect((await page.locator('[data-toc="chart"] > [data-slot="collapsible"] > .section-body').boundingBox())!.height).toBe(0);
+		expect(await page.evaluate(() => document.readyState)).toBe('loading');
+	} finally { release(); }
+	await ready(page);
+});
+
+test('a failed app bundle leaves all section content readable', async ({ page }) => {
+	await page.route('**/_app/**/*.js', route => route.abort());
+	await page.goto('/sections');
+	await expect.poll(() => page.locator('[data-toc="chart"] > [data-slot="collapsible"] > .section-body').evaluate(node => node.getBoundingClientRect().height)).toBeGreaterThan(128);
+	await expect(page.getByTestId('sections-controls')).toBeHidden();
+});
+
+test('a stalled app bundle has a bounded readable fallback that hydration preserves', async ({ page }) => {
+	await page.clock.install();
+	let release!: () => void;
+	const gate = new Promise<void>(resolve => { release = resolve; });
+	await page.route('**/_app/**/*.js', async route => { await gate; await route.continue(); });
+	try {
+		await page.goto('/sections', { waitUntil: 'commit' });
+		await expect(page.locator('[data-toc="chart"]')).toHaveAttribute('data-section-initial', 'closed');
+		await page.clock.fastForward(5_001);
+		await expect.poll(() => page.locator('[data-toc="chart"] > [data-slot="collapsible"] > .section-body').evaluate(node => node.getBoundingClientRect().height)).toBeGreaterThan(128);
+	} finally { release(); }
+	await ready(page);
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('a boot exception leaves all section content readable', async ({ page }) => {
+	await page.route('**/sections', async route => {
+		const response = await route.fetch();
+		await route.fulfill({ response, body: (await response.text()).replace('const prepare = () => {', 'const prepare = () => { throw new Error("Injected boot failure");') });
+	});
+	await page.goto('/sections'); await ready(page);
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+	await expect(page.locator('body')).toBeVisible();
+});
+
+test('a choice made in another tab applies on the next client page without changing the current view', async ({ page, context }) => {
+	await page.goto('/sections'); await ready(page);
+	const second = await context.newPage();
+	try {
+		await second.goto('/sections'); await ready(second);
+		await second.getByTestId('sections-toggle').click();
+		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+		await page.getByRole('link', { name: 'Next page', exact: true }).click();
+		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+	} finally { await second.close(); }
+});
+
+test('late content applies the shared default when the bulk control becomes available', async ({ page }) => {
+	await page.goto('/sections/late'); await ready(page);
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+	await expect(page.getByTestId('sections-controls')).toBeHidden();
+	await page.getByRole('button', { name: 'Load sections' }).click();
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'false');
+	expect(await stored(page)).toBeNull();
+});
+
+test('late content preserves a deliberate individual choice', async ({ page }) => {
+	await page.goto('/sections/late'); await ready(page);
+	await trigger(page, 'Chart').click();
+	await trigger(page, 'Chart').click();
+	await page.getByRole('button', { name: 'Load sections' }).click();
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'false');
+	expect(await stored(page)).toBeNull();
+});
+
 test('first visit collapses content with the orange glow, keeps exclusions open, and remembers only bulk choices', async ({ page }) => {
 	await page.goto('/sections'); await ready(page);
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');

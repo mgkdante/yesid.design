@@ -3,7 +3,8 @@
 	import { afterNavigate } from '$app/navigation';
 	import { CollapsibleSection, FilterGroup, SectionsToggle, TocNav, useSectionJump } from '@yesid/ui/brand';
 	import { DataTable } from '@yesid/ui/table';
-	let { single = false }: { single?: boolean } = $props();
+	let { single = false, late = false }: { single?: boolean; late?: boolean } = $props();
+	let loaded = $state(false);
 	const navigation = useSectionJump(afterNavigate);
 	const copy = { collapse: 'Collapse all', expand: 'Expand all', collapseTitle: 'Collapse sections', expandTitle: 'Expand sections' };
 	const entries = [{ id: 'chart-heading', title: 'Chart target', level: 2, children: [] }];
@@ -30,6 +31,7 @@
 	<h1>Remembered sections</h1>
 	<nav aria-label="Fixture pages" class="flex flex-wrap gap-2 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center [&_a]:px-2"><a href="/sections">First page</a> <a href="/sections/next">Next page</a> <a href="/sections/single">Single section</a></nav>
 	<SectionsToggle {copy} activeEffect="glow" />
+	{#if late}<button type="button" class="min-h-11" onclick={() => { loaded = true; }}>Load sections</button>{/if}
 	<TocNav heading="Contents" {entries} {navigation} />
 	<FilterGroup label="Filters" items={[]} allLabel="All" collapsible onSelect={() => {}} />
 	<CollapsibleSection title="Map tools" independent anchor="tools"><p>Independent map control</p></CollapsibleSection>
@@ -41,7 +43,7 @@
 			<output data-testid="chart-width">{width}</output>
 		</div>
 	</CollapsibleSection>
-	{#if !single}
+	{#if !single && (!late || loaded)}
 		<CollapsibleSection title="Live table" anchor="live">
 			<DataTable caption="Live measurements" key={(row) => row} columns={[{ key: 'measure', header: 'Measure', cell }]} rows={['Live source']} />
 			<output data-testid="live-updates">{updates}</output>

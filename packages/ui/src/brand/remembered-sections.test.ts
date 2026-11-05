@@ -1,7 +1,5 @@
-import { fireEvent, render, within } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, expect, it } from 'vitest';
-import CollapsibleSection from './CollapsibleSection.svelte';
-import SectionsToggle from './SectionsToggle.svelte';
 import { themeBootScript } from '../head/boot.js';
 import Fixture from './test-fixtures/RememberedSections.svelte';
 
@@ -13,16 +11,19 @@ afterEach(() => {
 	delete document.documentElement.dataset.sectionsAvailable;
 });
 
-it('remembers only a bulk choice, across a complete page remount', async () => {
+it('remembers only a bulk choice, across complete page remounts', async () => {
 	new Function(themeBootScript)();
-	const first = render(CollapsibleSection, { title: 'First' });
-	const second = render(CollapsibleSection, { title: 'Second' });
-	const control = render(SectionsToggle, { copy });
-	await fireEvent.click(control.getByRole('button', { name: copy.collapse }));
-	expect(localStorage.getItem(key)).toBe('collapsed');
-	await fireEvent.click(within(first.container).getByRole('button'));
-	expect(localStorage.getItem(key)).toBe('collapsed');
-	first.unmount(); second.unmount(); control.unmount();
+	const first = render(Fixture);
+	await fireEvent.click(first.getByRole('button', { name: copy.expand }));
+	expect(localStorage.getItem(key)).toBe('expanded');
+	await fireEvent.click(first.getByRole('button', { name: 'First' }));
+	expect(localStorage.getItem(key)).toBe('expanded');
+	first.unmount();
 	const next = render(Fixture);
-	expect(within(next.container).getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('false');
+	expect(next.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('true');
+	await fireEvent.click(next.getByRole('button', { name: copy.collapse }));
+	expect(localStorage.getItem(key)).toBe('collapsed');
+	next.unmount();
+	const last = render(Fixture);
+	expect(last.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('false');
 });

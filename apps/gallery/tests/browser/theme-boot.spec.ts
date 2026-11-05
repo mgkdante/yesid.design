@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-// Blocking app scripts proves the theme and content geometry are applied before hydration.
+// Failed app scripts keep the stored theme and readable server content.
 for (const colorScheme of ['dark', 'light'] as const) {
-	test(`a reload paints the stored theme and first-visit collapsed section before the app runs (system ${colorScheme})`, async ({ page }) => {
+	test(`a reload keeps the stored theme and readable sections when app scripts fail (system ${colorScheme})`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme });
 		await page.goto('/');
 		const html = page.locator('html');
@@ -25,7 +25,8 @@ for (const colorScheme of ['dark', 'light'] as const) {
 		await expect(html).toHaveAttribute('data-theme', 'light');
 		await expect(section).toHaveAttribute('aria-expanded', 'true');
 		const body = page.locator(`[id="${await section.getAttribute('aria-controls')}"]`);
-		await expect(body).toBeHidden();
+		await expect(html).toHaveAttribute('data-sections-failed', '');
+		await expect(body).toBeVisible();
 
 		// Hydration takes over the boot script's markup: once the theme switch responds, the section is
 		// collapsed by default and its individual toggle still opens it.

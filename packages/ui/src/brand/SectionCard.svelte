@@ -26,7 +26,8 @@
 		children,
 		bulk = false,
 		initialized: initializedProp,
-	}: CollapsibleSectionProps & { ref?: HTMLDivElement | null; bulk?: boolean; initialized?: boolean } = $props();
+		onChoose,
+	}: CollapsibleSectionProps & { ref?: HTMLDivElement | null; bulk?: boolean; initialized?: boolean; onChoose?: () => void } = $props();
 	let mounted = $state(false);
 	$effect.pre(() => { mounted = true; });
 	const initialized = $derived(initializedProp ?? mounted);
@@ -40,6 +41,7 @@
 	// Server HTML is complete and readable even for a declared-closed section without JavaScript.
 	const isOpen = $derived(!collapsible || !initialized || open);
 	function choose(next: boolean): void {
+		onChoose?.();
 		open = next;
 	}
 
@@ -402,9 +404,6 @@
 
 	/* Boot sets private geometry marks while parsing. Hydration adopts the same geometry
 	   before removing the override; server markup and children remain untouched. */
-	:global(html[data-sections-parsing] body) {
-		visibility: hidden;
-	}
 	:global(.section-card:not([data-section-ready])) .collapsible-content {
 		transition: none;
 	}
@@ -412,6 +411,9 @@
 		grid-template-rows: 0fr;
 	}
 	:global(.section-card[data-section-initial='open']:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
+		grid-template-rows: 1fr;
+	}
+	:global(html[data-sections-failed]) :global(.section-card:not([data-section-ready])) > [data-slot='collapsible'] > .collapsible-content {
 		grid-template-rows: 1fr;
 	}
 	:global(.section-card[data-section-initial='closed']:not([data-section-ready])) > [data-slot='collapsible'] > .section-subtitle--article-summary .section-subtitle__text {

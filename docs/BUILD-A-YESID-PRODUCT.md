@@ -230,7 +230,8 @@ Put `%yesid.themeBoot%` before `%sveltekit.head%` in `src/app.html`, and set
 `<html lang="%lang%">`. The script restores the theme and the origin-wide `sections-choice` before paint. A page with
 at least two content sections and the bulk control starts collapsed when no choice exists.
 The visitor's bulk choice wins across pages and visits. Keep the script ahead of page content
-and include the package CSS so hydration preserves that geometry. The server keeps complete,
+and include the package CSS so hydration preserves that geometry. The body stays visible during
+parsing, and failed or stalled app startup exposes pending content. The server keeps complete,
 readable bodies; without JavaScript everything remains readable. Blocked storage uses declared
 defaults. The TOC starts open and stays independent.
 

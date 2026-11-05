@@ -31,6 +31,7 @@ afterEach(() => {
 	localStorage.clear();
 	document.documentElement.dataset.theme = 'dark';
 	delete document.documentElement.dataset.sectionsChoice;
+	delete document.documentElement.dataset.sectionsFailed;
 });
 
 describe('theme boot script', () => {
@@ -45,6 +46,16 @@ describe('theme boot script', () => {
 		vi.stubGlobal('localStorage', { getItem() { throw new DOMException('Blocked', 'SecurityError'); } });
 		expect(runBoot).not.toThrow();
 		expect(document.documentElement.dataset.sectionsChoice).toBeUndefined();
+	});
+
+	it('exposes pending content even if observer setup and cleanup throw', () => {
+		vi.stubGlobal('MutationObserver', class {
+			observe() { throw new Error('Observer setup failed'); }
+			disconnect() { throw new Error('Observer cleanup failed'); }
+		});
+		expect(runBoot).not.toThrow();
+		expect(document.documentElement.hasAttribute('data-sections-failed')).toBe(true);
+		expect(document.documentElement.hasAttribute('data-sections-parsing')).toBe(false);
 	});
 	it('paints the stored theme over the markup default', () => {
 		theme.set('light');
@@ -78,5 +89,11 @@ describe('theme boot script', () => {
 	it('ships its CSP hash in boot.json and replaces the app.html placeholder', () => {
 		expect(boot.hash).toBe(`sha256-${createHash('sha256').update(themeBootScript).digest('base64')}`);
 		expect(injectThemeBoot('<head>%yesid.themeBoot%</head>')).toBe(`<head><script>${themeBootScript}</script></head>`);
+	});
+
+	it('seeds complete server eligibility before the first section is parsed', () => {
+		const html = '<head>%yesid.themeBoot%</head><div data-sections-control></div><div class="has-[>img]" data-section-bulk=""></div><div class="has-[>img]" data-section-bulk=""></div>';
+		expect(injectThemeBoot(html)).toContain('<script data-sections-available>');
+		expect(injectThemeBoot(html.replace('<div class="has-[>img]" data-section-bulk=""></div>', ''))).not.toContain('<script data-sections-available>');
 	});
 });

@@ -13,14 +13,16 @@ panels and map tools keep their own defaults and actions.
   it, including the shared `sections` bulk API. Individual toggles, fragment and TOC jumps do not.
   There is no per-page or per-section identity, cookie, server state, CMS setting, expiry or
   cross-origin sharing. Malformed values use the collapsed first-visit default without rewriting
-  the stored value. Historical `persisted:*` disclosure keys and `quiet-mode` stay ignored.
+  the stored value. Changes from another tab apply to future mounts without forcing a bulk action
+  on the current view. If content crosses the two-section threshold later, untouched mounts adopt
+  the choice and deliberate individual toggles stay as chosen. Historical `persisted:*` disclosure keys and `quiet-mode` stay ignored.
 - The head script injected by `injectThemeBoot` applies geometry while HTML is parsed, before
   paint. Package CSS covers pending sections and reserves the control. Hydration adopts the
-  choice once per mount. While a document containing section cards is still parsing, package
-  CSS holds body visibility until the parser reaches `interactive`, before deferred app scripts.
-  This trades progressive body paint for stable geometry on chunked HTML: the final count and
-  fragment chain are known before the body is shown. It does not wait for hydration, a timer or
-  a storage request; without the boot script this visibility gate does not apply. The script also exposes a direct fragment's target and containing
+  choice once per mount. The injected script carries eligibility from the complete server markup,
+  so the first parsed card can use the bulk choice while later HTML arrives. The body, header and
+  TOC remain visible while parsing. Boot exceptions and app-resource failures expose all pending
+  bodies and hide the inactive bulk control. A five-second recovery exposes pending bodies if
+  startup stalls without an error event; hydration preserves that readable fallback. The script also exposes a direct fragment's target and containing
   sections before hydration; the section-jump controller owns final landing and cancellation.
 - Server HTML contains every section body, open and readable even when `open={false}` was
   declared for the interactive view. With JavaScript disabled those bodies stay open. If storage
@@ -75,6 +77,36 @@ at that revision. Recheck both products' built outputs during rehearsal.
    control; Remember/Forget actions and labels remain absent.
 
 ## Product regression inventory
+
+### Privacy copy for the CMS owner
+
+**FR**
+
+Lorsque vous utilisez le bouton qui replie ou déplie toutes les sections, votre choix (`collapsed`
+ou `expanded`) est enregistré dans le stockage local de votre navigateur (`localStorage`), sous la
+clé `sections-choice`, pour ce site. Il s’applique aux autres pages et aux visites suivantes,
+jusqu’à ce que vous le changiez ou effaciez les données du site dans votre navigateur. Ouvrir ou
+fermer une section individuellement ne modifie que la vue en cours. Cette préférence n’est pas
+envoyée à un serveur et ne crée aucun témoin de connexion (cookie).
+
+**EN**
+
+When you use the control to expand or collapse all sections, your choice (`collapsed` or
+`expanded`) is saved in your browser’s local storage (`localStorage`) under the key
+`sections-choice` for this site. It applies to other pages and later visits until you change it
+or clear the site’s data in your browser. Opening or closing an individual section affects only
+the current view. This preference is not sent to a server and sets no cookie.
+
+**ES**
+
+Cuando usas el control para expandir o contraer todas las secciones, tu elección (`collapsed` o
+`expanded`) se guarda en el almacenamiento local de tu navegador (`localStorage`), con la clave
+`sections-choice`, para este sitio. Se aplica a las demás páginas y a las visitas posteriores
+hasta que la cambies o borres los datos del sitio en tu navegador. Abrir o cerrar una sección
+individual solo cambia la vista actual. Esta preferencia no se envía a un servidor ni crea
+ninguna cookie.
+
+### Consumer tests
 
 Read-only inventory on 2026-11-05: Transit `6e24556ca3134f2c34563cac9dc1106687929c7b`,
 yesid.dev `3bc954e0225be6495b2e190a521e8ff20736b748`. Refresh these at adoption.

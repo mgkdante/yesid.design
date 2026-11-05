@@ -21,6 +21,7 @@
 <script lang="ts">
 	import { cn } from '../cn/index.js';
 	import { sections } from '../state/sections.svelte.js';
+	import { initializeSections } from './sections-registry.js';
 
 	let {
 		copy,
@@ -30,7 +31,10 @@
 		class: className,
 	}: SectionsToggleProps = $props();
 	let ready = $state(false);
-	$effect.pre(() => { ready = true; });
+	$effect.pre(() => {
+		if (sections.count >= 2) initializeSections();
+		ready = true;
+	});
 
 	const collapsed = $derived(collapsedProp ?? sections.allCollapsed);
 	const label = $derived(collapsed ? copy.expand : copy.collapse);
@@ -79,6 +83,7 @@
 	}
 	.sections-controls[data-sections-hidden] { display: none; }
 	:global(html[data-sections-available]) .sections-controls:not([data-sections-ready]) { display: inline-flex; }
+	:global(html[data-sections-failed]) .sections-controls:not([data-sections-ready]) { display: none; }
 	.sections-label { position: relative; text-align: start; min-width: var(--sections-label-width); }
 	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-label { color: transparent; }
 	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-label::after {
