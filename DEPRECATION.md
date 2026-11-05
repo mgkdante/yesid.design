@@ -56,27 +56,22 @@ consumer or clean-room verification.
 
 ## Removals
 
-### Planned removals
+### Published removals
 
 - **v0.35.0 (connect c-8 owner exception, 2026-11-04):** the owner approved removing
   the unused contracts listed in the [migration and source evidence](docs/migrations/connect-prune.md)
   without a deprecation window, waiving both the 90-day and intervening-minor gates.
   Card sub-parts, StickyPanel, the color-mix floor engine, the CSP serializer, the token
   parse subpath and unused variant and analytics helper exports leave the public API.
-  Card root, config entries, sectionGlow and footer types stay. The API report still needs
-  owner approval before stable release. This source change is not a published release or
-  consumer-adoption receipt.
-
-### Approved next transition
+  Card root, config entries, sectionGlow and footer types stay. Published in v0.35.0;
+  this entry does not establish consumer adoption.
 
 - **v0.35.0 (connect c-7, owner decision 2026-11-04):** Sheet Content no longer supplies
   an English `Close` label. `closeLabel` is required unless `showCloseButton` is explicitly
   `false`. This is a breaking prop change, approved for the coordinated consumer bump without
   the normal 90-day and intervening-minor gates. The runtime button remains; its copy moves to
   the caller. See [the migration and consumer checks](docs/migrations/connect-module-fixes.md).
-  This records the approved source transition, not a published release or consumer adoption.
-
-### Published removals
+  Published in v0.35.0; this entry does not establish consumer adoption.
 
 - **v0.34.0 (D-e owner exception, 2026-11-03):** the owner approved folding
   unused primitive cleanup into the deepen refactor without a deprecation window, waiving

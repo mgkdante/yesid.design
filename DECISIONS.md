@@ -85,8 +85,7 @@ deterministic targets without pretending that clamp is a native DTCG dimension.
 `packages/ui/README.md` owns the shared component behavior and the known consumer compatibility
 seams. Product conflicts never become
 app checks in the package: the owner settles each one and the package ships the single look
-(design-standard ds2 settled the Card, Button, resizable, StickyPanel, TerminalCursor, Separator
-and MetroStation conflicts in yesid.dev's favor).
+(the current component contracts are documented in the UI README).
 
 Shared controlled views own only their rendered mechanics. Consumers continue to own copy,
 locale selection, state, persistence and actions, such as StopLabel prefixes. Package and
@@ -134,8 +133,9 @@ copy. Each app supplies that copy from its own local locale files, outside the C
 
 Call `createNavigationLifecycle` once during initialization of the persistent app layout and
 pass the resulting instance to `SiteHeader` across route changes. `subscribeNavigation` is optional:
-Kit 2 apps pass the navigation subscription; Kit 3 apps omit it and use the safe fallback, where
-a language switch that lands on a redirect closes the menu.
+Kit 3 apps omit it and use the safe fallback, where a language switch that lands on a redirect
+closes the menu. A supplied adapter must publish every accepted start; partial streams are
+unsupported. Kit 3 is the supported app target.
 
 ## D17: Primitives are owned code
 
