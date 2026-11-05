@@ -13,6 +13,7 @@ test('first visit collapses content with the orange glow, keeps exclusions open,
 	await expect(trigger(page, 'Filters')).toHaveAttribute('aria-expanded', 'true');
 	const bulk = page.getByTestId('sections-toggle');
 	await expect(bulk).toHaveAttribute('data-collapsed', 'true');
+	const activeColor = await bulk.evaluate(node => getComputedStyle(node).color);
 	expect(await bulk.evaluate(node => getComputedStyle(node.querySelector('.core')!).filter)).not.toBe('none');
 	expect(await stored(page)).toBeNull();
 	await trigger(page, 'Chart').click();
@@ -22,6 +23,7 @@ test('first visit collapses content with the orange glow, keeps exclusions open,
 	await bulk.click();
 	expect(await stored(page)).toBe('expanded');
 	await expect(bulk).toHaveAttribute('data-collapsed', 'false');
+	expect(await bulk.evaluate(node => getComputedStyle(node).color)).not.toBe(activeColor);
 	expect(await bulk.evaluate(node => getComputedStyle(node.querySelector('.core')!).filter)).toBe('none');
 	await page.reload(); await ready(page);
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');

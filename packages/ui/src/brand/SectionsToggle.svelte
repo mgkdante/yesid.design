@@ -115,7 +115,11 @@
 	}
 
 	.sections-toggle:hover,
-	.sections-toggle:focus-visible,
+	.sections-toggle:focus-visible {
+		border-color: var(--muted-foreground);
+		color: var(--foreground);
+	}
+
 	.sections-toggle[data-collapsed='true'],
 	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-toggle {
 		border-color: var(--primary);
