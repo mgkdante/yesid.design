@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.36.0-rc.1
+## 0.36.0
 
 <!-- release-fragment: remembered-sections -->
 - `@yesid/ui` (minor): The expand-all control remembers one origin-wide localStorage choice under `sections-choice`.
