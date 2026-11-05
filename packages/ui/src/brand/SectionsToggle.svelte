@@ -21,21 +21,26 @@
 <script lang="ts">
 	import { cn } from '../cn/index.js';
 	import { sections } from '../state/sections.svelte.js';
+	import { initializeSections } from './sections-registry.js';
 
 	let {
 		copy,
 		collapsed: collapsedProp,
 		onToggle = () => sections.toggle(),
-		activeEffect = 'none',
+		activeEffect = 'glow',
 		class: className,
 	}: SectionsToggleProps = $props();
+	let ready = $state(false);
+	$effect.pre(() => {
+		if (sections.count >= 2) initializeSections();
+		ready = true;
+	});
 
 	const collapsed = $derived(collapsedProp ?? sections.allCollapsed);
 	const label = $derived(collapsed ? copy.expand : copy.collapse);
 	const title = $derived(collapsed ? copy.expandTitle : copy.collapseTitle);
 </script>
 
-{#if sections.count >= 2}
 <div
 	class={cn(
 		'sections-controls',
@@ -43,12 +48,21 @@
 		className,
 	)}
 	data-testid="sections-controls"
+	data-sections-control
+	data-collapse-label={copy.collapse}
+	data-expand-label={copy.expand}
+	data-collapse-title={copy.collapseTitle}
+	data-expand-title={copy.expandTitle}
+	data-sections-ready={ready ? '' : undefined}
+	data-sections-hidden={sections.count < 2 ? '' : undefined}
 >
 	<button
 		type="button"
 		class="sections-toggle sections-toggle--switch tap-press"
 		data-collapsed={collapsed}
 		{title}
+		aria-label={label}
+		disabled={!ready}
 		data-testid="sections-toggle"
 		onclick={onToggle}
 	>
@@ -59,18 +73,30 @@
 			<path class="wave wave--far" d="M18.3 5.7a8.9 8.9 0 0 1 0 12.6" />
 			<circle class="core" cx="12" cy="12" r="2.3" />
 		</svg>
-		<span>{label}</span>
+		<span class="sections-label" aria-hidden="true" data-expand-label={copy.expand}
+			style:--sections-label-width={`${Math.max([...copy.collapse].length, [...copy.expand].length)}ch`}>{label}</span>
 	</button>
 
 </div>
 
-{/if}
 
 <style>
 	.sections-controls {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
+	}
+	.sections-controls[data-sections-hidden] { display: none; }
+	:global(html[data-sections-available]) .sections-controls:not([data-sections-ready]) { display: inline-flex; }
+	:global(.sections-controls[data-sections-fallback]:not([data-sections-ready])),
+	:global(html[data-sections-recovering]) .sections-controls:not([data-sections-ready]) { visibility: hidden; pointer-events: none; }
+	.sections-label { position: relative; text-align: start; min-width: var(--sections-label-width); }
+	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-label { color: transparent; }
+	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-label::after {
+		content: attr(data-expand-label);
+		position: absolute;
+		inset: 0;
+		color: var(--primary);
 	}
 
 	.sections-toggle {
@@ -100,8 +126,13 @@
 	}
 
 	.sections-toggle:hover,
-	.sections-toggle:focus-visible,
-	.sections-toggle[data-collapsed='true'] {
+	.sections-toggle:focus-visible {
+		border-color: var(--muted-foreground);
+		color: var(--foreground);
+	}
+
+	.sections-toggle[data-collapsed='true'],
+	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .sections-toggle {
 		border-color: var(--primary);
 		color: var(--primary);
 		background: color-mix(in srgb, var(--primary) 7%, var(--background));
@@ -130,16 +161,19 @@
 		opacity: 0.5;
 	}
 
-	.sections-toggle[data-collapsed='true'] .wave {
+	.sections-toggle[data-collapsed='true'] .wave,
+	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .wave {
 		opacity: 0;
 	}
 
-	.sections-toggle[data-collapsed='true'] .core {
+	.sections-toggle[data-collapsed='true'] .core,
+	:global(html[data-sections-collapsed]) .sections-controls:not([data-sections-ready]) .core {
 		fill: var(--primary);
 		stroke: var(--primary);
 	}
 
-	.sections-controls--glow .sections-toggle[data-collapsed='true'] .core {
+	.sections-controls--glow .sections-toggle[data-collapsed='true'] .core,
+	:global(html[data-sections-collapsed]) .sections-controls--glow:not([data-sections-ready]) .core {
 		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--glow) 60%, transparent));
 	}
 

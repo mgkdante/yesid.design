@@ -114,17 +114,25 @@ component duplicated in Transit and yesid.dev while they waited for a third prod
 drifted, and each carried fixes the other lacked. Principle 1 still holds: a difference that cannot be a
 prop with a default stays in the app.
 
-## D15: Disclosure state is never remembered
+## D15: The expand-all control remembers one site-wide choice
 
-Sections, filter groups and listing panels start at their declared state on every mount or visit;
-nothing about open or closed is persisted or written by the boot script. Pages with at least two
-collapsible content sections offer one expand-all control for those sections instead; the TOC
-keeps its independent toggle and does not count toward that threshold.
-The control reaches content sections only: a control panel built on `CollapsibleSection` passes
-`independent` to stay out of the bulk action, its count and the content TOC's active item.
+On both products, pages with a bulk control and at least two collapsible content sections start
+collapsed on a first visit. The collapsed control is orange, with `activeEffect="glow"`; expanded
+content clears that active state. A visitor's bulk choice wins on later pages and visits.
+`sections-choice` in origin-local localStorage holds only `collapsed` or `expanded`, written by
+bulk actions. Individual section toggles affect that view only. There is no page or section key,
+cookie, server state or CMS setting. Malformed values use the first-visit default without repair.
 
-A table-of-contents jump to a collapsed section opens that section and any sections enclosing it.
-Every other section keeps its current state.
+The TOC starts open and keeps its independent toggle. Filter groups, listing panels, static
+cards and `independent` panels, including Transit's map tools, stay outside the bulk action and
+its count. Below two content sections the control stays hidden and sections use declared defaults.
+A table-of-contents or fragment jump opens its target and enclosing sections without writing the
+choice. Back and locale reading-position restoration remain the product's responsibility.
+
+The head boot script applies initial geometry before paint; hydration adopts it without changing
+layout. The server sends complete, readable section bodies. Without JavaScript they stay readable;
+if storage access throws, interactive sections use declared defaults. Old `persisted:*` disclosure
+keys and `quiet-mode` are ignored. The owner approved this contract on 2026-11-05.
 
 ## D16: Consumers own navigation setup and header copy
 

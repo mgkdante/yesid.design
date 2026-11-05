@@ -61,16 +61,16 @@ it('collapses and expands every mounted section, and reflects individual section
 it('hides with zero or one section and reacts to mounts and unmounts', async () => {
  render(TocNav, { props: { entries: [], activeId: '', heading: 'Contents', onNavigate: () => {} } });
  const view = render(SectionsToggle, { props: { copy } });
- expect(view.container.querySelector('button')).toBeNull();
+ expect(view.container.querySelector('[data-sections-control]')?.hasAttribute('data-sections-hidden')).toBe(true);
  const first = render(CollapsibleSection, { props: { title: 'First' } });
  render(CollapsibleSection, { props: { title: 'Static', collapsible: false } });
  await tick();
- expect(view.container.querySelector('button')).toBeNull();
+ expect(view.container.querySelector('[data-sections-control]')?.hasAttribute('data-sections-hidden')).toBe(true);
  const second = render(CollapsibleSection, { props: { title: 'Second' } });
  await tick();
  expect(within(view.container).getByRole('button', { name: copy.collapse })).toBeTruthy();
  second.unmount();
  await tick();
- expect(view.container.querySelector('button')).toBeNull();
+ expect(view.container.querySelector('[data-sections-control]')?.hasAttribute('data-sections-hidden')).toBe(true);
  first.unmount();
 });

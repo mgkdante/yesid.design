@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-// Blocking app scripts proves that only the theme is restored before hydration.
+// Failed app scripts keep the stored theme and readable server content.
 for (const colorScheme of ['dark', 'light'] as const) {
-	test(`a reload paints the stored theme and default-open section before the app runs (system ${colorScheme})`, async ({ page }) => {
+	test(`a reload keeps the stored theme and readable sections when app scripts fail (system ${colorScheme})`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme });
 		await page.goto('/');
 		const html = page.locator('html');
@@ -25,30 +25,29 @@ for (const colorScheme of ['dark', 'light'] as const) {
 		await expect(html).toHaveAttribute('data-theme', 'light');
 		await expect(section).toHaveAttribute('aria-expanded', 'true');
 		const body = page.locator(`[id="${await section.getAttribute('aria-controls')}"]`);
+		await expect(html).toHaveAttribute('data-sections-recovering', '');
 		await expect(body).toBeVisible();
 
 		// Hydration takes over the boot script's markup: once the theme switch responds, the section is
-		// at its declared default and its toggle still closes it.
+		// collapsed by default and its individual toggle still opens it.
 		await page.unroute('**/_app/**/*.js');
 		await page.reload();
 		await expect(async () => {
 			if ((await html.getAttribute('data-theme')) !== 'dark') await themeSwitch.click();
 			await expect(html).toHaveAttribute('data-theme', 'dark', { timeout: 1000 });
 		}).toPass();
-		await expect(section).toHaveAttribute('aria-expanded', 'true');
-		await section.click();
 		await expect(section).toHaveAttribute('aria-expanded', 'false');
-		await expect(body).toBeHidden();
+		await section.click();
+		await expect(section).toHaveAttribute('aria-expanded', 'true');
+		await expect(body).toBeVisible();
 	});
 }
 
 test('bulk control reaches the real sections and reload ignores old quiet mode', async ({ page }) => {
  await page.goto('/');
  const section = page.getByRole('button', { name: 'Service notes' });
- await expect(async () => {
-  if (await section.getAttribute('aria-expanded') !== 'false') await page.getByRole('button', { name: 'Collapse all' }).click();
-  await expect(section).toHaveAttribute('aria-expanded', 'false', { timeout: 1000 });
- }).toPass();
+ await expect(page.locator('html')).toHaveAttribute('data-gallery-ready', 'true');
+ await expect(section).toHaveAttribute('aria-expanded', 'false');
  await page.getByRole('button', { name: 'Expand all' }).click();
  await expect(section).toHaveAttribute('aria-expanded', 'true');
  await page.evaluate(() => localStorage.setItem('quiet-mode', 'true'));

@@ -1,7 +1,8 @@
 # Disclosure migration (D-a)
 
-`SectionsToggle` replaces the former QuietModeButton. Content sections no longer remember
-open/closed choices between visits. Filter groups and listing filter panels remain independent.
+`SectionsToggle` controls content sections. The current bulk preference and first-visit default
+are specified in [Remembered sections](remembered-sections.md). Individual section state,
+filter groups and listing filter panels remain independent.
 
 ## Required consumer changes
 
@@ -31,7 +32,7 @@ open/closed choices between visits. Filter groups and listing filter panels rema
   `collapse`, `expand`, `collapseTitle` and `expandTitle`. There is one button: Collapse all
   whenever any section is open, Expand all only when every section is closed. Mixed state
   collapses everything. The control hides when fewer than two collapsible content sections are mounted.
-  It is omitted during SSR and appears after registration during hydration; static cards and the TOC do not count.
+  Its hidden server markup reserves the control before paint when the threshold is met; static cards and the TOC do not count.
 - Replace `quietMode` / `QuietModeStore` with `sections` / `SectionsState` from `@yesid/ui/state`.
   Replace `set(true)` with `collapseAll()`, `set(false)` with `expandAll()`, and `enabled` reads
   with `allCollapsed`. `count` is the number of registered collapsible content sections. `toggle()`
@@ -49,17 +50,17 @@ open/closed choices between visits. Filter groups and listing filter panels rema
 - Replace private trigger clicks with `openSection(anchor)` from `@yesid/ui/brand` (also root).
   It opens every mounted matching collapsible card and returns whether any matched. It is safe
   after unmount and refreshes on anchor changes. Static cards always show their bodies.
-- Keep a keyed boundary per page or entity identity around disclosures: defaults reset on remount, not when a reused CollapsibleSection receives a new anchor.
+- Keep a keyed boundary per page or entity identity around disclosures: the bulk choice applies on remount, not when a reused CollapsibleSection receives a new anchor.
 - In yesid.dev `apps/web/src/lib/components/blog/BlogFilterSidebar.svelte`, the custom date filter
   still uses `persisted('blog-filter-date', true)` outside FilterGroup. Replace it with local state
   seeded true and update its `.value` bindings. Search queries, dates and other selections can
   continue using the generic store.
 - Rebuild CSP configuration with the new `@yesid/ui/boot.json` hash when adopting the package.
-  Transit already imports that JSON in `apps/web/svelte.config.js`, so its hash updates with the
-  dependency bump and rebuild. Theme boot and interrupted view-transition handling remain. No disclosure marks are emitted
-  or processed. Old `persisted:*` disclosure keys and `quiet-mode` storage are ignored and left
+  Transit imports that JSON in `apps/web/kit.config.js`, so its hash updates with the
+  dependency bump and rebuild. Theme boot and interrupted view-transition handling remain. The head script applies the
+  current bulk preference before paint through private section geometry marks. Old `persisted:*` disclosure keys and `quiet-mode` storage are ignored and left
   untouched. Generic `persisted` remains for search and selection state.
-- Update browser/SSR tests: reload starts at declared `open` / `startOpen` defaults; the mobile
+- Update browser/SSR tests: content reload follows the bulk choice; blocked storage uses declared defaults; the mobile
   ListingFrame filter panel starts closed. Assert one bulk control, no Remember/Forget button,
   content-section bulk behavior, individual reopen, inert/focus behavior and reduced motion.
 

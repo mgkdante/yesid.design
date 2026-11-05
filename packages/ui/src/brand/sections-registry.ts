@@ -6,6 +6,7 @@ interface SectionRegistration {
 	element?: () => HTMLElement | null;
 	isOpen(): boolean;
 	setOpen(open: boolean): void;
+	initialize?(): void;
 }
 
 /** Opens the disclosure chain exposing a heading, section anchor or numbered wrapper. */
@@ -60,6 +61,11 @@ export function allSectionsCollapsed(): boolean | undefined {
 
 export function setSectionsOpen(open: boolean): void {
 	for (const section of contentSections()) section.setOpen(open);
+}
+
+/** Apply the bulk preference once to each eligible mount, including a threshold crossed later. */
+export function initializeSections(): void {
+	for (const section of contentSections()) section.initialize?.();
 }
 
 function contentSections(): SectionRegistration[] {

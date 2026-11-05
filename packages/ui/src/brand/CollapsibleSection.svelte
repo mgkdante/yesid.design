@@ -27,9 +27,24 @@
 <script lang="ts">
 	import SectionCard from './SectionCard.svelte';
 	import { registerSection } from './sections-registry.js';
+	import { hasBulkSections, initialSectionOpen } from './sections-preference.js';
 
 	let { open = $bindable(true), independent = false, ...props }: CollapsibleSectionProps = $props();
 	let element = $state<HTMLDivElement | null>(null);
+	let initialized = $state(false);
+	let preferenceApplied = false;
+	let chosen = false;
+	function initializePreference() {
+		if (preferenceApplied) return;
+		preferenceApplied = true;
+		if (!chosen) open = initialSectionOpen(element, open);
+	}
+	$effect.pre(() => {
+		if (initialized || !element) return;
+		if (props.collapsible !== false) open = initialSectionOpen(element, open, independent);
+		if (!independent && hasBulkSections()) preferenceApplied = true;
+		initialized = true;
+	});
 
 	$effect(() => {
 		if (props.collapsible === false && !independent) return;
@@ -37,12 +52,14 @@
 			independent,
 			id: props.anchor,
 			element: () => element,
+			initialize: initializePreference,
 			isOpen: () => props.collapsible === false || open,
 			setOpen: (next) => {
+				chosen = true;
 				if (props.collapsible !== false) open = next;
 			},
 		});
 	});
 </script>
 
-<SectionCard {...props} bind:open bind:ref={element} />
+<SectionCard {...props} bulk={!independent && props.collapsible !== false} {initialized} onChoose={() => { chosen = true; }} bind:open bind:ref={element} />

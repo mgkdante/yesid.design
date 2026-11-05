@@ -317,10 +317,10 @@ nodes/traces, warm glow and ripple ink. Companion product grids use the same pro
 
 `SectionsToggle` renders one Collapse all / Expand all control. The caller supplies localized
 `collapse`, `expand`, `collapseTitle` and `expandTitle` copy. State and `onToggle` default to the
-in-memory `sections` state; `collapsed` and `onToggle` support a controlled adapter. The default
+shared `sections` state and origin-wide bulk preference; `collapsed` and `onToggle` support a controlled adapter. The default
 label reflects the mounted sections: Expand all when all are closed, Collapse all otherwise.
-The control is hidden with fewer than two mounted collapsible content sections. Registration is client-only,
-so the server omits it until hydration has counted the sections. Independent panels, static cards
+The control has hidden server markup. The boot script shows it before paint when the server
+markup contains at least two collapsible content sections. Client registration keeps the threshold current. Independent panels, static cards
 and TocNav do not count;
 the TOC keeps its independent toggle and is never changed by expand-all actions.
 `activeEffect="none"` keeps flat marks; `"glow"` adds a scoped core filter.
@@ -337,8 +337,11 @@ A card with a toggle header, an optional index badge, `icon` and `headerActions`
 Collapse all / Expand all. Use `<CollapsibleSection independent bind:open={panelOpen}>` for a
 filter or control panel that keeps its own toggle and stays out of bulk actions, counts and the
 all-closed calculation.
-Each mount starts at its declared `open` default (true); no disclosure
-state is stored or restored. Static cards always show their body. Closed bodies stay mounted,
+A content mount adopts the origin-wide bulk choice when the control is available; the first-visit
+choice is collapsed. Below the threshold it uses the declared `open` default (true). If a second
+section arrives later, untouched mounts adopt the bulk choice; deliberate individual toggles stay
+as chosen for that view. Storage changes in another tab affect future mounts without changing
+the current view. Static cards always show their body. Closed bodies stay mounted,
 inert and hidden from assistive technology; collapsing a focused body returns focus to its header.
 `openSignal` opens a card whenever the consumer counter changes. `openSection(anchor, root?)`
 opens mounted collapsible cards with that anchor, optionally within a page root, and returns
@@ -581,8 +584,7 @@ inline. Pass `role` and `aria-live` when the notice reports a change. With a `ro
 
 ## Site root and shared state
 
-`@yesid/ui/layout` exports `SiteRoot`, the app root. Disclosure components use their declared
-per-mount defaults. On mount SiteRoot adopts the theme the boot script applied and starts Lenis
+`@yesid/ui/layout` exports `SiteRoot`, the app root. The expand-all control remembers one origin-wide choice for content sections. On mount SiteRoot adopts the theme the boot script applied and starts Lenis
 through `@yesid/motion`; it cleans up on unmount and renders no element of its own. Every in-house
 product shows the yesid dot in its browser tab. On load, `SiteRoot` calls `theme.init()`, which
 repaints every `link[rel="icon"]` with that mark in `--primary`, replacing the supplied href even
@@ -596,7 +598,7 @@ without a theme change; later theme changes repaint it too. Props:
 
 The app keeps its own navigation, scroll-restoration, and analytics handling.
 
-`@yesid/ui/state` exports the stores that `SiteRoot` initializes:
+`@yesid/ui/state` exports shared state and page actions:
 
 - `theme`: `current`, `isDark`, `set`, `toggle`, `init`. Dark is the default, system preference
   is ignored, the choice persists under `theme`, `data-theme` is set on `<html>`, `meta[name=
@@ -606,7 +608,14 @@ The app keeps its own navigation, scroll-restoration, and analytics handling.
   sections. `allCollapsed` is true only when
   all registered sections are closed; `collapseAll()`, `expandAll()` and `toggle()` reach those
   sections only. Filter groups and listing filter panels keep their own independent toggles.
-  New sections start at their declared defaults; nothing is read from or written to storage.
+  On pages with a `SectionsToggle` and at least two content sections, the first visit starts
+  collapsed; the control is orange and `activeEffect` defaults to `glow`. Bulk actions write
+  `collapsed` or `expanded` to the one localStorage key `sections-choice`. That choice applies
+  across pages and browser visits on this origin. Individual toggles and section jumps never
+  write it. The TOC, filters, listing panels, static cards and `independent` panels stay outside
+  this choice. Below the threshold sections use declared defaults. Malformed values use the
+  collapsed first-visit default; blocked storage uses declared defaults. No cookie, server or
+  CMS state is involved.
 - `desktop`: a Svelte `MediaQuery` at the `breakpoint.desktop-min` token (1024px). It is false
   during SSR.
 
@@ -630,7 +639,7 @@ resets in a new tab. `bind:value={state.value}` works directly. Values must be `
 text. During SSR it returns the seed.
 
 The generic store remains available for search and selection state. Disclosure components and the
-head boot script do not use it. Historical disclosure storage keys are ignored, not deleted.
+head boot script do not use the generic store. Historical disclosure storage keys are ignored, not deleted.
 
 ## Head
 
@@ -646,7 +655,21 @@ head boot script do not use it. Historical disclosure storage keys are ignored, 
 `injectThemeBoot(html)` replaces `%yesid.themeBoot%` with the boot script. Put the placeholder in
 `app.html` before `%sveltekit.head%` and call it from `transformPageChunk`. Before first paint the
 script sets `data-theme` from the `theme` key (dark otherwise). It also handles a rejected
-cross-document view transition during reload. It does not restore open/closed choices.
+cross-document view transition during reload. It also reads `sections-choice` and applies section geometry before paint. Keep this script
+in the head before page content and keep the package's component CSS: hydration adopts that
+geometry without a flash. The server supplies eligibility on the injected script so the first
+section has its initial geometry while later HTML is parsing. The body, header and TOC stay
+visible during parsing. Boot exceptions and failed app resources expose pending content; a
+five-second recovery also exposes pending content if app startup stalls. Hydration preserves that
+readable fallback on those pending cards. Future mounts adopt the stored choice. Startup error
+listeners and observations are released when the pending mounts finish. Pending triggers, body
+semantics and the bulk accessible name match the visual state. Recovery keeps the control’s
+layout space while the inactive control is hidden and disabled.
+The server renders complete, open section bodies, including declared-closed
+ones, so JavaScript-disabled reading stays available. Interactive closed bodies remain mounted,
+clipped, `inert` and `aria-hidden`; browser find-in-page cannot generally search them until opened.
+TOC and fragment jumps reveal their targets and enclosing sections. Responsive charts and media
+keep their DOM; products must verify their actual measurement/lazy-mount code during adoption.
 A hash-based CSP allows it with the source in
 `@yesid/ui/boot.json` (`{ "hash": "sha256-…" }`), which Node config files can import. A CSP that
 relies on `'unsafe-inline'` must not add the hash, because any hash switches `'unsafe-inline'` off.

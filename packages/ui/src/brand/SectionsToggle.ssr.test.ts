@@ -10,12 +10,11 @@ const copy: SectionsToggleCopy = {
 	expandTitle: 'Expand every section',
 };
 
-it('omits an inactive server control until at least two sections register on mount', () => {
- const controlled = render(SectionsToggle, { props: { copy, collapsed: true } }).body;
- const initial = render(SectionsToggle, { props: { copy } }).body;
- for (const body of [controlled, initial]) {
-  expect(body).not.toContain('<button');
-  expect(body).not.toContain(copy.collapse);
-  expect(body).not.toContain(copy.expand);
+it('reserves an inert, hidden server control for the pre-paint threshold check', () => {
+ for (const props of [{ copy, collapsed: true }, { copy }]) {
+  const body = render(SectionsToggle, { props }).body;
+  expect(body).toContain('data-sections-control');
+  expect(body).toContain('data-sections-hidden');
+  expect(body).not.toContain('data-sections-ready');
  }
 });
