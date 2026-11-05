@@ -13,8 +13,13 @@ export function hasBulkSectionsInHtml(html: string): boolean {
 		if (start < 0) break;
 		cursor = start + 1;
 		if (html.startsWith('!--', cursor)) {
-			const end = html.indexOf('-->', cursor + 3);
-			cursor = end < 0 ? html.length : end + 3;
+			cursor += 3;
+			if (html[cursor] === '>') cursor++;
+			else if (html[cursor] === '-' && html[cursor + 1] === '>') cursor += 2;
+			else {
+				const end = html.indexOf('-->', cursor);
+				cursor = end < 0 ? html.length : end + 3;
+			}
 			continue;
 		}
 		const first = html.charCodeAt(cursor) | 32;

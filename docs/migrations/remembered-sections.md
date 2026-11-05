@@ -50,6 +50,11 @@ returns that generated text; it does not serialize section DOM or read browser s
 preference has no input to this generator. No tracked llms endpoint was found in Transit's tree
 at that revision. Recheck both products' built outputs during rehearsal.
 
+The pre-paint eligibility scan recognizes package start-tag attributes and a limited set of
+raw-text contexts. Marker text inside `template`, scripting-enabled `noscript`, `iframe`, `xmp`
+and double-escaped script text can overcount. These contexts remain outside this scanner fix;
+client registration owns the actual mounted-section count.
+
 ## At both product bumps
 
 1. Adopt the same exact prerelease for all design dependencies and rebuild. Keep

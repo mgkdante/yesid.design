@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { injectThemeBoot, themeBootScript } from '../../../../packages/ui/src/head/boot.js';
 
 const key = 'sections-choice';
 const trigger = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
@@ -15,7 +16,7 @@ test('a parser stall leaves already delivered content visible', async ({ page })
 		expect(card).toBeGreaterThan(0);
 		await route.fulfill({ response, body: html.slice(0, card) + '<script src="/parser-hold.js"></script>' + html.slice(card) });
 	});
-	await page.route('**/parser-hold.js', async route => { await gate; await route.fulfill({ body: '', contentType: 'text/javascript' }); });
+	await page.route('**/parser-hold.js', async route => { await gate; await route.fulfill({ body: 'document.currentScript.remove();', contentType: 'text/javascript' }); });
 	try {
 		await page.goto('/sections', { waitUntil: 'commit' });
 		await page.waitForFunction(() => [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].every(link => link.sheet));
@@ -26,7 +27,47 @@ test('a parser stall leaves already delivered content visible', async ({ page })
 		expect(await page.evaluate(() => document.readyState)).toBe('loading');
 	} finally { release(); }
 	await ready(page);
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
 });
+
+for (const comment of ['<!-->', '<!--->']) {
+	test(`the ${comment} comment keeps collapsed geometry during a parser stall`, async ({ page }) => {
+		const errors: string[] = [];
+		page.on('pageerror', error => errors.push(error.message));
+		page.on('console', message => { if (/hydration/i.test(message.text())) errors.push(message.text()); });
+		let release!: () => void;
+		const gate = new Promise<void>(resolve => { release = resolve; });
+		await page.route('**/sections', async route => {
+			const response = await route.fetch();
+			let html = await response.text();
+			const boot = `<script data-sections-available>${themeBootScript}</script>`;
+			expect(html).toContain(boot);
+			html = html.replace(boot, '%yesid.themeBoot%');
+			const control = html.lastIndexOf('<div', html.indexOf('data-sections-control'));
+			expect(control).toBeGreaterThan(0);
+			html = html.slice(0, control) + comment + html.slice(control);
+			const card = html.lastIndexOf('<div', html.indexOf('data-toc="live"'));
+			html = html.slice(0, card) + '<script src="/parser-hold.js"></script>' + html.slice(card);
+			await route.fulfill({ response, body: injectThemeBoot(html) });
+		});
+		await page.route('**/parser-hold.js', async route => {
+			await gate;
+			// The probe removes its added nodes before Svelte hydrates the original server tree.
+			await route.fulfill({ body: `const comment = document.querySelector('[data-sections-control]').previousSibling; if (comment?.nodeType === 8) comment.remove(); document.currentScript.remove();`, contentType: 'text/javascript' });
+		});
+		try {
+			await page.goto('/sections', { waitUntil: 'commit' });
+			await page.waitForFunction(() => [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].every(link => link.sheet));
+			await page.evaluate(() => document.fonts.ready);
+			await expect(page.getByTestId('sections-toggle')).toBeVisible();
+			expect((await page.locator('[data-toc="chart"] > [data-slot="collapsible"] > .section-body').boundingBox())!.height).toBe(0);
+			expect(await page.evaluate(() => document.readyState)).toBe('loading');
+		} finally { release(); }
+		await ready(page);
+		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+		expect(errors).toEqual([]);
+	});
+}
 
 test('a failed app bundle leaves all section content readable', async ({ page }) => {
 	await page.route('**/_app/**/*.js', route => route.abort());

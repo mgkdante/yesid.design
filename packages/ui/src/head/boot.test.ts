@@ -116,6 +116,11 @@ describe('theme boot script', () => {
 		expect(injectThemeBoot(html.replace('<div class="has-[>img]" data-section-bulk=""></div>', ''))).not.toContain('<script data-sections-available>');
 	});
 
+	it.each(['<!-->', '<!--->'])('recognizes sections following the immediately closed comment %s', (comment) => {
+		const html = `<head>%yesid.themeBoot%</head><body>${comment}<div data-sections-control></div><div data-section-bulk></div><div data-section-bulk></div></body>`;
+		expect(injectThemeBoot(html)).toContain('<script data-sections-available>');
+	});
+
 	it.each([
 		['plain', '<a', '<a'],
 		['double-quoted', '<a"', '"<a"'],
