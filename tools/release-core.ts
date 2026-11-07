@@ -320,7 +320,7 @@ function readReleaseInventory(workspaces: Record<string, LockedWorkspace | null>
 
 function readRepositoryVersionState(repositoryRootInput: string): RepositoryVersionState {
 	const repositoryRoot = resolve(repositoryRootInput);
-	const root = readManifest(repositoryRoot, 'package.json', 'yesid-dev-design');
+	const root = readManifest(repositoryRoot, 'package.json', 'yesid.design');
 	const lockfile = readFileSync(join(repositoryRoot, 'bun.lock'), 'utf8');
 	const workspaces = readLockWorkspaces(lockfile);
 	const packages = readReleaseInventory(workspaces);

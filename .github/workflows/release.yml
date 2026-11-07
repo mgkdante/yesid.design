@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'mgkdante/yesid.dev-design'
+    if: github.repository == 'mgkdante/yesid.design'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:

@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — listing frame</title>
+	<title>yesid.design — listing frame</title>
 </svelte:head>
 
 {#snippet hero()}

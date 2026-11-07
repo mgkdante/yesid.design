@@ -18,7 +18,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — error page</title>
+	<title>yesid.design — error page</title>
 </svelte:head>
 
 {#snippet brand()}

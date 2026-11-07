@@ -36,7 +36,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — detail frame</title>
+	<title>yesid.design — detail frame</title>
 </svelte:head>
 
 <div data-testid="fixture-nav" class="fixed inset-x-0 top-0 z-[60] h-[88px] border-b border-border bg-background"></div>
