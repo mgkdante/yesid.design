@@ -173,7 +173,7 @@ describe('deterministic release preparation', () => {
 		prepareRelease(root, '0.7.0-rc.1');
 		expect(readFileSync(join(root, 'packages/ui/README.md'), 'utf8')).toContain('blob/v0.7.0-rc.1/');
 
-		write(join(root, 'packages/tokens/README.md'), '[old](https://github.com/mgkdante/yesid.dev-design/blob/v0.6.0/README.md)\n');
+		write(join(root, 'packages/tokens/README.md'), '[old](https://github.com/mgkdante/yesid.design/blob/v0.6.0/README.md)\n');
 		expect(() => checkPreparedRelease(root, { version: '0.7.0-rc.1' })).toThrow(
 			'packages/tokens/README.md links blob/v0.6.0/',
 		);

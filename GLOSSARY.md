@@ -1,4 +1,4 @@
-# yesid.dev-design
+# yesid.design
 Shared UI, tokens and motion packages that every yesid product builds from.
 
 ## Language

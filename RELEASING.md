@@ -66,7 +66,7 @@ test -z "$(git status --porcelain)"
 TAG=vX.Y.Z
 git tag -a "$TAG" -m "$TAG"
 bun run release:check -- --version "${TAG#v}" --tag "$TAG"
-test "$(gh api repos/mgkdante/yesid.dev-design/immutable-releases --jq .enabled)" = true
+test "$(gh api repos/mgkdante/yesid.design/immutable-releases --jq .enabled)" = true
 git push origin "refs/tags/$TAG"
 ```
 
@@ -85,7 +85,7 @@ Check the result:
 gh release view "$TAG" --json assets --jq '.assets[].name'   # the eight yesid-<pkg>-X.Y.Z.tgz
 gh release verify "$TAG"
 gh release download "$TAG" --pattern 'yesid-ui-*.tgz' --dir /tmp/check
-gh attestation verify /tmp/check/yesid-ui-*.tgz --repo mgkdante/yesid.dev-design
+gh attestation verify /tmp/check/yesid-ui-*.tgz --repo mgkdante/yesid.design
 ```
 
 If the run fails before publishing, check `gh release view "$TAG"`. `gh release create` deletes
@@ -167,6 +167,6 @@ This proves local tooling, not GitHub publication, provenance or consumer accept
 ## 5. Consumers
 
 Each app takes the release in its own pull request: change the tag and version in every
-`https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
+`https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
 URL, run `bun install`, and let its CI build and test it. The lockfile pins each tarball's
 integrity. A rollback is the same edit pointing at an earlier release.

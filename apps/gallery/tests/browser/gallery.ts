@@ -11,7 +11,7 @@ export async function openGallery(page: Page, theme?: GalleryTheme): Promise<voi
 		}, theme);
 	}
 	await page.goto('/');
-	await expect(page).toHaveTitle('yesid.dev-design — brand gallery');
+	await expect(page).toHaveTitle('yesid.design — brand gallery');
 	if (theme) {
 		await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 	}

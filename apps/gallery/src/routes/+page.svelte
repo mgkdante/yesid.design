@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — brand gallery</title>
+	<title>yesid.design — brand gallery</title>
 </svelte:head>
 
 <h1 class="font-heading text-display font-bold">Brand gallery</h1>

@@ -31,7 +31,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — site header</title>
+	<title>yesid.design — site header</title>
 </svelte:head>
 
 {#snippet search()}

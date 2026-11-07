@@ -3,7 +3,7 @@
 Use this checklist in the new product:
 
 - [ ] Start from Bun, SvelteKit 3, TypeScript 6, Svelte 5, Vite 8 and Tailwind CSS v4.
-- [ ] Pick one exact `yesid.dev-design` release tag.
+- [ ] Pick one exact `yesid.design` release tag.
 - [ ] Add the package tarball URLs for that tag to `package.json` and run `bun install`.
 - [ ] Load the package token styles and bundled fonts.
 - [ ] Import one shared UI initializer from both SvelteKit client and server init hooks.
@@ -29,23 +29,23 @@ URLs. Gallery remains workspace evidence, never product acceptance.
 
 ## 2. Install one exact release
 
-Pick the newest release you have reviewed on the [releases page](https://github.com/mgkdante/yesid.dev-design/releases).
+Pick the newest release you have reviewed on the [releases page](https://github.com/mgkdante/yesid.design/releases).
 Each release carries one tarball per package. Add the packages with the same tag in every URL:
 
 ```json
 {
   "dependencies": {
-    "@yesid/analytics": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-analytics-X.Y.Z.tgz",
-    "@yesid/i18n-core": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-i18n-core-X.Y.Z.tgz",
-    "@yesid/motion": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-motion-X.Y.Z.tgz",
-    "@yesid/seo-kit": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-seo-kit-X.Y.Z.tgz",
-    "@yesid/tokens": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-tokens-X.Y.Z.tgz",
-    "@yesid/ui": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-ui-X.Y.Z.tgz",
+    "@yesid/analytics": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-analytics-X.Y.Z.tgz",
+    "@yesid/i18n-core": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-i18n-core-X.Y.Z.tgz",
+    "@yesid/motion": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-motion-X.Y.Z.tgz",
+    "@yesid/seo-kit": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-seo-kit-X.Y.Z.tgz",
+    "@yesid/tokens": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-tokens-X.Y.Z.tgz",
+    "@yesid/ui": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-ui-X.Y.Z.tgz",
     "satori": "0.33.5"
   },
   "devDependencies": {
-    "@yesid/config": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-config-X.Y.Z.tgz",
-    "@yesid/gates": "https://github.com/mgkdante/yesid.dev-design/releases/download/vX.Y.Z/yesid-gates-X.Y.Z.tgz"
+    "@yesid/config": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-config-X.Y.Z.tgz",
+    "@yesid/gates": "https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-gates-X.Y.Z.tgz"
   }
 }
 ```
@@ -59,7 +59,7 @@ products, as in the dependency block above (or devDependencies for a wholly stat
 The wider peer range is a compatibility declaration, not a recommendation to resolve an untested version.
 Add `shiki >=4 <5` only if importing the optional server-side `@yesid/seo-kit/highlight` subpath. The packages ship TypeScript and Svelte
 source that Vite compiles (see `ssr.noExternal` in section 4).
-`gh attestation verify <tarball> --repo mgkdante/yesid.dev-design` proves a tarball came from the
+`gh attestation verify <tarball> --repo mgkdante/yesid.design` proves a tarball came from the
 release workflow.
 
 ## 3. Load the tokens and fonts
@@ -587,7 +587,7 @@ the variable unset for local, preview and fork deployments to keep them silent. 
 
 A brand change follows one direction:
 
-1. Edit `packages/tokens/tokens.json` in `yesid.dev-design`.
+1. Edit `packages/tokens/tokens.json` in `yesid.design`.
 2. Regenerate and verify the upstream outputs.
 3. Follow [`RELEASING.md`](../RELEASING.md) to publish the next release.
 4. In the product, change the tag and version in every `@yesid` URL, run `bun install`, and review

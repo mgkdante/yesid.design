@@ -12,7 +12,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — density</title>
+	<title>yesid.design — density</title>
 </svelte:head>
 
 {#snippet scale(name: string)}

@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>yesid.dev-design — data page</title>
+	<title>yesid.design — data page</title>
 </svelte:head>
 
 {#snippet stopCell(row: StopRow)}{row.stop}{/snippet}
