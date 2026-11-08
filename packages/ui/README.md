@@ -516,7 +516,11 @@ stop and leaving input available if navigation is canceled.
 />
 ```
 
-Links with `priority: 2` show from 500px of header width and `priority: 3` from 1024px. The
+Nav text keeps one size at every width: links at `--text-nav-link-*` (16px) and the wordmark at
+`--text-nav-brand-*` (18px). Links that don't fit move to the menu instead of shrinking: links show
+from 375px of header width (the default `priority: 1`), `priority: 2` from 500px and
+`priority: 3` from 1024px. Below 375px the header shows the wordmark and controls only, so keep
+every header link in `menuItems` too. The
 optional `search` snippet shows from 1024px and folds away with the links while the menu is open;
 `actions` render before the theme, language and menu controls. The app marks `current` links and
 items; snippets can query the header's width with `@container site-header`. A menu item's `icon`

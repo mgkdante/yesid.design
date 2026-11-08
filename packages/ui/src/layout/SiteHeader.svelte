@@ -15,7 +15,7 @@
 		href: string;
 		label: string;
 		current?: boolean;
-		/** 2 shows from a 500px header, 3 from 1024px. */
+		/** 1 shows from a 375px header, 2 from 500px, 3 from 1024px. */
 		priority?: 1 | 2 | 3;
 	}
 
@@ -414,6 +414,12 @@
 		min-width: 0;
 	}
 
+	/* Nav text keeps one size; links that do not fit move to the menu instead of shrinking. */
+	@container site-header (width < 375px) {
+		.nav-links-part {
+			display: none;
+		}
+	}
 	@container site-header (width < 500px) {
 		.nav-links [data-priority='2'] {
 			display: none;

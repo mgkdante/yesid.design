@@ -58,12 +58,12 @@
   --text-metric-value-mobile: 1.25rem;
   --text-metric-value-desktop: 2.25rem;
   --text-metric-value-default: 1.875rem;
-  --text-nav-brand-mobile: 1.0625rem;
+  --text-nav-brand-mobile: 1.125rem;
   --text-nav-brand-desktop: 1.125rem;
-  --text-nav-brand-compact: 1rem;
-  --text-nav-link-mobile: 0.875rem;
-  --text-nav-link-desktop: 0.9375rem;
-  --text-nav-link-compact: 0.8125rem;
+  --text-nav-brand-compact: 1.125rem;
+  --text-nav-link-mobile: 1rem;
+  --text-nav-link-desktop: 1rem;
+  --text-nav-link-compact: 1rem;
   --text-menu-label-mobile: 1.625rem;
   --text-menu-label-desktop: 1.875rem;
   --text-menu-subtitle: 1rem;
