@@ -1,5 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -28,7 +28,8 @@ function checkout(version = '1.2.3'): TempCheckout {
 }
 
 function tarballFile(path: string, entry: string): string {
-	const result = spawnSync('tar', ['-xOf', path, `package/${entry}`], { encoding: 'utf8' });
+	// A bare file name: GNU tar reads a Windows drive path such as C:\... as a remote host.
+	const result = spawnSync('tar', ['-xOf', basename(path), `package/${entry}`], { cwd: dirname(path), encoding: 'utf8' });
 	if (result.status !== 0) throw new Error(result.stderr);
 	return result.stdout;
 }
