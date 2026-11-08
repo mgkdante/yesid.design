@@ -12,7 +12,6 @@ brings its own content and product logic; the look and the shared plumbing come 
 | [DESIGN.md](DESIGN.md) | The visual language. |
 | [Product guide](docs/BUILD-A-YESID-PRODUCT.md) | Setting up a new product step by step. |
 | [Architecture wiki](https://yesid-dev.notion.site/3923e86306908139bbe4e78931cb3dbc?v=4093e8630690805eb12d000c417f4660) | Components, ownership and the package and release contracts, each page checked against a named release. Public in Notion. |
-| [Training course](https://app.notion.com/p/4093e8630690815999e1e59965daabc0) | The yesid.design Deep Dive: six units on tracing contracts, tokens, UI state, motion, privacy and releases, with exercises pinned to source. Requires access to the Notion workspace. |
 
 The code, the API reports and the files in this repository are the authority. The Notion pages
 explain them and name the release they were checked against.
