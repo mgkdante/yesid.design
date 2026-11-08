@@ -228,7 +228,7 @@ Kit 3's `page.url` and search parameters are readonly: create `new URL(page.url.
 
 Put `%yesid.themeBoot%` before `%sveltekit.head%` in `src/app.html`, and set
 `<html lang="%lang%">`. The script restores the theme and the origin-wide `sections-choice` before paint. A page with
-at least two content sections and the bulk control starts collapsed when no choice exists.
+at least two content sections and the bulk control starts expanded when no choice exists.
 The visitor's bulk choice wins across pages and visits. Keep the script ahead of page content
 and include the package CSS so hydration preserves that geometry. The body stays visible during
 parsing, and failed or stalled app startup exposes pending content. The server keeps complete,
@@ -332,8 +332,8 @@ a document load instead.
 
 `SectionsToggle` uses shared sections state and one origin-local localStorage preference. It appears with at least two mounted
 content `CollapsibleSection` instances and expands all only when all are closed. TOC/filter/control
-panels stay independent. Content starts collapsed on a first visit; the collapsed control is
-orange, with `activeEffect="glow"` by default. Bulk choices are stored as `collapsed` or `expanded`
+panels stay independent. Content starts expanded on a first visit. After Collapse all the control
+is orange, with `activeEffect="glow"` by default. Bulk choices are stored as `collapsed` or `expanded`
 under `sections-choice` across pages and browser visits; individual toggles affect only the view.
 With fewer than two content sections, the control stays hidden and declared defaults apply.
 List this convenience preference in the product's privacy/device-storage text. It has no cookie,

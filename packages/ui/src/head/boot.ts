@@ -21,7 +21,7 @@ export const themeBootScript = `(() => {
 		delete root.dataset.sectionsChoice;
 		try {
 			const choice = localStorage.getItem('${SECTIONS_CHOICE_KEY}');
-			root.dataset.sectionsChoice = choice === 'expanded' ? 'expanded' : 'collapsed';
+			root.dataset.sectionsChoice = choice === 'collapsed' ? 'collapsed' : 'expanded';
 		} catch {}
 	};
 	const applySection = (section, open, fallback = false) => {

@@ -1,9 +1,20 @@
 # Remembered sections (connect c-10)
 
 `@yesid/ui` carries this owner-approved behavior contract in a **minor** bump. Both yesid.dev and
-Transit start with content collapsed on a first visit, with an orange expand-all control and
-the `glow` active effect. An explicit bulk choice wins across later pages and visits on that
-origin. Pages with fewer than two collapsible content sections have a hidden control and use
+Transit start with content expanded on a first visit, with a neutral bulk control. After Collapse
+all the control is orange with the `glow` active effect. An explicit bulk choice wins across later
+pages and visits on that origin.
+
+## First visit opens content
+
+On 2026-11-07 the owner changed the first-visit default from collapsed to expanded. The boot
+script now reads `sections-choice` as `collapsed` only when that exact value is stored; a missing
+or malformed value means `expanded`. Blocked storage still uses declared defaults. At the product
+bump, allow the new hash from `@yesid/ui/boot.json`. Then update tests that expect collapsed
+content or an orange control on a first visit: seed `collapsed` where a test needs closed content
+at entry, and assert open content with the Collapse all label on a fresh visit. The privacy copy
+below is unchanged. The rest of this document describes the original c-10 adoption; read its
+"first visit" checks as starting expanded. Pages with fewer than two collapsible content sections have a hidden control and use
 declared defaults. The TOC starts open. Filters, listing panels, static cards, `independent`
 panels and map tools keep their own defaults and actions.
 
@@ -12,7 +23,7 @@ panels and map tools keep their own defaults and actions.
 - `localStorage['sections-choice']` is exactly `collapsed` or `expanded`. Only bulk actions write
   it, including the shared `sections` bulk API. Individual toggles, fragment and TOC jumps do not.
   There is no per-page or per-section identity, cookie, server state, CMS setting, expiry or
-  cross-origin sharing. Malformed values use the collapsed first-visit default without rewriting
+  cross-origin sharing. Malformed values use the expanded first-visit default without rewriting
   the stored value. Changes from another tab apply to future mounts without forcing a bulk action
   on the current view. If content crosses the two-section threshold later, untouched mounts adopt
   the choice and deliberate individual toggles stay as chosen. Historical `persisted:*` disclosure keys and `quiet-mode` stay ignored.

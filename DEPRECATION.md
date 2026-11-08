@@ -58,6 +58,10 @@ consumer or clean-room verification.
 
 ### Owner-approved behavior changes
 
+- **2026-11-07:** the owner changed D15's first-visit default from collapsed to expanded on both
+  products. A stored `collapsed` choice still collapses content; a missing or malformed choice now
+  opens it. Public exports, props and method signatures are unchanged. The boot asset has a new
+  CSP hash. See [Remembered sections](docs/migrations/remembered-sections.md#first-visit-opens-content).
 - **connect c-10, 2026-11-05:** the owner approved D15's origin-wide remembered bulk choice and
   collapsed first-visit default on both products. This behavior contract ships in a minor bump;
   public exports, props and method signatures stay available. The boot asset has a new CSP hash.

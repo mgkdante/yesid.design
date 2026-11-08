@@ -5,8 +5,13 @@ const key = 'sections-choice';
 const trigger = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 const ready = (page: Page) => expect(page.locator('html')).toHaveAttribute('data-gallery-ready', 'true');
 const stored = (page: Page) => page.evaluate(key => localStorage.getItem(key), key);
+// Seeds a remembered Collapse all for tests of collapsed mechanics; a later bulk choice still wins.
+const startCollapsed = (page: Page) => page.addInitScript(key => {
+	if (localStorage.getItem(key) === null) localStorage.setItem(key, 'collapsed');
+}, key);
 
 test('a parser stall leaves already delivered content visible', async ({ page }) => {
+	await startCollapsed(page);
 	let release!: () => void;
 	const gate = new Promise<void>(resolve => { release = resolve; });
 	await page.route('**/sections', async route => {
@@ -32,6 +37,7 @@ test('a parser stall leaves already delivered content visible', async ({ page })
 
 for (const comment of ['<!-->', '<!--->']) {
 	test(`the ${comment} comment keeps collapsed geometry during a parser stall`, async ({ page }) => {
+		await startCollapsed(page);
 		const errors: string[] = [];
 		page.on('pageerror', error => errors.push(error.message));
 		page.on('console', message => { if (/hydration/i.test(message.text())) errors.push(message.text()); });
@@ -77,6 +83,7 @@ test('a failed app bundle leaves all section content readable', async ({ page })
 });
 
 test('a stalled app bundle has a bounded readable fallback that hydration preserves', async ({ page }) => {
+	await startCollapsed(page);
 	await page.clock.install();
 	let release!: () => void;
 	const gate = new Promise<void>(resolve => { release = resolve; });
@@ -116,6 +123,7 @@ test('startup recovery stays on its pending mounts and keeps the control space',
 });
 
 test('a widget error after hydration does not change future mount preferences', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/sections'); await ready(page);
 	const error = page.waitForEvent('pageerror');
 	await page.evaluate(() => { setTimeout(() => { throw new Error('Unrelated widget failure'); }, 0); });
@@ -125,6 +133,7 @@ test('a widget error after hydration does not change future mount preferences', 
 });
 
 test('pending disclosure and bulk semantics match their visual state', async ({ page }) => {
+	await startCollapsed(page);
 	let release!: () => void;
 	const gate = new Promise<void>(resolve => { release = resolve; });
 	await page.route('**/_app/**/*.js', async route => { await gate; await route.continue(); });
@@ -156,60 +165,64 @@ test('a choice made in another tab applies on the next client page without chang
 	try {
 		await second.goto('/sections'); await ready(second);
 		await second.getByTestId('sections-toggle').click();
-		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
-		await page.getByRole('link', { name: 'Next page', exact: true }).click();
+		await expect.poll(() => stored(page)).toBe('collapsed');
 		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+		await page.getByRole('link', { name: 'Next page', exact: true }).click();
+		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
 	} finally { await second.close(); }
 });
 
-test('late content applies the shared default when the bulk control becomes available', async ({ page }) => {
+test('late content applies the remembered choice when the bulk control becomes available', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/sections/late'); await ready(page);
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
 	await expect(page.getByTestId('sections-controls')).toBeHidden();
 	await page.getByRole('button', { name: 'Load sections' }).click();
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
 	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'false');
-	expect(await stored(page)).toBeNull();
+	expect(await stored(page)).toBe('collapsed');
 });
 
 test('late content preserves a deliberate individual choice', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/sections/late'); await ready(page);
 	await trigger(page, 'Chart').click();
 	await trigger(page, 'Chart').click();
 	await page.getByRole('button', { name: 'Load sections' }).click();
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'false');
-	expect(await stored(page)).toBeNull();
+	expect(await stored(page)).toBe('collapsed');
 });
 
-test('first visit collapses content with the orange glow, keeps exclusions open, and remembers only bulk choices', async ({ page }) => {
+test('first visit opens content with a neutral control, keeps exclusions open, and remembers only bulk choices', async ({ page }) => {
 	await page.goto('/sections'); await ready(page);
-	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Contents')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Map tools')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Filters')).toHaveAttribute('aria-expanded', 'true');
 	const bulk = page.getByTestId('sections-toggle');
-	await expect(bulk).toHaveAttribute('data-collapsed', 'true');
-	const activeColor = await bulk.evaluate(node => getComputedStyle(node).color);
-	expect(await bulk.evaluate(node => getComputedStyle(node.querySelector('.core')!).filter)).not.toBe('none');
+	await expect(bulk).toHaveAccessibleName('Collapse all');
+	await expect(bulk).toHaveAttribute('data-collapsed', 'false');
+	const neutralColor = await bulk.evaluate(node => getComputedStyle(node).color);
+	expect(await bulk.evaluate(node => getComputedStyle(node.querySelector('.core')!).filter)).toBe('none');
 	expect(await stored(page)).toBeNull();
 	await trigger(page, 'Chart').click();
 	expect(await stored(page)).toBeNull();
 	await bulk.click(); // Mixed state chooses Collapse all.
 	expect(await stored(page)).toBe('collapsed');
-	await bulk.click();
-	expect(await stored(page)).toBe('expanded');
-	await expect(bulk).toHaveAttribute('data-collapsed', 'false');
-	expect(await bulk.evaluate(node => getComputedStyle(node).color)).not.toBe(activeColor);
-	expect(await bulk.evaluate(node => getComputedStyle(node.querySelector('.core')!).filter)).toBe('none');
+	await expect(bulk).toHaveAttribute('data-collapsed', 'true');
+	expect(await bulk.evaluate(node => getComputedStyle(node).color)).not.toBe(neutralColor);
+	expect(await bulk.evaluate(node => getComputedStyle(node.querySelector('.core')!).filter)).not.toBe('none');
 	await page.reload(); await ready(page);
-	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
 	await page.getByRole('link', { name: 'Next page', exact: true }).click();
 	await expect(page).toHaveURL(/\/sections\/next$/);
-	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
-	await page.getByTestId('sections-toggle').click();
-	await page.getByRole('link', { name: 'First page', exact: true }).click();
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+	await page.getByTestId('sections-toggle').click();
+	expect(await stored(page)).toBe('expanded');
+	await page.getByRole('link', { name: 'First page', exact: true }).click();
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('a new context restores the origin choice and a lone section stays open', async ({ browser, baseURL }) => {
@@ -237,13 +250,13 @@ test('blocked storage uses declared defaults and still allows bulk interaction',
 	expect(errors).toEqual([]);
 });
 
-test('malformed choice and historical keys use the collapsed first-visit default', async ({ page }) => {
+test('malformed choice and historical keys use the expanded first-visit default', async ({ page }) => {
 	await page.addInitScript(() => {
-		localStorage.setItem('sections-choice', '{bad'); localStorage.setItem('quiet-mode', 'false');
-		sessionStorage.setItem('persisted:chart', 'true');
+		localStorage.setItem('sections-choice', '{bad'); localStorage.setItem('quiet-mode', 'true');
+		sessionStorage.setItem('persisted:chart', 'false');
 	});
 	await page.goto('/sections'); await ready(page);
-	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
 	expect(await stored(page)).toBe('{bad');
 });
 
@@ -264,16 +277,18 @@ test('SSR and JavaScript-disabled reading preserve all content and head metadata
 });
 
 test('direct fragments and TOC jumps open targets and enclosing sections without changing the choice', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/sections#media-heading'); await ready(page);
 	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Nested media')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
 	await trigger(page, 'Chart target').click();
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
-	expect(await stored(page)).toBeNull();
+	expect(await stored(page)).toBe('collapsed');
 });
 
 test('responsive chart, table, live content and media measure when opened under both motion policies', async ({ page }) => {
+	await startCollapsed(page);
 	for (const reducedMotion of ['reduce', 'no-preference'] as const) {
 		await page.emulateMedia({ reducedMotion });
 		await page.goto('/sections'); await ready(page);
@@ -331,7 +346,7 @@ for (const initial of ['first-visit', 'collapsed', 'expanded', 'blocked', 'fragm
 		const before = await page.getByTestId('after-sections').evaluate(node => node.getBoundingClientRect().top + scrollY);
 		const buttonBefore = await page.getByTestId('sections-toggle').boundingBox();
 		const body = page.locator('[data-section-bulk]').first().locator('.section-body').first();
-		if (initial === 'expanded' || initial === 'blocked') expect((await body.boundingBox())!.height).toBeGreaterThan(0);
+		if (initial !== 'collapsed' && initial !== 'fragment') expect((await body.boundingBox())!.height).toBeGreaterThan(0);
 		else expect((await body.boundingBox())!.height).toBe(0);
 		await expect(page.getByTestId('sections-toggle')).toBeVisible();
 		release(); await ready(page);
@@ -345,6 +360,7 @@ for (const initial of ['first-visit', 'collapsed', 'expanded', 'blocked', 'fragm
 }
 
 test('find-in-page can search mounted prose after expansion and Back restores the reading position', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/sections'); await ready(page);
 	const find = () => page.evaluate(() => {
 		if (!('find' in window) || typeof window.find !== 'function') throw new Error('Chromium find-in-page API is required');

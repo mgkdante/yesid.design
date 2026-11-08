@@ -117,8 +117,9 @@ prop with a default stays in the app.
 ## D15: The expand-all control remembers one site-wide choice
 
 On both products, pages with a bulk control and at least two collapsible content sections start
-collapsed on a first visit. The collapsed control is orange, with `activeEffect="glow"`; expanded
-content clears that active state. A visitor's bulk choice wins on later pages and visits.
+expanded on a first visit, with a neutral control. After Collapse all the control is orange, with
+`activeEffect="glow"`; expanded content clears that active state. A visitor's bulk choice wins on
+later pages and visits.
 `sections-choice` in origin-local localStorage holds only `collapsed` or `expanded`, written by
 bulk actions. Individual section toggles affect that view only. There is no page or section key,
 cookie, server state or CMS setting. Malformed values use the first-visit default without repair.
@@ -132,7 +133,8 @@ choice. Back and locale reading-position restoration remain the product's respon
 The head boot script applies initial geometry before paint; hydration adopts it without changing
 layout. The server sends complete, readable section bodies. Without JavaScript they stay readable;
 if storage access throws, interactive sections use declared defaults. Old `persisted:*` disclosure
-keys and `quiet-mode` are ignored. The owner approved this contract on 2026-11-05.
+keys and `quiet-mode` are ignored. The owner approved this contract on 2026-11-05 and changed
+the first-visit default from collapsed to expanded on 2026-11-07.
 
 ## D16: Consumers own navigation setup and header copy
 
