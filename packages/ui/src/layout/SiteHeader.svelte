@@ -15,7 +15,7 @@
 		href: string;
 		label: string;
 		current?: boolean;
-		/** 1 shows from a 375px header, 2 from 500px, 3 from 1024px. */
+		/** 1 shows from a 375px header, 2 from 500px, 3 from 1024px, and only while the links fit. */
 		priority?: 1 | 2 | 3;
 	}
 
@@ -70,6 +70,7 @@
 	import LanguageToggle from '../brand/LanguageToggle.svelte';
 	import ThemeToggle from '../brand/ThemeToggle.svelte';
 	import Wordmark from '../brand/Wordmark.svelte';
+	import { linksFit } from './links-fit.js';
 
 	let { navigation, home, wordmark, links, menuItems, labels, language, search, actions }: SiteHeaderProps =
 		$props();
@@ -210,6 +211,7 @@
 						aria-label={labels.nav}
 						class="nav-pill pointer-events-auto flex items-center"
 						class:nav-pill-compact={active}
+						use:linksFit={{ paused: active }}
 					>
 						<Wordmark href={home} text={wordmark} autoPlay class="nav-wordmark" />
 
@@ -414,7 +416,7 @@
 		min-width: 0;
 	}
 
-	/* Nav text keeps one size; links that do not fit move to the menu instead of shrinking. */
+	/* Links that don't fit move to the menu (links-fit); this holds until it measures them. */
 	@container site-header (width < 375px) {
 		.nav-links-part {
 			display: none;
