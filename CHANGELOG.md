@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.37.0-rc.3
+## 0.37.0
+
+Promotes 0.37.0-rc.3, which also contains the 0.37.0-rc.2 and 0.37.0-rc.1 changes below:
+content sections start expanded on a first visit, and the nav keeps 16px text at every width.
 
 <!-- release-fragment: nav-links-fit -->
 - `@yesid/ui` (patch): `SiteHeader` now moves its links to the menu whenever the pill would not fit its header with 4px
