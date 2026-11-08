@@ -12,7 +12,7 @@ import {
 } from '../../src/lib/gallery/site-header-fixture.js';
 
 // The header width each link priority needs before it shows (the package's contract).
-const SHOWN_FROM = { 1: 0, 2: 500, 3: 1024 } as const;
+const SHOWN_FROM = { 1: 375, 2: 500, 3: 1024 } as const;
 const literal = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const header = (page: Page) => page.getByRole('navigation', { name: LABELS.nav });
 const toggle = (page: Page) =>
@@ -53,6 +53,31 @@ test('links and search show at the header widths their priority allows', async (
 	}
 	await expect(header(page).getByRole('searchbox', { name: SEARCH_LABEL })).toBeVisible({ visible: width >= 1024 });
 	await expect(language(page)).toHaveAttribute('href', languageHref(LOCALES[1]));
+});
+
+// One nav text size at every width: links 16px, wordmark 18px, and the pill stays on screen.
+test('nav text keeps one size at every width and the pill fits the screen', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'One run resizes through every width');
+	for (const width of [320, 360, 374, 375, 390, 500, 768, 1024, 1440]) {
+		await page.setViewportSize({ width, height: 800 });
+		await visitHeader(page);
+		const sizes = await header(page).evaluate((nav) => {
+			const pill = nav.getBoundingClientRect();
+			const shown = [...nav.querySelectorAll<HTMLElement>('.nav-pill-link')].filter((link) => link.offsetWidth > 0);
+			const wordmark = nav.querySelector<HTMLElement>('.nav-wordmark')!;
+			return {
+				links: [...new Set(shown.map((link) => getComputedStyle(link).fontSize))],
+				wordmark: getComputedStyle(wordmark).fontSize,
+				left: pill.left,
+				right: pill.right,
+			};
+		});
+		if (width >= SHOWN_FROM[1]) expect(sizes.links, `links at ${width}px`).toEqual(['16px']);
+		else expect(sizes.links, `no header links below ${SHOWN_FROM[1]}px`).toEqual([]);
+		expect(sizes.wordmark, `wordmark at ${width}px`).toBe('18px');
+		expect(sizes.left, `pill left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+		expect(sizes.right, `pill right edge at ${width}px`).toBeLessThanOrEqual(width);
+	}
 });
 
 test('the skip link is the first tab stop and moves focus into the main content', async ({ page }) => {
