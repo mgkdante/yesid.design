@@ -56,9 +56,51 @@ function allowAnalyticsProps(
 	return kept.length > 0 ? (Object.fromEntries(kept) as Record<string, string>) : undefined;
 }
 
+/** A root-relative path: one leading slash, no query, hash, backslash or whitespace. */
+const ROOT_PATH = /^\/(?!\/)[^?#\\\s]*$/;
+
+function isRootPath(value: unknown): value is string {
+	return typeof value === 'string' && ROOT_PATH.test(value);
+}
+
+function reduceAnalyticsUrl(raw: string, reducePath: ((pathname: string) => string) | undefined) {
+	const url = new URL(raw);
+	if (reducePath) {
+		const path = reducePath(url.pathname);
+		if (!isRootPath(path)) throw new TypeError('reducePath must return a root-relative path');
+		url.pathname = path;
+	}
+	return sanitizeAnalyticsUrl(url);
+}
+
+/** One plain host. A rollup such as "a.example,b.example" would count the visit under each site. */
+const SINGLE_SITE = /^[a-z0-9.-]+$/i;
+
+function assertEndpoint(endpoint: string | undefined): void {
+	if (endpoint !== undefined && !isRootPath(endpoint)) {
+		throw new TypeError('Analytics endpoint must be a same-origin path, such as "/relay/e"');
+	}
+}
+
+function servesSite(domain: string | undefined, hostname: string | undefined): domain is string {
+	if (!domain || !hostname || !SINGLE_SITE.test(domain)) return false;
+	return hostname === domain || hostname.endsWith(`.${domain}`);
+}
+
 export interface AnalyticsOptions<Props extends AnalyticsProps = AnalyticsProps> {
 	/** The Plausible site domain. Unset or empty turns measurement off. */
 	domain: string | undefined;
+	/**
+	 * A same-origin path whose server forwards events to Plausible, such as `/relay/e`. Unset sends
+	 * them straight to `https://plausible.io/api/event`, which content blockers often stop.
+	 */
+	endpoint?: `/${string}`;
+	/**
+	 * Maps each page path, percent-encoded as in `URL.pathname`, to the path Plausible records. It
+	 * runs before query and referrer reduction. An event is dropped if it throws or returns anything
+	 * but a root-relative path.
+	 */
+	reducePath?: (pathname: string) => string;
 	/** Properties added to every pageview and event, read each time one is sent. */
 	context?: () => AnalyticsPropValues<Props>;
 }
@@ -67,27 +109,49 @@ export interface Analytics<EventName extends string, Props extends AnalyticsProp
 	trackEvent(name: EventName, props?: AnalyticsPropValues<Props>): void;
 }
 
+function requestFilter(
+	sendable: ReadonlySet<string>,
+	allowed: AnalyticsProps,
+	reducePath: ((pathname: string) => string) | undefined,
+) {
+	// The tracker also sends class-tagged clicks and window.plausible calls, so filter here.
+	// Engagement events reuse the pageview's transformed URL and properties.
+	return ({ p, $: _revenue, ...payload }: PlausibleRequestPayload): PlausibleRequestPayload | null => {
+		if (!sendable.has(payload.n)) return null;
+		try {
+			const props = allowAnalyticsProps(allowed, p);
+			return {
+				...payload,
+				u: reduceAnalyticsUrl(payload.u, reducePath),
+				r: sanitizeAnalyticsReferrer(payload.r ?? '') ?? null,
+				...(props && { p: props }),
+			};
+		} catch {
+			return null;
+		}
+	};
+}
+
 /**
  * Starts cookieless Plausible measurement: pageviews, including client-side navigation, and
- * `trackEvent` for the preset's events. Nothing is sent unless `domain` is set and the page is
- * served from it or one of its subdomains, so local, preview and fork hosts stay silent; without
- * a browser location it returns a no-op. Call it once per page load.
+ * `trackEvent` for the preset's events. Nothing is sent unless `domain` is one site and the page
+ * is served from it or one of its subdomains, so local, preview and fork hosts stay silent;
+ * without a browser location it returns a no-op. Call it once per page load: a second start
+ * throws, as does an `endpoint` that isn't a same-origin path.
  */
 export function createAnalytics<
 	const EventName extends string,
 	const Props extends AnalyticsProps = Record<never, never>,
 >(
 	preset: AnalyticsPreset<EventName, Props>,
-	{ domain, context }: AnalyticsOptions<Props>,
+	{ domain, endpoint, reducePath, context }: AnalyticsOptions<Props>,
 ): Analytics<EventName, Props> {
-	const hostname = globalThis.location?.hostname;
-	if (!domain || !hostname || (hostname !== domain && !hostname.endsWith(`.${domain}`))) {
-		return { trackEvent() {} };
-	}
-	const sendable = new Set<string>(['pageview', ...preset.events]);
+	assertEndpoint(endpoint);
+	if (!servesSite(domain, globalThis.location?.hostname)) return { trackEvent() {} };
 	const allowed: AnalyticsProps = preset.props ?? {};
 	init({
 		domain,
+		...(endpoint && { endpoint }),
 		// The tracker calls this inside history.pushState, so a failing context must not throw.
 		customProperties: () => {
 			try {
@@ -96,21 +160,7 @@ export function createAnalytics<
 				return {};
 			}
 		},
-		// The tracker also sends class-tagged clicks and window.plausible calls, so filter here.
-		transformRequest({ p, $: _revenue, ...payload }): PlausibleRequestPayload | null {
-			if (!sendable.has(payload.n)) return null;
-			try {
-				const props = allowAnalyticsProps(allowed, p);
-				return {
-					...payload,
-					u: sanitizeAnalyticsUrl(new URL(payload.u)),
-					r: sanitizeAnalyticsReferrer(payload.r ?? '') ?? null,
-					...(props && { p: props }),
-				};
-			} catch {
-				return null;
-			}
-		},
+		transformRequest: requestFilter(new Set(['pageview', ...preset.events]), allowed, reducePath),
 	});
 	return {
 		trackEvent(name, props) {

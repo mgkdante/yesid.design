@@ -205,4 +205,71 @@ describe('createAnalytics', () => {
 
 		expect(customProperties('pageview')).toEqual({});
 	});
+
+	it('sends to a same-origin endpoint when one is given, and to the tracker default otherwise', () => {
+		vi.stubGlobal('location', { hostname: 'example.test' });
+		createAnalytics(preset, { domain: 'example.test', endpoint: '/relay/e' });
+		expect(init).toHaveBeenLastCalledWith(expect.objectContaining({ endpoint: '/relay/e' }));
+
+		vi.mocked(init).mockClear();
+		createAnalytics(preset, { domain: 'example.test' });
+		expect(vi.mocked(init).mock.calls[0]?.[0]).not.toHaveProperty('endpoint');
+	});
+
+	it.each(['https://plausible.io/api/event', '//relay.test/e', 'relay/e', '/relay/e?x=1', '/relay\\e'])(
+		'refuses endpoint %s, which is not a same-origin path',
+		(endpoint) => {
+			vi.stubGlobal('location', { hostname: 'example.test' });
+			expect(() =>
+				createAnalytics(preset, { domain: 'example.test', endpoint: endpoint as `/${string}` }),
+			).toThrow(TypeError);
+			expect(init).not.toHaveBeenCalled();
+		},
+	);
+
+	it.each(['example.test,other.test', 'example.test other.test', 'https://example.test', 'example.test\n'])(
+		'stays silent with domain %j, which is not one site',
+		(domain) => {
+			vi.stubGlobal('location', { hostname: 'example.test' });
+			const analytics = createAnalytics(preset, { domain });
+			analytics.trackEvent('event_alpha');
+
+			expect(init).not.toHaveBeenCalled();
+			expect(track).not.toHaveBeenCalled();
+		},
+	);
+
+	it('lets a second start fail instead of starting another tracker', () => {
+		vi.stubGlobal('location', { hostname: 'example.test' });
+		vi.mocked(init)
+			.mockImplementationOnce(() => {})
+			.mockImplementationOnce(() => {
+				throw new Error('plausible.init() can only be called once');
+			});
+		createAnalytics(preset, { domain: 'example.test' });
+
+		expect(() => createAnalytics(preset, { domain: 'example.test' })).toThrow();
+	});
+
+	it('records the reduced path, keeping bounded campaign tags, and drops events it cannot reduce', () => {
+		vi.stubGlobal('location', { hostname: 'example.test' });
+		const reducePath = vi.fn((pathname: string) =>
+			pathname.startsWith('/client-name/') ? '/site/people' : pathname === '/bad' ? 'site' : '/404',
+		);
+		createAnalytics(preset, { domain: 'example.test', reducePath });
+		const transform = vi.mocked(init).mock.calls[0]?.[0].transformRequest;
+		if (!transform) throw new Error('Expected a request transform');
+		const payload = { n: 'pageview', d: 'example.test', r: null };
+
+		expect(transform({ ...payload, u: 'https://example.test/client-name/people?utm_source=news&email=a@b.c' })?.u)
+			.toBe('https://example.test/site/people?utm_source=news');
+		expect(reducePath).toHaveBeenLastCalledWith('/client-name/people');
+		expect(transform({ ...payload, u: 'https://example.test/typed%20address' })?.u)
+			.toBe('https://example.test/404');
+		expect(transform({ ...payload, u: 'https://example.test/bad' })).toBeNull();
+		reducePath.mockImplementationOnce(() => {
+			throw new Error('unknown route');
+		});
+		expect(transform({ ...payload, u: 'https://example.test/x' })).toBeNull();
+	});
 });

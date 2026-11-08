@@ -3,7 +3,7 @@
 	"version": "0.37.0",
 	"private": true,
 	"type": "module",
-	"description": "Consumer-neutral cookieless Plausible client, URL reduction, and web-vitals collection.",
+	"description": "Consumer-neutral cookieless Plausible client, first-party event relay, URL reduction, and web-vitals collection.",
 	"files": ["src", "!**/*.test.ts", "NOTICE"],
 	"sideEffects": false,
 	"exports": {
@@ -18,6 +18,10 @@
 		"./config": {
 			"types": "./src/config.ts",
 			"default": "./src/config.ts"
+		},
+		"./relay": {
+			"types": "./src/relay.ts",
+			"default": "./src/relay.ts"
 		},
 		"./vitals": {
 			"types": "./src/vitals.ts",
