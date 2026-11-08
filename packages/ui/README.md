@@ -337,8 +337,8 @@ A card with a toggle header, an optional index badge, `icon` and `headerActions`
 Collapse all / Expand all. Use `<CollapsibleSection independent bind:open={panelOpen}>` for a
 filter or control panel that keeps its own toggle and stays out of bulk actions, counts and the
 all-closed calculation.
-A content mount adopts the origin-wide bulk choice when the control is available; the first-visit
-choice is collapsed. Below the threshold it uses the declared `open` default (true). If a second
+A content mount adopts the origin-wide bulk choice when the control is available; with no choice
+stored, content starts expanded. Below the threshold it uses the declared `open` default (true). If a second
 section arrives later, untouched mounts adopt the bulk choice; deliberate individual toggles stay
 as chosen for that view. Storage changes in another tab affect future mounts without changing
 the current view. Static cards always show their body. Closed bodies stay mounted,
@@ -609,12 +609,13 @@ The app keeps its own navigation, scroll-restoration, and analytics handling.
   all registered sections are closed; `collapseAll()`, `expandAll()` and `toggle()` reach those
   sections only. Filter groups and listing filter panels keep their own independent toggles.
   On pages with a `SectionsToggle` and at least two content sections, the first visit starts
-  collapsed; the control is orange and `activeEffect` defaults to `glow`. Bulk actions write
+  expanded with a neutral control. After Collapse all the control is orange, and `activeEffect`
+  defaults to `glow`. Bulk actions write
   `collapsed` or `expanded` to the one localStorage key `sections-choice`. That choice applies
   across pages and browser visits on this origin. Individual toggles and section jumps never
   write it. The TOC, filters, listing panels, static cards and `independent` panels stay outside
   this choice. Below the threshold sections use declared defaults. Malformed values use the
-  collapsed first-visit default; blocked storage uses declared defaults. No cookie, server or
+  expanded first-visit default; blocked storage uses declared defaults. No cookie, server or
   CMS state is involved.
 - `desktop`: a Svelte `MediaQuery` at the `breakpoint.desktop-min` token (1024px). It is false
   during SSR.

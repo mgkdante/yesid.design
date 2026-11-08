@@ -8,7 +8,7 @@ A collapsible content card on a detail page, with a heading and a body.
 _Avoid_: card (on detail pages), panel, disclosure
 
 **Expand-all control**:
-The single page action that opens every content section, or collapses them all when any is open. Pages with at least two content sections start collapsed with an orange control; the visitor's bulk choice is remembered across the site and visits. Individual toggles affect only that view. The TOC and independent panels keep their own state.
+The single page action that opens every content section, or collapses them all when any is open. Pages with at least two content sections start expanded; after Collapse all the control turns orange, and the visitor's bulk choice is remembered across the site and visits. Individual toggles affect only that view. The TOC and independent panels keep their own state.
 _Avoid_: quiet mode, per-section preference, Remember/Forget actions
 
 **Filter group**:

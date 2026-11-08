@@ -1,6 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+// These jumps prove only their target opens, so they start from a remembered Collapse all.
+const startCollapsed = (page: Page) => page.addInitScript(() => localStorage.setItem('sections-choice', 'collapsed'));
 
 test('a fragment link through an open shadow root opens and lands inside the registered root', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/detail-frame?sections=1');
 	const target = page.locator('[data-toc="platforms"]');
 	await expect(target.getByRole('button', { name: 'Platforms', exact: true })).toHaveAttribute('aria-expanded', 'false');
@@ -97,6 +101,7 @@ for (const motion of ['reduce', 'no-preference'] as const) {
 
 for (const motion of ['reduce', 'no-preference'] as const) {
 	test('a TOC action opens only its target and lands on the active 25% line (' + motion + ')', async ({ page }) => {
+		await startCollapsed(page);
 		await page.emulateMedia({ reducedMotion: motion });
 		await page.goto('/detail-frame?sections=1');
 		await expect(page.getByRole('button', { name: 'Expand all', exact: true })).toBeVisible();
@@ -118,6 +123,7 @@ for (const motion of ['reduce', 'no-preference'] as const) {
 }
 
 test('the router helper reveals an initial fragment after the real sections register', async ({ page }) => {
+	await startCollapsed(page);
 	await page.goto('/detail-frame?sections=1#platforms');
 	await expect(page.getByRole('button', { name: 'Platforms', exact: true })).toHaveAttribute('aria-expanded', 'true');
 	await expect(page.getByRole('button', { name: 'Signals', exact: true })).toHaveAttribute('aria-expanded', 'false');

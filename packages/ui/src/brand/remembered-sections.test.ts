@@ -14,16 +14,18 @@ afterEach(() => {
 it('remembers only a bulk choice, across complete page remounts', async () => {
 	new Function(themeBootScript)();
 	const first = render(Fixture);
-	await fireEvent.click(first.getByRole('button', { name: copy.expand }));
-	expect(localStorage.getItem(key)).toBe('expanded');
+	expect(first.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('true');
+	expect(localStorage.getItem(key)).toBeNull();
+	await fireEvent.click(first.getByRole('button', { name: copy.collapse }));
+	expect(localStorage.getItem(key)).toBe('collapsed');
 	await fireEvent.click(first.getByRole('button', { name: 'First' }));
-	expect(localStorage.getItem(key)).toBe('expanded');
+	expect(localStorage.getItem(key)).toBe('collapsed');
 	first.unmount();
 	const next = render(Fixture);
-	expect(next.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('true');
-	await fireEvent.click(next.getByRole('button', { name: copy.collapse }));
-	expect(localStorage.getItem(key)).toBe('collapsed');
+	expect(next.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('false');
+	await fireEvent.click(next.getByRole('button', { name: copy.expand }));
+	expect(localStorage.getItem(key)).toBe('expanded');
 	next.unmount();
 	const last = render(Fixture);
-	expect(last.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('false');
+	expect(last.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('true');
 });
