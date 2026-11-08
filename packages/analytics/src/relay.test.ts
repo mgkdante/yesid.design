@@ -77,6 +77,50 @@ describe('relayAnalyticsEvent', () => {
 		expect(send).toHaveBeenCalledOnce();
 	});
 
+	describe('behind Cloudflare', () => {
+		const visitor = '198.51.100.23';
+		const viaCloudflare = (clientAddress: string, cfConnectingIp = visitor) =>
+			relayAnalyticsEvent(eventRequest(event, { headers: { 'Content-Type': 'text/plain', 'CF-Connecting-IP': cfConnectingIp } }), {
+				...options,
+				clientAddress,
+				fetch: send,
+			});
+		let send = upstream();
+		const forwardedFor = () => (send.mock.calls[0]?.[1]?.headers as Record<string, string>)['X-Forwarded-For'];
+
+		it.each([
+			['the first IPv4 range', '173.245.48.1'],
+			['the last address of an IPv4 range', '131.0.75.255'],
+			['a wide IPv4 range', '104.23.255.254'],
+			['an IPv6 range', '2606:4700:3033::6815:3e1'],
+			['a /29 IPv6 range', '2a06:98c7:ffff::1'],
+			['an IPv6 address in full form', '2400:CB00:0000:0000:0000:0000:0000:0001'],
+			['an IPv4-mapped IPv6 address', '::ffff:172.64.1.1'],
+		])('forwards the visitor address Cloudflare saw when the connection came from %s', async (_case, server) => {
+			send = upstream();
+			expect((await viaCloudflare(server)).status).toBe(202);
+			expect(forwardedFor()).toBe(visitor);
+		});
+
+		it.each([
+			['a visitor that set the header itself', '203.0.113.7'],
+			['an address just past a range', '173.245.64.0'],
+			['an address just before a range', '104.15.255.255'],
+			['an IPv6 address outside the ranges', '2606:4701::1'],
+			['an address that is not an IP', 'cloudflare'],
+		])('ignores CF-Connecting-IP from %s', async (_case, clientAddress) => {
+			send = upstream();
+			await viaCloudflare(clientAddress);
+			expect(forwardedFor()).toBe(clientAddress);
+		});
+
+		it('keeps the Cloudflare address when CF-Connecting-IP is not an IP address', async () => {
+			send = upstream();
+			await viaCloudflare('162.158.1.1', 'not-an-address');
+			expect(forwardedFor()).toBe('162.158.1.1');
+		});
+	});
+
 	it('refuses methods other than POST', async () => {
 		const send = upstream();
 		const request = new Request('https://example.test/relay/e', { method: 'GET' });
