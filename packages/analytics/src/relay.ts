@@ -1,3 +1,5 @@
+import { isCloudflareAddress, isIpAddress } from './cloudflare';
+
 const PLAUSIBLE_EVENT_API = 'https://plausible.io/api/event';
 const RELAY_TIMEOUT_MS = 5_000;
 const SINGLE_SITE = /^[a-z0-9.-]+$/i;
@@ -9,8 +11,10 @@ export interface AnalyticsRelayOptions {
 	/** The one Plausible site this relay forwards: the `domain` the page passes to `createAnalytics`. */
 	domain: string;
 	/**
-	 * The visitor's IP address, such as SvelteKit's `getClientAddress()` or a Worker's
-	 * `CF-Connecting-IP` header. Plausible needs it to tell visitors apart; it is never stored.
+	 * The address that connected to the server, such as SvelteKit's `getClientAddress()` or a
+	 * Worker's `CF-Connecting-IP` header. Plausible needs the visitor's address to tell visitors
+	 * apart, and it is never stored. When this is a Cloudflare server, because Cloudflare proxies
+	 * the site to another host, the relay forwards the visitor's `CF-Connecting-IP` instead.
 	 */
 	clientAddress: string;
 	/** Fetch implementation. Defaults to the global `fetch`. */
@@ -60,6 +64,17 @@ function isOwnEvent(body: string, domain: string, requestUrl: string): boolean {
 }
 
 /**
+ * The visitor's address. Behind a Cloudflare proxy the connecting address is a Cloudflare server,
+ * which Plausible accepts with 202 and then drops as data-centre traffic. Only a connection from
+ * Cloudflare's own ranges can carry a CF-Connecting-IP that Cloudflare set, so the header is
+ * trusted only then. Anyone else could write it to make one machine look like many visitors.
+ */
+function visitorAddress(request: Request, clientAddress: string): string {
+	const forwarded = request.headers.get('cf-connecting-ip')?.trim() ?? '';
+	return isIpAddress(forwarded) && isCloudflareAddress(clientAddress) ? forwarded : clientAddress;
+}
+
+/**
  * Forwards one tracker event from a same-origin route to Plausible, with the visitor's IP address
  * and user agent so visitors stay distinct. Each request goes upstream at most once: no retry and
  * no fallback. It answers 202 when Plausible accepts the event, 405 for a method other than POST,
@@ -84,7 +99,7 @@ export async function relayAnalyticsEvent(
 			headers: {
 				'Content-Type': 'application/json',
 				'User-Agent': request.headers.get('user-agent') ?? '',
-				'X-Forwarded-For': clientAddress,
+				'X-Forwarded-For': visitorAddress(request, clientAddress),
 			},
 			body,
 			redirect: 'manual',

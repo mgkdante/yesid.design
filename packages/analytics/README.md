@@ -110,13 +110,21 @@ if (url.pathname === '/relay/e') {
 }
 ```
 
+Pass the address that connected to your server. When a site is proxied by Cloudflare to another
+host, such as Vercel, that address is a Cloudflare server: Plausible answers 202 for it and then
+drops the event as data-centre traffic, so no visit is counted. The relay handles this. When
+`clientAddress` is in Cloudflare's published ranges, it forwards the request's `CF-Connecting-IP`
+instead. A request from anywhere else can't choose its address with that header. After deploying a
+relay, confirm with one real browser visit (Plausible also drops headless browsers) that the visit
+appears in Plausible's realtime view.
+
 The forwarding contract, for products that write their own route:
 
 | Step | Rule |
 | --- | --- |
 | Accept | `POST` only (otherwise 405). Body at most 4 KiB (`RELAY_MAX_BODY_BYTES`, otherwise 413). |
 | Check | JSON whose `d` equals the relay's `domain` exactly and whose `u` is a page on the host that received the request, which must be that site or a subdomain (otherwise 400). Preview and fork hosts are refused. |
-| Forward | One `POST` to `https://plausible.io/api/event` with the body unchanged, `Content-Type: application/json`, the visitor's `User-Agent` and `X-Forwarded-For: <visitor IP>`. No cookies or other headers. Without the IP and user agent every visitor looks like the server. |
+| Forward | One `POST` to `https://plausible.io/api/event` with the body unchanged, `Content-Type: application/json`, the visitor's `User-Agent` and `X-Forwarded-For: <visitor IP>`, taken from `CF-Connecting-IP` only when the connection came from a Cloudflare range. No cookies or other headers. Without the IP and user agent every visitor looks like the server. |
 | Answer | 202 when Plausible accepts, 502 when it fails or can't be reached within 5 seconds. Never retry, and never fall back to a direct send: either would count a visit twice. |
 
 The visitor's address goes to Plausible to tell visitors apart and is not stored by the relay.
