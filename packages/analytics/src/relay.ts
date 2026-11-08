@@ -1,5 +1,6 @@
 const PLAUSIBLE_EVENT_API = 'https://plausible.io/api/event';
 const RELAY_TIMEOUT_MS = 5_000;
+const SINGLE_SITE = /^[a-z0-9.-]+$/i;
 
 /** Largest event body the relay forwards. Tracker events are well under 1 KiB. */
 export const RELAY_MAX_BODY_BYTES = 4_096;
@@ -40,14 +41,19 @@ async function readBoundedText(request: Request, limit: number): Promise<string 
 	return new TextDecoder().decode(bytes);
 }
 
-/** Accepts only an event for this relay's site, about a page on the host that received it. */
+/**
+ * Accepts only an event for this relay's site, about a page on the host that received it, which
+ * must be the site or one of its subdomains. Preview and fork hosts are refused.
+ */
 function isOwnEvent(body: string, domain: string, requestUrl: string): boolean {
 	try {
 		const event: unknown = JSON.parse(body);
 		if (typeof event !== 'object' || event === null) return false;
 		const { n, d, u } = event as Record<string, unknown>;
 		if (typeof n !== 'string' || d !== domain || typeof u !== 'string') return false;
-		return new URL(u).hostname === new URL(requestUrl).hostname;
+		const host = new URL(u).hostname;
+		const onSite = host === domain || host.endsWith(`.${domain}`);
+		return onSite && host === new URL(requestUrl).hostname;
 	} catch {
 		return false;
 	}
@@ -58,14 +64,15 @@ function isOwnEvent(body: string, domain: string, requestUrl: string): boolean {
  * and user agent so visitors stay distinct. Each request goes upstream at most once: no retry and
  * no fallback. It answers 202 when Plausible accepts the event, 405 for a method other than POST,
  * 413 for an oversized body, 400 for an event about another site or host, and 502 when Plausible
- * fails or can't be reached. Cookies and other request headers are not forwarded.
+ * fails or can't be reached. Cookies and other request headers are not forwarded. The platform
+ * bounds how long a slow request body may take.
  */
 export async function relayAnalyticsEvent(
 	request: Request,
 	{ domain, clientAddress, fetch: send = globalThis.fetch }: AnalyticsRelayOptions,
 ): Promise<Response> {
-	if (!domain || !clientAddress) {
-		throw new TypeError('relayAnalyticsEvent needs a domain and the client address');
+	if (!SINGLE_SITE.test(domain) || !clientAddress) {
+		throw new TypeError('relayAnalyticsEvent needs one site as domain and the client address');
 	}
 	if (request.method !== 'POST') return reply(405, { Allow: 'POST' });
 	const body = await readBoundedText(request, RELAY_MAX_BODY_BYTES);

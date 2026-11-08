@@ -227,12 +227,15 @@ describe('createAnalytics', () => {
 		},
 	);
 
-	it.each(['example.test,other.test', 'example.test other.test', 'https://example.test'])(
-		'refuses domain %s, so a visit is never counted under two sites',
+	it.each(['example.test,other.test', 'example.test other.test', 'https://example.test', 'example.test\n'])(
+		'stays silent with domain %j, which is not one site',
 		(domain) => {
 			vi.stubGlobal('location', { hostname: 'example.test' });
-			expect(() => createAnalytics(preset, { domain })).toThrow(TypeError);
+			const analytics = createAnalytics(preset, { domain });
+			analytics.trackEvent('event_alpha');
+
 			expect(init).not.toHaveBeenCalled();
+			expect(track).not.toHaveBeenCalled();
 		},
 	);
 

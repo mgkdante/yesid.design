@@ -53,15 +53,28 @@ describe('relayAnalyticsEvent', () => {
 		['a site rollup', { ...event, d: 'example.test,other.test' }],
 		['a page on another host', { ...event, u: 'https://other.test/a' }],
 		['a page on a sibling subdomain', { ...event, u: 'https://app.example.test/a' }],
+		['a page on a preview host that also received it', { ...event, u: 'https://preview.vercel.test/a' }, 'https://preview.vercel.test/relay/e'],
 		['a missing name', { d: event.d, u: event.u }],
 		['malformed JSON', '{"n":'],
 		['a non-object', '"pageview"'],
-	])('refuses %s without contacting Plausible', async (_case, body) => {
+	] as [string, unknown, string?][])('refuses %s without contacting Plausible', async (_case, body, url) => {
 		const send = upstream();
-		const response = await relayAnalyticsEvent(eventRequest(body), { ...options, fetch: send });
+		const response = await relayAnalyticsEvent(eventRequest(body, {}, url), { ...options, fetch: send });
 
 		expect(response.status).toBe(400);
 		expect(send).not.toHaveBeenCalled();
+	});
+
+	it('forwards a page on a subdomain of the site when that subdomain received it', async () => {
+		const send = upstream();
+		const sub = { ...event, u: 'https://www.example.test/a' };
+		const response = await relayAnalyticsEvent(eventRequest(sub, {}, 'https://www.example.test/relay/e'), {
+			...options,
+			fetch: send,
+		});
+
+		expect(response.status).toBe(202);
+		expect(send).toHaveBeenCalledOnce();
 	});
 
 	it('refuses methods other than POST', async () => {
@@ -96,6 +109,7 @@ describe('relayAnalyticsEvent', () => {
 	it.each([
 		{ domain: '', clientAddress: '203.0.113.7' },
 		{ domain: 'example.test', clientAddress: '' },
+		{ domain: 'example.test,other.test', clientAddress: '203.0.113.7' },
 	])('throws when the route is misconfigured: %o', async (config) => {
 		await expect(relayAnalyticsEvent(eventRequest(), { ...config, fetch: upstream() })).rejects.toThrow(
 			TypeError,

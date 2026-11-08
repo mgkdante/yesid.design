@@ -49,8 +49,8 @@ helpers behind `createAnalytics`; they are not standalone exports. Register the 
 It sends nothing unless `domain` is set and the page is served from that host or a subdomain,
 so local, preview and fork deployments stay silent. Call it once per page load in the browser,
 from the root layout only: a second start throws rather than counting each visit twice. Pass the
-product's own host as `domain`; a comma-separated list of sites throws, because Plausible would
-count the visit under each. Each request carries only the page path, bounded campaign tags
+product's own host as `domain`. A value that isn't one host, such as a comma-separated list that
+Plausible would count under each site, turns measurement off. Each request carries only the page path, bounded campaign tags
 (`utm_*`, `ref`, `source`) and the referrer's origin. Nothing is written to cookies or browser
 storage.
 
@@ -115,12 +115,13 @@ The forwarding contract, for products that write their own route:
 | Step | Rule |
 | --- | --- |
 | Accept | `POST` only (otherwise 405). Body at most 4 KiB (`RELAY_MAX_BODY_BYTES`, otherwise 413). |
-| Check | JSON whose `d` equals the relay's `domain` exactly and whose `u` is a page on the host that received the request (otherwise 400). |
+| Check | JSON whose `d` equals the relay's `domain` exactly and whose `u` is a page on the host that received the request, which must be that site or a subdomain (otherwise 400). Preview and fork hosts are refused. |
 | Forward | One `POST` to `https://plausible.io/api/event` with the body unchanged, `Content-Type: application/json`, the visitor's `User-Agent` and `X-Forwarded-For: <visitor IP>`. No cookies or other headers. Without the IP and user agent every visitor looks like the server. |
 | Answer | 202 when Plausible accepts, 502 when it fails or can't be reached within 5 seconds. Never retry, and never fall back to a direct send: either would count a visit twice. |
 
 The visitor's address goes to Plausible to tell visitors apart and is not stored by the relay.
-A misconfigured route, with no `domain` or no client address, throws.
+A misconfigured route, with no client address or a `domain` that isn't one host, throws. The
+relay doesn't time out a slow request body itself; Vercel and Workers bound request duration.
 
 ## Web vitals
 
@@ -134,8 +135,8 @@ runs and where the samples go.
 ## Rules
 
 - No domain, a foreign host or no browser location sends nothing and never starts the tracker.
-- One tracker per page load, for one site. A second start, a multi-site `domain` or an `endpoint`
-  that isn't a same-origin path throws.
+- One tracker per page load, for one site. A second start, or an `endpoint` that isn't a
+  same-origin path, throws. A `domain` that isn't one host sends nothing.
 - URLs and referrers are reduced before they leave the browser. A URL that can't be reduced drops
   the event instead of throwing into navigation.
 - No cookies or storage writes; the tracker only reads its own `plausible_ignore` opt-out.

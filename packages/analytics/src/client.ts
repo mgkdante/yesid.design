@@ -73,14 +73,18 @@ function reduceAnalyticsUrl(raw: string, reducePath: ((pathname: string) => stri
 	return sanitizeAnalyticsUrl(url);
 }
 
-function assertSingleSite(domain: string | undefined, endpoint: string | undefined): void {
-	// Plausible reads "a.example,b.example" as a rollup and counts the visit under every site.
-	if (domain && !/^[a-z0-9.-]+$/i.test(domain)) {
-		throw new TypeError('Analytics domain must be one site, such as "example.com"');
-	}
+/** One plain host. A rollup such as "a.example,b.example" would count the visit under each site. */
+const SINGLE_SITE = /^[a-z0-9.-]+$/i;
+
+function assertEndpoint(endpoint: string | undefined): void {
 	if (endpoint !== undefined && !isRootPath(endpoint)) {
 		throw new TypeError('Analytics endpoint must be a same-origin path, such as "/relay/e"');
 	}
+}
+
+function servesSite(domain: string | undefined, hostname: string | undefined): domain is string {
+	if (!domain || !hostname || !SINGLE_SITE.test(domain)) return false;
+	return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
 export interface AnalyticsOptions<Props extends AnalyticsProps = AnalyticsProps> {
@@ -130,10 +134,10 @@ function requestFilter(
 
 /**
  * Starts cookieless Plausible measurement: pageviews, including client-side navigation, and
- * `trackEvent` for the preset's events. Nothing is sent unless `domain` is set and the page is
- * served from it or one of its subdomains, so local, preview and fork hosts stay silent; without
- * a browser location it returns a no-op. Call it once per page load: a second start throws.
- * A `domain` listing several sites or an `endpoint` that isn't a same-origin path also throws.
+ * `trackEvent` for the preset's events. Nothing is sent unless `domain` is one site and the page
+ * is served from it or one of its subdomains, so local, preview and fork hosts stay silent;
+ * without a browser location it returns a no-op. Call it once per page load: a second start
+ * throws, as does an `endpoint` that isn't a same-origin path.
  */
 export function createAnalytics<
 	const EventName extends string,
@@ -142,11 +146,8 @@ export function createAnalytics<
 	preset: AnalyticsPreset<EventName, Props>,
 	{ domain, endpoint, reducePath, context }: AnalyticsOptions<Props>,
 ): Analytics<EventName, Props> {
-	assertSingleSite(domain, endpoint);
-	const hostname = globalThis.location?.hostname;
-	if (!domain || !hostname || (hostname !== domain && !hostname.endsWith(`.${domain}`))) {
-		return { trackEvent() {} };
-	}
+	assertEndpoint(endpoint);
+	if (!servesSite(domain, globalThis.location?.hostname)) return { trackEvent() {} };
 	const allowed: AnalyticsProps = preset.props ?? {};
 	init({
 		domain,
