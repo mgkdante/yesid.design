@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.38.0-rc.1
+## 0.38.0
 
 <!-- release-fragment: analytics-first-party-endpoint -->
 - `@yesid/analytics` (minor): Analytics can now reach visitors whose browsers block `plausible.io`. Additions only; existing
