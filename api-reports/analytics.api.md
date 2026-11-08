@@ -18,6 +18,11 @@
 - `types` → `./src/config.ts`
 - `default` → `./src/config.ts`
 
+### `./relay`
+
+- `types` → `./src/relay.ts`
+- `default` → `./src/relay.ts`
+
 ### `./vitals`
 
 - `types` → `./src/vitals.ts`
@@ -31,6 +36,7 @@
 - `Index` → `./src/index.ts` (`.`)
 - `Client` → `./src/client.ts` (`./client`)
 - `Config` → `./src/config.ts` (`./config`)
+- `Relay` → `./src/relay.ts` (`./relay`)
 - `Vitals` → `./src/vitals.ts` (`./vitals`)
 
 ## API Report File for "@yesid/analytics"
@@ -52,6 +58,8 @@ type AnalyticsEventName<Preset extends AnalyticsPreset> = Preset['events'][numbe
 interface AnalyticsOptions<Props extends AnalyticsProps = AnalyticsProps> {
     context?: () => AnalyticsPropValues<Props>;
     domain: string | undefined;
+    endpoint?: `/${string}`;
+    reducePath?: (pathname: string) => string;
 }
 
 // @public (undocumented)
@@ -68,6 +76,13 @@ type AnalyticsProps = Readonly<Record<string, readonly string[]>>;
 type AnalyticsPropValues<Props extends AnalyticsProps> = {
     readonly [Key in keyof Props]?: Props[Key][number];
 };
+
+// @public (undocumented)
+interface AnalyticsRelayOptions {
+    clientAddress: string;
+    domain: string;
+    fetch?: typeof fetch;
+}
 
 declare namespace Client {
     export {
@@ -105,6 +120,9 @@ declare namespace Index {
         AnalyticsPreset,
         AnalyticsEventName,
         AnalyticsPropValues,
+        relayAnalyticsEvent,
+        RELAY_MAX_BODY_BYTES,
+        AnalyticsRelayOptions,
         parseVitalsSample,
         parseVitalsBeacon,
         startVitals,
@@ -143,6 +161,20 @@ function parseVitalsBeacon(input: unknown): VitalsSample[] | null;
 
 // @public (undocumented)
 function parseVitalsSample(input: unknown): VitalsSample | null;
+
+declare namespace Relay {
+    export {
+        relayAnalyticsEvent,
+        RELAY_MAX_BODY_BYTES,
+        AnalyticsRelayOptions
+    }
+}
+
+// @public
+const RELAY_MAX_BODY_BYTES = 4096;
+
+// @public
+function relayAnalyticsEvent(request: Request, input: AnalyticsRelayOptions): Promise<Response>;
 
 // @public (undocumented)
 function sanitizeAnalyticsUrl(url: URL): string;
