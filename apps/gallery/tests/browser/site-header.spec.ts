@@ -80,6 +80,30 @@ test('nav text keeps one size at every width and the pill fits the screen', asyn
 	}
 });
 
+// Labels differ by product and language, so links move to the menu whenever they don't fit.
+test('header links move to the menu when their labels do not fit, and come back when they do', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'One run sets a phone width');
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await page.setViewportSize({ width: 390, height: 800 });
+	await visitHeader(page);
+	const link = header(page).getByRole('link', { name: LINKS[0].label, exact: true });
+	await expect(link).toBeVisible();
+	const pillFits = () => header(page).evaluate((nav) => {
+		const box = nav.getBoundingClientRect();
+		return box.left >= 0 && box.right <= innerWidth;
+	});
+
+	await link.evaluate((node) => { node.textContent = 'A header link label far too long for any phone'; });
+	await expect(header(page).getByRole('link', { name: /far too long/ })).toBeHidden();
+	expect(await pillFits()).toBe(true);
+
+	await header(page).locator('.nav-pill-link').first().evaluate((node, label) => { node.textContent = label; }, LINKS[0].label);
+	await expect(link).toBeVisible();
+	expect(await pillFits()).toBe(true);
+	expect(errors).toEqual([]);
+});
+
 test('the skip link is the first tab stop and moves focus into the main content', async ({ page }) => {
 	await visitHeader(page);
 	const skip = page.getByRole('link', { name: LABELS.skipToContent });
