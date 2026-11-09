@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.39.1
+
+<!-- release-fragment: boot-recovery-own-scripts -->
+- `@yesid/ui` (patch): Keep the reader's collapsed section choice when an optional or third-party script fails to load. Startup resource recovery now responds only to same-origin `/_app/` module scripts and modulepreloads, preserving readable content when app assets fail. No migration is required.
+
 ## 0.39.0
 
 <!-- release-fragment: section-cards-wider-on-phones -->
