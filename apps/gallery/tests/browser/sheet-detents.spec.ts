@@ -47,6 +47,13 @@ test('sheet detent height follows viewport and reduced motion', async ({ page })
 		await expect.poll(async () => (await sheet.boundingBox())!.height).toBeCloseTo(height * 0.9, 0);
 		await expect(sheet).toHaveAttribute('data-detent', 'full');
 	}
+	// 50% of 200px is below the 120px peek: the half stop floors at peek instead of reversing.
+	await handle.press('Home');
+	await handle.press('ArrowUp');
+	await page.setViewportSize({ width: 800, height: 200 });
+	await expect.poll(async () => (await sheet.boundingBox())!.height).toBeCloseTo(120, 0);
+	await expect(sheet).toHaveAttribute('data-detent', 'half');
+	await page.setViewportSize({ width: 800, height: 800 });
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	expect(await sheet.evaluate(n => getComputedStyle(n).transitionDuration)).toBe('0s');
 });

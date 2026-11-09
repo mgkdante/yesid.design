@@ -20,7 +20,7 @@ export function sheetDrag(node: HTMLElement, read: () => {
 	function down(e: PointerEvent) {
 		if (read().detents.length < 2) return;
 		if (!e.isPrimary || e.button !== 0 || !(e.target instanceof Element) || excluded(e.target, node)) return;
-		validateDetents(read().detents, window.innerHeight);
+		validateDetents(read().detents);
 		drag = { id: e.pointerId, y: e.clientY, start: node.getBoundingClientRect().height,
 			heights: resolveHeights(read().detents, window.innerHeight), active: false,
 			samples: [{ y: e.clientY, t: e.timeStamp }] };

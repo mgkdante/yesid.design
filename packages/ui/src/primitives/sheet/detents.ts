@@ -6,24 +6,40 @@ export function parseSize(size: SheetDetent['size']): { value: number; unit: 'px
 	return { value: Number(match[1]), unit: match[2] as 'px' | '%' };
 }
 
+/**
+ * Pixel heights at a viewport. A stop never resolves below an earlier one, so mixed units that
+ * cross on a short viewport (120px vs 50%) collapse together instead of reversing.
+ */
 export function resolveHeights(detents: readonly SheetDetent[], viewport: number): number[] {
+	let floor = 0;
 	return detents.map(({ size }) => {
 		const { value, unit } = parseSize(size);
-		return unit === '%' ? value * viewport / 100 : value;
+		floor = Math.max(floor, unit === '%' ? value * viewport / 100 : value);
+		return floor;
 	});
 }
 
-export function validateDetents(detents: readonly SheetDetent[], viewport = 800): void {
+/** Structural checks only: viewport-dependent order between px and % stops cannot throw at runtime. */
+export function validateDetents(detents: readonly SheetDetent[]): void {
 	if (detents.length < 2) throw new Error('Sheet requires at least two detents');
 	if (new Set(detents.map(d => d.id)).size !== detents.length) throw new Error('Sheet detent ids must be unique');
-	const heights = resolveHeights(detents, viewport);
-	if (heights.some((height, i) => i > 0 && height <= heights[i - 1])) {
-		throw new Error('Sheet detents must be ordered from smallest to largest at the current viewport');
+	const last: Partial<Record<'px' | '%', number>> = {};
+	for (const { size } of detents) {
+		const { value, unit } = parseSize(size);
+		if (value <= (last[unit] ?? 0)) throw new Error('Sheet detents must be ordered from smallest to largest');
+		last[unit] = value;
 	}
 }
 
 export function cssSize(size: SheetDetent['size']): string {
 	return size.replace('%', 'dvh');
+}
+
+/** CSS height for stop `index`, floored by every earlier stop, matching resolveHeights. */
+export function cssHeight(detents: readonly SheetDetent[], index: number): string {
+	const units = new Set(detents.slice(0, index + 1).map(d => parseSize(d.size).unit));
+	if (units.size === 1) return cssSize(detents[index].size);
+	return `max(${detents.slice(0, index + 1).map(d => cssSize(d.size)).join(', ')})`;
 }
 
 /** Positive velocity means growing. Flicks choose the next stop beyond release height. */

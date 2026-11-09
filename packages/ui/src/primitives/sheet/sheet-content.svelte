@@ -29,7 +29,7 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import type { Snippet } from 'svelte';
 	import SheetOverlay from './sheet-overlay.svelte';
-	import { cssSize, validateDetents, type SheetDetent } from './detents.js';
+	import { cssHeight, validateDetents, type SheetDetent } from './detents.js';
 	import { sheetDrag } from './drag.js';
 	import {
 		cn,
@@ -73,7 +73,7 @@
 	$effect(() => {
 		if (!detents) return;
 		if (side !== 'bottom') throw new Error('Sheet detents require side="bottom"');
-		validateDetents(detents, window.innerHeight);
+		validateDetents(detents);
 		if (!detents.some(d => d.id === detent)) detent = detents[0].id;
 	});
 	function change(next: number) {
@@ -144,7 +144,7 @@
 					onkeydowncapture={!modal ? nonModalKey : restProps.onkeydowncapture}
 					data-detent={active?.id} data-sheet-detents={detents ? '' : undefined}
 					class={cn(sheetVariants({ side }), showCloseButton && '[&_[data-slot=sheet-header]]:pr-12', detents && 'max-h-none gap-0 overflow-hidden', className)}
-					style:height={active ? dragHeight === undefined ? cssSize(active.size) : `${dragHeight}px` : undefined}
+					style:height={active ? dragHeight === undefined ? cssHeight(detents, index) : `${dragHeight}px` : undefined}
 					style:touch-action={detents ? 'none' : undefined}
 					style:transition-property={detents ? 'height' : undefined}
 					style:transition-duration={detents ? dragHeight === undefined ? 'var(--duration-normal)' : '0s' : undefined}
