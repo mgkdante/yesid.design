@@ -32,7 +32,8 @@ export function validateDetents(detents: readonly SheetDetent[]): void {
 }
 
 export function cssSize(size: SheetDetent['size']): string {
-	return size.replace('%', 'dvh');
+	const { value, unit } = parseSize(size);
+	return `${value}${unit === '%' ? 'dvh' : 'px'}`;
 }
 
 /** CSS height for stop `index`, floored by every earlier stop, matching resolveHeights. */
