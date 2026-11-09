@@ -112,7 +112,7 @@ The first `cn` use, including a primitive's first class merge, locks the zero-co
 default. Products with custom vocabulary must initialize before any primitive renders. Use one
 shared initializer imported by both SvelteKit `hooks.client.ts` (`ClientInit`) and
 `hooks.server.ts` (`ServerInit`), not a root layout instance script. See the
-[product guide](https://github.com/mgkdante/yesid.design/blob/v0.38.1/docs/BUILD-A-YESID-PRODUCT.md)
+[product guide](https://github.com/mgkdante/yesid.design/blob/v0.39.1/docs/BUILD-A-YESID-PRODUCT.md)
 for the complete hook pattern.
 
 The state boundary is the loaded ESM module graph. Browser and SSR bundles, separately bundled
@@ -592,7 +592,7 @@ the lifecycle restores focus after landing. Inside SiteHeader this uses a bound 
 standalone links pass their `bind:ref` to the lifecycle's optional `languageLink` getter.
 `reload` asks for a full document load. LanguageToggle registers no router hooks.
 `resetFocusAfterNavigation` is the same reset for `goto(url, { reset: false })`.
-The [migration note](https://github.com/mgkdante/yesid.design/blob/v0.38.1/docs/migrations/navigation-lifecycle.md)
+The [migration note](https://github.com/mgkdante/yesid.design/blob/v0.39.1/docs/migrations/navigation-lifecycle.md)
 records the v0.33.0 copy and integration migration for Transit and yesid.dev.
 
 ## Site footer and error page
@@ -715,8 +715,9 @@ cross-document view transition during reload. It also reads `sections-choice` an
 in the head before page content and keep the package's component CSS: hydration adopts that
 geometry without a flash. The server supplies eligibility on the injected script so the first
 section has its initial geometry while later HTML is parsing. The body, header and TOC stay
-visible during parsing. Boot exceptions and failed app resources expose pending content; a
-five-second recovery also exposes pending content if app startup stalls. Hydration preserves that
+visible during parsing. Boot exceptions and failed same-origin `/_app/` module scripts or
+modulepreloads expose pending content. Optional and cross-origin script load failures preserve
+the stored section choice. A five-second recovery also exposes pending content if app startup stalls. Hydration preserves that
 readable fallback on those pending cards. Future mounts adopt the stored choice. Startup error
 listeners and observations are released when the pending mounts finish. Pending triggers, body
 semantics and the bulk accessible name match the visual state. Recovery keeps the control’s
