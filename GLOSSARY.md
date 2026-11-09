@@ -41,11 +41,9 @@ such a pointer use the same press baseline as desktops.
 _Avoid_: mobile animation
 
 **Release rehearsal**:
-Verification of the same exact prerelease in both products, through their own checks and
-affected real callers before stable promotion. Required when API reports or migration notes change.
-_Avoid_: Gallery acceptance, stable adoption
+Verification of one exact prerelease in a product's own adoption change, through its own checks and affected real callers, before stable promotion. The same change becomes the consumer adoption once it points at the stable release. Required when API reports or migration notes change.
+_Avoid_: Gallery acceptance, throwaway rehearsal branch
 
 **Consumer adoption**:
-A product's reviewed integration of one exact stable release. Publication, adoption and deployed
-acceptance each need their own evidence.
-_Avoid_: automatic sync
+A product's reviewed integration of one exact stable release; it may begin as that release's rehearsal. Publication, adoption and deployed acceptance each need their own evidence.
+_Avoid_: automatic sync, merging a prerelease
