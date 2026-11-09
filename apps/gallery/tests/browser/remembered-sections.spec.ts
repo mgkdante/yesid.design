@@ -75,7 +75,32 @@ for (const comment of ['<!-->', '<!--->']) {
 	});
 }
 
+test('a blocked third-party script preserves collapsed sections through hydration', async ({ page }) => {
+	await startCollapsed(page);
+	let release!: () => void;
+	const gate = new Promise<void>(resolve => { release = resolve; });
+	await page.route('**/_app/**/*.js', async route => { await gate; await route.continue(); });
+	await page.route('https://metrics.example/beacon.js', route => route.abort('blockedbyclient'));
+	try {
+		await page.goto('/sections', { waitUntil: 'commit' });
+		await expect(page.locator('[data-toc="chart"]')).toHaveAttribute('data-section-initial', 'closed');
+		await page.evaluate(() => new Promise<void>(resolve => {
+			const script = document.createElement('script');
+			script.src = 'https://metrics.example/beacon.js';
+			script.onerror = () => resolve();
+			document.head.append(script);
+		}));
+		await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+		await expect(page.locator('[data-section-fallback]')).toHaveCount(0);
+	} finally { release(); }
+	await ready(page);
+	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'false');
+	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'false');
+	expect(await stored(page)).toBe('collapsed');
+});
+
 test('a failed app bundle leaves all section content readable', async ({ page }) => {
+	await startCollapsed(page);
 	await page.route('**/_app/**/*.js', route => route.abort());
 	await page.goto('/sections');
 	await expect.poll(() => page.locator('[data-toc="chart"] > [data-slot="collapsible"] > .section-body').evaluate(node => node.getBoundingClientRect().height)).toBeGreaterThan(128);

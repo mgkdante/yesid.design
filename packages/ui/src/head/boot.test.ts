@@ -61,6 +61,45 @@ describe('theme boot script', () => {
 		expect(document.documentElement.hasAttribute('data-sections-parsing')).toBe(false);
 	});
 
+	it.each([
+		['third-party beacon', 'script', 'https://metrics.example/beacon.js', '', false],
+		['cross-origin app module', 'script', 'https://cdn.example/_app/entry.js', 'module', false],
+		['cross-origin modulepreload', 'link', 'https://cdn.example/_app/chunk.js', 'modulepreload', false],
+		['same-origin optional script', 'script', '/analytics.js', '', false],
+		['same-origin optional module', 'script', '/analytics.js', 'module', false],
+		['classic script in app path', 'script', '/_app/optional.js', '', false],
+		['own app entry', 'script', '/_app/immutable/entry/start.js', 'module', true],
+		['own app chunk', 'link', '/_app/immutable/chunks/section.js', 'modulepreload', true],
+	])('handles a failed %s without losing the stored choice', (_name, tag, url, kind, recovers) => {
+		vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
+		localStorage.setItem('sections-choice', 'collapsed');
+		document.body.innerHTML = `<div data-sections-control></div>${['First', 'Second'].map(name => `
+			<div class="section-card" data-section-bulk>
+				<div data-slot="collapsible">
+					<button data-section-trigger>${name}</button>
+					<div data-slot="collapsible-content">Readable content</div>
+				</div>
+			</div>`).join('')}`;
+		runBoot();
+		const triggers = [...document.querySelectorAll('[data-section-trigger]')];
+		expect(triggers.map(node => node.getAttribute('aria-expanded'))).toEqual(['false', 'false']);
+		const host = document.createElement('div');
+		host.innerHTML = `<${tag}></${tag}>`;
+		const resource = host.firstElementChild!;
+		resource.setAttribute(tag === 'script' ? 'src' : 'href', url);
+		resource.setAttribute(tag === 'script' ? 'type' : 'rel', kind);
+		document.body.append(host);
+		// Resource load errors do not bubble; window observes them in the capture phase.
+		resource.dispatchEvent(new Event('error'));
+		expect(triggers.map(node => node.getAttribute('aria-expanded'))).toEqual(recovers ? ['true', 'true'] : ['false', 'false']);
+		for (const body of document.querySelectorAll('[data-slot="collapsible-content"]')) {
+			expect(body.hasAttribute('inert')).toBe(!recovers);
+			expect(body.getAttribute('aria-hidden')).toBe(recovers ? null : 'true');
+		}
+		expect(document.documentElement.hasAttribute('data-sections-recovering')).toBe(recovers);
+		expect(localStorage.getItem('sections-choice')).toBe('collapsed');
+	});
+
 	it('releases startup error listeners when pending mounts finish hydration', () => {
 		vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
 		document.body.innerHTML = '<div class="section-card"></div>';

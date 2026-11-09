@@ -86,7 +86,15 @@ export const themeBootScript = `(() => {
 	};
 	const onError = event => {
 		const target = event.target;
-		if (event instanceof ErrorEvent || target?.tagName === 'SCRIPT' || (target?.tagName === 'LINK' && target.rel === 'modulepreload')) recover();
+		if (event instanceof ErrorEvent) { recover(); return; }
+		// Optional scripts cannot prevent hydration. Only failed app modules need the readable fallback.
+		const source = target?.tagName === 'SCRIPT' && target.type === 'module' ? target.src
+			: target?.tagName === 'LINK' && target.relList.contains('modulepreload') ? target.href : null;
+		if (!source) return;
+		try {
+			const url = new URL(source, document.baseURI);
+			if (url.origin === location.origin && url.pathname.startsWith('/_app/')) recover();
+		} catch {}
 	};
 	const prepare = () => {
 		const sections = [...document.querySelectorAll('[data-section-bulk]')];
