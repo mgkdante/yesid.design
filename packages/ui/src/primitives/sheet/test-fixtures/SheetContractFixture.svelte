@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../index.js';
 
-	type Props =
+	type Props = { modal?: boolean } & (
 		| { closeLabel: string; showCloseButton?: boolean }
-		| { closeLabel?: string; showCloseButton: false };
+		| { closeLabel?: string; showCloseButton: false });
 
 	let props: Props = $props();
 	let open = $state(true);

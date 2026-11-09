@@ -378,7 +378,10 @@ describe('public UI prop contracts', () => {
 		expectTypeOf<BindingsOf<typeof Sheet>>().toEqualTypeOf<'open'>();
 		expectTypeOf<BindingsOf<typeof SheetTrigger>>().toEqualTypeOf<'ref'>();
 		expectTypeOf<BindingsOf<typeof SheetClose>>().toEqualTypeOf<'ref'>();
-		expectTypeOf<BindingsOf<typeof SheetContent>>().toEqualTypeOf<'ref'>();
+		// @ts-expect-error Detents require caller-owned handle copy.
+		const missingHandle: import('./primitives/sheet/index.js').SheetContentProps = { detents: [{ id: 'peek', size: '120px', label: 'Peek' }], showCloseButton: false, children: ignoredChildren };
+		void missingHandle;
+		expectTypeOf<BindingsOf<typeof SheetContent>>().toEqualTypeOf<'ref' | 'detent'>();
 		expectTypeOf<BindingsOf<typeof SheetOverlay>>().toEqualTypeOf<'ref'>();
 		expectTypeOf<BindingsOf<typeof SheetTitle>>().toEqualTypeOf<'ref'>();
 		expectTypeOf<BindingsOf<typeof SheetDescription>>().toEqualTypeOf<'ref'>();
