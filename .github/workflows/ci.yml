@@ -1,6 +1,8 @@
 # Public-repository CI. Documentation-only PRs skip browser authority; byte-identical
 # release prepares also skip Windows tokens and parity. `check` always runs, with
 # release validation and packing for releases; required `ci` enforces selected results.
+# Deliberately no push trigger (Q28): strict up-to-date protection plus squash merges
+# mean the last PR run tested exactly what lands on main.
 name: ci
 
 on:
@@ -27,16 +29,47 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      # Policy CLI/env changes require two steps: land policy support first, then workflow use.
+      - name: Materialize trusted policy
+        id: policy
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Invalid PR base SHA' >&2; exit 1; }
+            git merge-base --is-ancestor "$BASE_SHA" origin/main || { echo 'PR base is not reachable from origin/main' >&2; exit 1; }
+            revision="$BASE_SHA"
+          else
+            revision="$(git rev-parse origin/main)"
+          fi
+          directory="$(mktemp -d "$RUNNER_TEMP/ci-policy.XXXXXX")"
+          mkdir "$directory/tools"
+          # Complete local import closure; neither module reads files at load time.
+          for file in tools/ci-policy.ts tools/ci-release.ts .bun-version; do
+            git show "$revision:$file" > "$directory/$file"
+          done
+          version="$(cat "$directory/.bun-version")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid trusted Bun version' >&2; exit 1; }
+          # Start Bun outside checkout config discovery, then restore the existing CLI's cwd.
+          echo 'process.chdir(process.env.GITHUB_WORKSPACE!);' > "$directory/cwd.ts"
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+          echo "bun-version=$version" >> "$GITHUB_OUTPUT"
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version-file: .bun-version
+          bun-version: ${{ steps.policy.outputs.bun-version }}
       - name: Select CI lane
         id: select
         env:
+          TRUSTED_POLICY: ${{ steps.policy.outputs.directory }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: bun tools/ci-policy.ts classify
+        shell: bash
+        run: |
+          cd "$TRUSTED_POLICY"
+          bun --preload ./cwd.ts ./tools/ci-policy.ts classify
 
   check:
     needs: [classify]
@@ -174,10 +207,45 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      # Policy CLI/env changes require two steps: land policy support first, then workflow use.
+      - name: Materialize trusted policy
+        id: policy
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Invalid PR base SHA' >&2; exit 1; }
+            git merge-base --is-ancestor "$BASE_SHA" origin/main || { echo 'PR base is not reachable from origin/main' >&2; exit 1; }
+            revision="$BASE_SHA"
+          else
+            revision="$(git rev-parse origin/main)"
+          fi
+          directory="$(mktemp -d "$RUNNER_TEMP/ci-policy.XXXXXX")"
+          mkdir "$directory/tools"
+          # Complete local import closure; neither module reads files at load time.
+          for file in tools/ci-policy.ts tools/ci-release.ts .bun-version; do
+            git show "$revision:$file" > "$directory/$file"
+          done
+          version="$(cat "$directory/.bun-version")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid trusted Bun version' >&2; exit 1; }
+          # Start Bun outside checkout config discovery, then restore the existing CLI's cwd.
+          echo 'process.chdir(process.env.GITHUB_WORKSPACE!);' > "$directory/cwd.ts"
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+          echo "bun-version=$version" >> "$GITHUB_OUTPUT"
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version-file: .bun-version
+          bun-version: ${{ steps.policy.outputs.bun-version }}
       - name: Require selected jobs to succeed
         env:
+          TRUSTED_POLICY: ${{ steps.policy.outputs.directory }}
           CI_NEEDS: ${{ toJSON(needs) }}
-        run: bun tools/ci-policy.ts aggregate
+        shell: bash
+        run: |
+          cd "$TRUSTED_POLICY"
+          # Also cover dependencies added after the trusted policy's job list.
+          bun -e 'if (Object.values(JSON.parse(process.env.CI_NEEDS ?? "{}")).some(need => ["failure", "cancelled"].includes(need.result))) { console.error("A CI dependency failed or was cancelled"); process.exit(1); }'
+          bun --preload ./cwd.ts ./tools/ci-policy.ts aggregate
