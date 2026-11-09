@@ -1,4 +1,5 @@
-# Public-repository CI. Every pull request runs every job; the final `ci` job is the required check.
+# Public-repository CI. Only verified documentation-only PRs skip browser-authority.
+# All other jobs always run; required `ci` accepts only the classifier-selected skip.
 name: ci
 
 on:
@@ -14,6 +15,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      browser: ${{ steps.select.outputs.browser }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: .bun-version
+      - name: Select browser authority
+        id: select
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bun tools/ci-policy.ts classify
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -51,6 +71,8 @@ jobs:
         run: bun x turbo run build
 
   browser-authority:
+    needs: [classify]
+    if: ${{ always() && !cancelled() && (needs.classify.result != 'success' || needs.classify.outputs.browser != 'false') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
@@ -131,10 +153,15 @@ jobs:
 
   ci:
     if: ${{ always() }}
-    needs: [check, browser-authority, token-outputs-windows, token-byte-parity]
+    needs: [classify, check, browser-authority, token-outputs-windows, token-byte-parity]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require every job to succeed
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
-        run: exit 1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: .bun-version
+      - name: Require selected jobs to succeed
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: bun tools/ci-policy.ts aggregate
