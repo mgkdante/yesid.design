@@ -11,7 +11,7 @@ drop them.
 
 The root export and the `./config`, `./client`, `./relay` and `./vitals` subpaths are public. The exact
 interface is in
-[`api-reports/analytics.api.md`](https://github.com/mgkdante/yesid.design/blob/v0.39.0-rc.1/api-reports/analytics.api.md).
+[`api-reports/analytics.api.md`](https://github.com/mgkdante/yesid.design/blob/v0.39.0/api-reports/analytics.api.md).
 
 ## Measurement
 
