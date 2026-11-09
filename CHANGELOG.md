@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.39.0-rc.1
+## 0.39.0
 
 <!-- release-fragment: section-cards-wider-on-phones -->
 - `@yesid/ui` (patch): Section cards in `DetailFrame` are wider on phones. Below 768px, top-level section cards in the
