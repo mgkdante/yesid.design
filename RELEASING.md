@@ -111,15 +111,18 @@ In **each** of Transit and yesid.dev:
    `main`, using the exact release candidate `vX.Y.Z-rc.N`. Record that base SHA.
    Make app fixes in this same PR.
 2. Change every design tarball URL in `package.json` to the candidate's exact tag and version,
-   including sibling peers, then run `bun install`. Keep the diff to those URLs, `bun.lock` and
-   the adoption changes required by the release's migration notes. Generate dependency lockfile
-   changes with the app's pinned Bun on Linux, following its contribution rules.
+   including sibling peers, then run `bun install`. Keep the diff to those URLs, `bun.lock`, the
+   adoption changes required by the release's migration notes, and release-related app fixes
+   discovered during rehearsal. Generate dependency lockfile changes with the app's pinned Bun on
+   Linux, following its contribution rules.
 3. Run the app's own required checks in that PR: source/architecture guards, generated-output
    drift checks, type checks, unit/integration tests, production build, accessibility and browser
    suites. Follow its scripts and CI definition for the exact commands and required jobs. All jobs
    must finish green, including every yesid.dev e2e shard, except the prerelease guard below.
    Each app must have a CI check that fails while any `@yesid` URL points at an `-rc` tag.
    Record that expected failure during rehearsal; the draft cannot merge with it failing.
+   Before completing rehearsal, ensure the app's prerelease guard is enabled and required for
+   merge; record a missing guard as a blocker on the release slice.
    Run local browser suites on dedicated ports with server reuse disabled when sharing a machine.
 4. Exercise the changed contract in the real app callers, including the affected responsive,
    keyboard/accessibility and reduced-motion behavior. For example, a disclosure or section-jump
