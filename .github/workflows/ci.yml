@@ -83,11 +83,15 @@ jobs:
           bun run release:check -- --version "$VERSION"
           bun tools/release.ts pack --tag "v$VERSION" --repository "$GITHUB_REPOSITORY"
 
-  browser-authority:
+  browser-shards:
     needs: [classify]
     if: ${{ always() && !cancelled() && (needs.classify.result != 'success' || needs.classify.outputs.browser != 'false') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     container:
       image: mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48
       options: --init --ipc=host
@@ -100,17 +104,28 @@ jobs:
           rm -rf /var/lib/apt/lists/*
       - uses: ./.github/actions/setup
       - name: Run browser authority
-        run: bun run test:browser
+        run: bun run --cwd apps/gallery test:browser --shard=${{ matrix.shard }}/2
       - name: Upload browser failure evidence
         if: ${{ failure() && !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: browser-authority-${{ github.run_id }}
+          name: browser-authority-${{ github.run_id }}-${{ matrix.shard }}
           if-no-files-found: warn
           retention-days: 7
           path: |
             apps/gallery/playwright-report/
             apps/gallery/test-results/
+
+  browser-authority:
+    needs: [classify, browser-shards]
+    if: ${{ always() && !cancelled() && (needs.classify.result != 'success' || needs.classify.outputs.browser != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require both browser shards to succeed
+        env:
+          SHARDS_RESULT: ${{ needs.browser-shards.result }}
+        run: test "$SHARDS_RESULT" = success
 
   token-outputs-windows:
     needs: [classify]
