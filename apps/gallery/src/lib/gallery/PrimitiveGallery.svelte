@@ -20,6 +20,15 @@
 	let comboboxValue = $state<string | null>('operations');
 	let footerStatusRefreshes = $state(0);
 	let sheetOpen = $state(false);
+	let detentOpen = $state(false);
+	let outsideCount = $state(0);
+	let headerCount = $state(0);
+	let detent = $state('half');
+	const sheetDetents = [
+		{ id: 'peek', size: '120px', label: 'Peek' },
+		{ id: 'half', size: '50%', label: 'Half height' },
+		{ id: 'full', size: '90%', label: 'Full height' },
+	] as const;
 
 	const comboboxOptions: readonly ComboboxOption[] = [
 		{
@@ -264,6 +273,26 @@
 						<Sheet.Footer class="mt-auto border-t border-border p-4">
 							<Sheet.Close class="min-h-11 rounded-md border border-border px-3 py-2">Done</Sheet.Close>
 						</Sheet.Footer>
+					</Sheet.Content>
+				</Sheet.Root>
+			</Card.Content>
+		</Card.Root>
+
+		<Card.Root>
+			<Card.Header><Card.Title>Sheet detents</Card.Title></Card.Header>
+			<Card.Content>
+				<button class="min-h-11 border border-border px-3" onclick={() => outsideCount++}>Outside count: {outsideCount}</button>
+				<Sheet.Root bind:open={detentOpen}>
+					<Sheet.Trigger class="min-h-11 border border-border px-3">Open draggable sheet</Sheet.Trigger>
+					<Sheet.Content modal={false} detents={sheetDetents} bind:detent handleLabel="Sheet height" closeLabel="Close draggable sheet">
+						<Sheet.Header class="shrink-0 gap-0 px-4 py-0">
+							<Sheet.Title>Draggable detail</Sheet.Title>
+							<button class="min-h-11 self-start" onclick={() => headerCount++}>Header action: {headerCount}</button>
+						</Sheet.Header>
+						<div data-testid="sheet-scroll-body" class="min-h-0 flex-1 overflow-y-auto p-4">
+							<Sheet.Description>Resize with the handle or header. The page stays interactive.</Sheet.Description>
+							{#each Array.from({ length: 60 }, (_, i) => i) as row (row)}<p class="py-3">Operational note {row + 1}</p>{/each}
+						</div>
 					</Sheet.Content>
 				</Sheet.Root>
 			</Card.Content>

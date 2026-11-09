@@ -2021,7 +2021,8 @@ declare namespace PrimitivesSheet {
         SheetOverlay,
         SheetContent,
         SheetDescription,
-        Close as SheetClose
+        Close as SheetClose,
+        SheetDetent
     }
 }
 
@@ -2371,17 +2372,27 @@ type SeparatorVariant = 'default' | 'hazard' | 'gradient';
 type SheetCloseProps = Dialog.CloseProps;
 
 // @public (undocumented)
-const SheetContent: Component<SheetContentProps, {}, "ref">;
+const SheetContent: Component<SheetContentProps, {}, "ref" | "detent">;
 
 // @public (undocumented)
 type SheetContent = ReturnType<typeof SheetContent>;
 
 // @public (undocumented)
 type SheetContentProps = WithoutChildrenOrChild<Dialog.ContentProps> & {
-    side?: SheetSide;
+    modal?: boolean;
+    detent?: string;
+    ondetentchange?: (id: string) => void;
     portalProps?: WithoutChildren<Dialog.PortalProps>;
     children: Snippet;
 } & ({
+    detents: readonly SheetDetent[];
+    handleLabel: string;
+    side?: 'bottom';
+} | {
+    detents?: undefined;
+    handleLabel?: never;
+    side?: SheetSide;
+}) & ({
     showCloseButton?: boolean;
     closeLabel: string;
 } | {
@@ -2397,6 +2408,13 @@ type SheetDescription = ReturnType<typeof SheetDescription>;
 
 // @public (undocumented)
 type SheetDescriptionProps = WithoutChild<Dialog.DescriptionProps>;
+
+// @public (undocumented)
+type SheetDetent = {
+    id: string;
+    size: `${number}px` | `${number}%`;
+    label: string;
+};
 
 // @public (undocumented)
 const SheetFooter: Component<SheetFooterProps, {}, "ref">;

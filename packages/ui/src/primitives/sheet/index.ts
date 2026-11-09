@@ -53,3 +53,5 @@ export {
 	Description as SheetDescription,
 	Close as SheetClose,
 };
+
+export type { SheetDetent } from './detents.js';

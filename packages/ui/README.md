@@ -713,3 +713,51 @@ bun run api:check
 
 Package tests and the Gallery's browser suite cover the shared behavior. Each product still runs
 its own tests, build and browser checks when it takes a release; a pass here does not replace them.
+
+### Draggable bottom sheets
+
+`Sheet.Content` accepts `detents` to opt into draggable heights. Supply at least two stops,
+ordered from smallest to largest, with unique ids. Each stop has `{ id, size, label }`.
+Sizes use positive `px` or `%`; percentages become `dvh`. Mixed units must be ascending at the
+viewport where the sheet mounts or dragging begins. Detents require `side="bottom"` (the default)
+and `handleLabel`. Both the handle name and each stop's label are caller-owned copy.
+
+`bind:detent` stores the current id. Missing or unknown ids resolve to the first stop.
+`ondetentchange(id)` fires only when the user changes stops by dragging, keyboard or handle tap.
+Content exposes `data-detent` for caller styling. A header should use `shrink-0`; a scrolling body
+should use `min-h-0 flex-1 overflow-y-auto`. The handle occupies 44px above the header.
+Interactive controls, scrollable descendants and `[data-sheet-no-drag]` do not start drags.
+There is no drag-to-dismiss. Height snaps use motion tokens and become instant under reduced motion.
+The id and CSS size hold through viewport changes without a resize listener.
+
+`modal={false}` works with or without detents. It removes the overlay, focus trap and scroll lock.
+The page remains interactive, outside clicks keep the sheet open, and Tab can leave it. Escape
+closes only from inside the sheet. Caller-supplied Bits props override these defaults.
+Modal behavior remains the default.
+
+Persistence belongs to the caller. For tab-scoped persistence:
+
+```svelte
+<script lang="ts">
+  import * as Sheet from '@yesid/ui/sheet';
+  import { persisted } from '@yesid/ui/state';
+  const height = persisted('detail-height', 'peek');
+  const stops = [
+    { id: 'peek', size: '120px', label: 'Peek' },
+    { id: 'half', size: '50%', label: 'Half height' },
+    { id: 'full', size: '90%', label: 'Full height' },
+  ] as const;
+</script>
+
+<Sheet.Root>
+  <Sheet.Trigger>Open detail</Sheet.Trigger>
+  <Sheet.Content detents={stops} bind:detent={height.value}
+    handleLabel="Detail height" closeLabel="Close detail" modal={false}>
+    <Sheet.Header class="shrink-0"><Sheet.Title>Detail</Sheet.Title></Sheet.Header>
+    <div class="min-h-0 flex-1 overflow-y-auto">Body</div>
+  </Sheet.Content>
+</Sheet.Root>
+```
+
+Alternatively keep local `bind:detent` state and write the id through `ondetentchange` when only
+user changes should persist. The component supplies no storage key or translated strings.
