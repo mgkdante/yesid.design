@@ -130,7 +130,8 @@ In **each** of Transit, yesid.dev and [yesid.login](https://github.com/mgkdante/
    aggregate that depends on it, only when every other required validation succeeds, including
    every yesid.dev e2e shard. In yesid.login, the guard runs as the last step of the required
    `verify` check: rehearsal must show `verify` failing only at that guard step after check and
-   tests pass. Each app's guard must fail while any `@yesid` URL points at an `-rc` tag.
+   tests pass. Each app's guard must fail while any yesid.design package or
+   yesid.design release URL points at a release candidate (`-rc`) tag.
    Record these expected failures during rehearsal; the draft cannot merge with them failing.
    Before completing rehearsal, ensure the app's prerelease guard is enabled and required for
    merge; record a missing guard as a blocker on the release slice.
@@ -195,7 +196,8 @@ Transit, yesid.dev and yesid.login each take the stable release in their own ado
 If it began as a draft for rehearsal, continue in that same PR. Change the tag and version in every
 `https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
 URL, run `bun install`, and rerun the app's required CI on that exact switched head before merging.
-Each app's CI must fail while any `@yesid` URL points at an `-rc` tag, so a prerelease cannot reach
+Each app's guard must fail while any yesid.design package or yesid.design release URL points at
+a release candidate (`-rc`) tag, so a prerelease cannot reach
 the app's `main`. The lockfile pins each tarball's integrity. Record adoption evidence on the owning
 release slice; publication, adoption and deployed acceptance each need their own evidence.
 A rollback is the same edit pointing at an earlier stable release.
