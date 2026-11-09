@@ -33,4 +33,4 @@ bun run test:browser:list
 `test:browser:list` lists the browser matrix without building. Browser runs are pinned to Chromium,
 UTC, `en-CA` and reduced motion, on the standard projects from `@yesid/config/playwright` (untagged
 tests at phone, tablet and desktop, `@theme` tests in light and dark, `@motion` tests with reduced
-motion), with one worker and no retries. They assert behavior, never pixels.
+motion), with two workers in CI, one worker locally and no retries. They assert behavior, never pixels.
