@@ -62,8 +62,7 @@ Release-only PRs take a light CI lane only with the exact title
 `chore(release): promote vX.Y.Z` (stable only). CI must reproduce the PR byte for byte in two
 independent runs of the merge base's `release:prepare`, using Bun matching that merge base's
 `.bun-version`. The light lane still runs API report approval, type checks, tests, Ubuntu token
-drift, build, `release:check` and packing all eight packages. It skips `browser-authority`,
-`token-outputs-windows` and `token-byte-parity`. PRs that do not qualify use the normal CI policy, including its documentation-only browser exemption.
+drift, build, `release:check` and packing all eight packages. It skips both `browser-shards` jobs, their `browser-authority` wrapper, `token-outputs-windows` and `token-byte-parity`. PRs that do not qualify use the normal CI policy, including its documentation-only browser exemption.
 
 ## 2. Tag
 
