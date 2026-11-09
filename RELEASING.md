@@ -19,7 +19,7 @@ published to npm.
 - A candidate tag publishes publicly. Obtain the owner's API report approval before the first
   candidate tag. If a later candidate changes the API report, obtain approval again before its
   tag. Stable promotion preserves that approved report.
-- Rehearse any release whose API report or migration notes change on both consumers before
+- Rehearse any release whose API report or migration notes change on all three consumers before
   promoting it to stable. A patch with no contract change can skip the rehearsal. Only the latest
   stable release is supported; a candidate is temporary verification, not another supported line.
 
@@ -57,7 +57,13 @@ tag, obtain the owner's API report approval; obtain it again before any later ca
 report changes. Keep the exact design commit, version, API report diff and approval in the release
 evidence. A contract change also needs the rehearsal below before stable promotion.
 
-Release-only PRs take a light CI lane only when their content is byte-identical to re-running `release:prepare` on their merge base.
+Release-only PRs take a light CI lane only with the exact title
+`chore(release): prepare vX.Y.Z` or `chore(release): prepare vX.Y.Z-rc.N`, or
+`chore(release): promote vX.Y.Z` (stable only). CI must reproduce the PR byte for byte in two
+independent runs of the merge base's `release:prepare`, using Bun matching that merge base's
+`.bun-version`. The light lane still runs API report approval, type checks, tests, Ubuntu token
+drift, build, `release:check` and packing all eight packages. It skips `browser-authority`,
+`token-outputs-windows` and `token-byte-parity`. Anything else runs full CI.
 
 ## 2. Tag
 
@@ -107,7 +113,7 @@ The workflow marks versions with a prerelease suffix as GitHub prereleases. Veri
 assets and provenance just as for stable. Do not install local packs, branch archives or assets
 outside a release tag in a consumer.
 
-In **each** of Transit and yesid.dev:
+In **each** of Transit, yesid.dev and [yesid.login](https://github.com/mgkdante/yesid.login):
 
 1. Open the app's adoption PR as a draft from its current `origin/main` against that app's
    `main`, using the exact release candidate `vX.Y.Z-rc.N`. Record that base SHA.
@@ -119,10 +125,13 @@ In **each** of Transit and yesid.dev:
    Linux, following its contribution rules.
 3. Run the app's own required checks in that PR: source/architecture guards, generated-output
    drift checks, type checks, unit/integration tests, production build, accessibility and browser
-   suites. Follow its scripts and CI definition for the exact commands and required jobs. All jobs
-   must finish green, including every yesid.dev e2e shard, except the prerelease guard below.
-   Each app must have a CI check that fails while any `@yesid` URL points at an `-rc` tag.
-   Record that expected failure during rehearsal; the draft cannot merge with it failing.
+   suites. Follow its scripts and CI definition for the exact commands and required jobs.
+   For Transit and yesid.dev, the expected failures are `prerelease-guard` and the required `ci`
+   aggregate that depends on it, only when every other required validation succeeds, including
+   every yesid.dev e2e shard. In yesid.login, the guard runs as the last step of the required
+   `verify` check: rehearsal must show `verify` failing only at that guard step after check and
+   tests pass. Each app's guard must fail while any `@yesid` URL points at an `-rc` tag.
+   Record these expected failures during rehearsal; the draft cannot merge with them failing.
    Before completing rehearsal, ensure the app's prerelease guard is enabled and required for
    merge; record a missing guard as a blocker on the release slice.
    Run local browser suites on dedicated ports with server reuse disabled when sharing a machine.
@@ -130,26 +139,26 @@ In **each** of Transit and yesid.dev:
    keyboard/accessibility and reduced-motion behavior. For example, a disclosure or section-jump
    change needs the app's actual panels and navigation, not just a generic fixture. Record the
    exact scenarios, results and any unverified behavior. Gallery remains repository evidence and
-   cannot replace either app's acceptance.
-5. On the owning release slice, record the candidate design SHA/tag, both consumer base and tested
-   head SHAs, the URL/lockfile diff, check commands and CI run links, and the contract scenarios.
+   cannot replace any app's acceptance.
+5. On the owning release slice, record the candidate design SHA/tag, all three consumers' base
+   and tested head SHAs, the URL/lockfile diff, check commands and CI run links, and the contract scenarios.
    Green evidence belongs to those exact heads; rerun affected checks if the candidate or app
    changes. Keep the adoption PRs as drafts until stable promotion and the stable switch below.
 
-If either app finds a shared defect, first merge a design source PR containing the fix, regenerated
+If any app finds a shared defect, first merge a design source PR containing the fix, regenerated
 API report, regression test and new change fragment, with green CI. Then start a separate
 release-only PR from updated `main`, prepare `X.Y.Z-rc.2` (then `rc.3`, etc.) and merge it with green
 CI. If the API report changed, obtain the owner's approval again before tagging this candidate.
-Publish the new tag, update both draft adoption PRs to it and repeat both app rehearsals.
+Publish the new tag, update all three draft adoption PRs to it and repeat all three app rehearsals.
 Keep app fixes in those same PRs. Never repair an installed package or replace an earlier tag
 or asset. If adoption needs an owner decision or a contract change
 outside the release scope, stop promotion and record the blocker on the release slice.
 
 ### Promote the proven candidate
 
-Once both apps pass on the same candidate, whose API report the owner approved before its tag,
-start a stable release-only PR from current design `main`. Verify that the report is unchanged
-from that approved candidate:
+Once all three apps pass rehearsal on the same candidate, whose API report the owner approved
+before its tag, start a stable release-only PR from current design `main`. Verify that the report
+is unchanged from that approved candidate:
 
 ```sh
 bun run release:prepare -- --version X.Y.Z
@@ -167,7 +176,7 @@ Leave candidate tags and releases intact. In each existing draft adoption PR, sw
 tarball URL to the stable tag and version and regenerate the lockfile. Rerun the app's required CI
 on that exact switched head, including the prerelease guard, and record the stable URL/lockfile
 diff, tested head SHA and CI run links on the owning release slice. Only after those checks pass
-can the same PR leave draft and merge. Publishing stable does not merge or deploy either app.
+can the same PR leave draft and merge. Publishing stable does not merge or deploy any app.
 
 ### Local tooling proof without publishing
 
@@ -182,8 +191,8 @@ This proves local tooling, not GitHub publication, provenance or consumer accept
 
 ## 5. Consumers
 
-Each app takes the stable release in its own adoption PR. If it began as a draft for rehearsal,
-continue in that same PR. Change the tag and version in every
+Transit, yesid.dev and yesid.login each take the stable release in their own adoption PR.
+If it began as a draft for rehearsal, continue in that same PR. Change the tag and version in every
 `https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
 URL, run `bun install`, and rerun the app's required CI on that exact switched head before merging.
 Each app's CI must fail while any `@yesid` URL points at an `-rc` tag, so a prerelease cannot reach
