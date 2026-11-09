@@ -46,7 +46,7 @@ copy: apply the reading roles to prose and code in the consumer, keeping compact
 | `./generators/design-md` | the `DESIGN.md` generator |
 
 The exact interface is in
-[`api-reports/tokens.api.md`](https://github.com/mgkdante/yesid.design/blob/v0.38.1/api-reports/tokens.api.md).
+[`api-reports/tokens.api.md`](https://github.com/mgkdante/yesid.design/blob/v0.39.0-rc.1/api-reports/tokens.api.md).
 
 ## Rules
 
