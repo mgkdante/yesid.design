@@ -715,8 +715,9 @@ cross-document view transition during reload. It also reads `sections-choice` an
 in the head before page content and keep the package's component CSS: hydration adopts that
 geometry without a flash. The server supplies eligibility on the injected script so the first
 section has its initial geometry while later HTML is parsing. The body, header and TOC stay
-visible during parsing. Boot exceptions and failed app resources expose pending content; a
-five-second recovery also exposes pending content if app startup stalls. Hydration preserves that
+visible during parsing. Boot exceptions and failed same-origin `/_app/` module scripts or
+modulepreloads expose pending content. Optional and cross-origin script load failures preserve
+the stored section choice. A five-second recovery also exposes pending content if app startup stalls. Hydration preserves that
 readable fallback on those pending cards. Future mounts adopt the stored choice. Startup error
 listeners and observations are released when the pending mounts finish. Pending triggers, body
 semantics and the bulk accessible name match the visual state. Recovery keeps the control’s
