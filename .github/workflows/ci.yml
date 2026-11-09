@@ -1,5 +1,6 @@
-# Public-repository CI. Only verified documentation-only PRs skip browser-authority.
-# All other jobs always run; required `ci` accepts only the classifier-selected skip.
+# Public-repository CI. Documentation-only PRs skip browser authority; byte-identical
+# release prepares also skip Windows tokens and parity. `check` always runs, with
+# release validation and packing for releases; required `ci` enforces selected results.
 name: ci
 
 on:
@@ -20,6 +21,8 @@ jobs:
     timeout-minutes: 5
     outputs:
       browser: ${{ steps.select.outputs.browser }}
+      release-only: ${{ steps.select.outputs.release-only }}
+      version: ${{ steps.select.outputs.version }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -27,14 +30,17 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version-file: .bun-version
-      - name: Select browser authority
+      - name: Select CI lane
         id: select
         env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: bun tools/ci-policy.ts classify
 
   check:
+    needs: [classify]
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -69,6 +75,13 @@ jobs:
             packages/tokens/tokens.css
       - name: build
         run: bun x turbo run build
+      - name: Validate and pack prepared release
+        if: needs.classify.outputs.release-only == 'true'
+        env:
+          VERSION: ${{ needs.classify.outputs.version }}
+        run: |
+          bun run release:check -- --version "$VERSION"
+          bun tools/release.ts pack --tag "v$VERSION" --repository "$GITHUB_REPOSITORY"
 
   browser-authority:
     needs: [classify]
@@ -100,6 +113,8 @@ jobs:
             apps/gallery/test-results/
 
   token-outputs-windows:
+    needs: [classify]
+    if: ${{ always() && !cancelled() && (needs.classify.result != 'success' || needs.classify.outputs.release-only != 'true') }}
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
@@ -122,7 +137,8 @@ jobs:
             packages/tokens/tokens.css
 
   token-byte-parity:
-    needs: [check, token-outputs-windows]
+    needs: [classify, check, token-outputs-windows]
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.token-outputs-windows.result == 'success' && (needs.classify.result != 'success' || needs.classify.outputs.release-only != 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

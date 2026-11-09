@@ -55,6 +55,8 @@ tag, obtain the owner's API report approval; obtain it again before any later ca
 report changes. Keep the exact design commit, version, API report diff and approval in the release
 evidence. A contract change also needs the rehearsal below before stable promotion.
 
+Release-only PRs take a light CI lane only when their content is byte-identical to re-running `release:prepare` on their merge base.
+
 ## 2. Tag
 
 Use `TAG=vX.Y.Z-rc.N` in the sequence below when tagging a candidate.

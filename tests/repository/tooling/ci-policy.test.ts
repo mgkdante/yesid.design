@@ -25,7 +25,7 @@ describe('browser selection', () => {
 
 function results(browser = 'true') {
 	return {
-		classify: { result: 'success', outputs: { browser } },
+		classify: { result: 'success', outputs: { browser, 'release-only': 'false' } },
 		check: { result: 'success' },
 		'browser-authority': { result: browser === 'false' ? 'skipped' : 'success' },
 		'token-outputs-windows': { result: 'success' },
@@ -114,5 +114,42 @@ describe('PR changes from real git history', { timeout: 30_000 }, () => {
 		const read = () => changedFiles(repo.initial, '0'.repeat(40), repo.root);
 		expect(read).toThrow();
 		expect(selectBrowser('pull_request', read)).toBe(true);
+	});
+});
+
+
+describe('release aggregate selection', () => {
+	for (const lane of ['full', 'docs', 'release']) {
+		const selected = () => {
+			const needs = results(lane === 'full' ? 'true' : 'false');
+			if (lane === 'release') {
+				needs.classify.outputs['release-only'] = 'true';
+				needs['token-outputs-windows'].result = 'skipped';
+				needs['token-byte-parity'].result = 'skipped';
+			}
+			return needs;
+		};
+		it(`${lane} accepts exactly selected results`, () => expect(aggregatePasses(selected())).toBe(true));
+		for (const job of Object.keys(selected())) {
+			for (const result of ['success', 'failure', 'cancelled', 'skipped', 'unknown', undefined]) {
+				if (result === selected()[job as keyof ReturnType<typeof selected>].result) continue;
+				it(`${lane} rejects ${job} ${result}`, () => {
+					const needs = selected();
+					expect(aggregatePasses({ ...needs, [job]: { ...needs[job as keyof typeof needs], result } })).toBe(false);
+				});
+			}
+			it(`${lane} rejects missing ${job}`, () => {
+				const needs: Record<string, { result?: string; outputs?: Record<string, string> }> = selected();
+				delete needs[job]; expect(aggregatePasses(needs)).toBe(false);
+			});
+		}
+	}
+	it.each(['', 'unknown', undefined])('rejects invalid release selection %s', (release) => {
+		const needs = results();
+		expect(aggregatePasses({ ...needs, classify: { result: 'success', outputs: { browser: 'true', ...(release === undefined ? {} : { 'release-only': release }) } } })).toBe(false);
+	});
+	it('rejects a release selection that requests browser authority', () => {
+		const needs = results(); needs.classify.outputs['release-only'] = 'true';
+		expect(aggregatePasses(needs)).toBe(false);
 	});
 });

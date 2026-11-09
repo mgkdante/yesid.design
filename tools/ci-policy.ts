@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
+import { releaseOnly } from './ci-release.js';
 
 // Exact repository documentation paths, never package or generated documentation.
 const DOCUMENTATION = new Set(['README.md', 'CONTRIBUTING.md', 'DECISIONS.md']);
@@ -34,7 +35,13 @@ export function aggregatePasses(needs: Record<string, Need>): boolean {
 	if (required.some((job) => !needs[job])) return false;
 	const selection = needs.classify?.outputs?.browser;
 	if (selection !== 'true' && selection !== 'false') return false;
+	const release = needs.classify?.outputs?.['release-only'];
+	if (release !== 'true' && release !== 'false') return false;
+	if (release === 'true' && selection !== 'false') return false;
 	return Object.entries(needs).every(([job, need]) => {
+		if (release === 'true' && ['browser-authority', 'token-outputs-windows', 'token-byte-parity'].includes(job)) {
+			return need.result === 'skipped';
+		}
 		if (job === 'browser-authority') {
 			return need.result === (selection === 'false' ? 'skipped' : 'success');
 		}
@@ -44,10 +51,12 @@ export function aggregatePasses(needs: Record<string, Need>): boolean {
 
 if (import.meta.main) {
 	if (process.argv[2] === 'classify') {
-		const browser = selectBrowser(process.env.GITHUB_EVENT_NAME ?? '', () =>
+		const version = releaseOnly(process.env.GITHUB_EVENT_NAME ?? '', process.env.PR_TITLE ?? '',
+			process.env.BASE_SHA ?? '', process.env.HEAD_SHA ?? '');
+		const browser = !version && selectBrowser(process.env.GITHUB_EVENT_NAME ?? '', () =>
 			changedFiles(process.env.BASE_SHA ?? '', process.env.HEAD_SHA ?? ''),
 		);
-		appendFileSync(process.env.GITHUB_OUTPUT!, `browser=${browser}\n`);
+		appendFileSync(process.env.GITHUB_OUTPUT!, `browser=${browser}\nrelease-only=${Boolean(version)}\nversion=${version ?? ''}\n`);
 	} else if (process.argv[2] === 'aggregate') {
 		const needs = JSON.parse(process.env.CI_NEEDS ?? '{}') as Record<string, Need>;
 		if (!aggregatePasses(needs)) {
