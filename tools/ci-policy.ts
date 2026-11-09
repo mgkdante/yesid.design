@@ -14,16 +14,16 @@ export function selectBrowser(event: string, changedFiles: () => readonly string
 	}
 }
 
-export function changedFiles(base: string, head: string): string[] {
+export function changedFiles(base: string, head: string, cwd = process.cwd()): string[] {
 	if (![base, head].every((sha) => /^[a-f0-9]{40}$/u.test(sha))) {
 		throw new Error('Expected base and head commit SHAs');
 	}
-	for (const sha of [base, head]) {
-		execFileSync('git', ['fetch', '--no-tags', '--depth=1', 'origin', sha]);
-	}
+	const mergeBase = execFileSync('git', ['merge-base', base, head], {
+		cwd, encoding: 'utf8',
+	}).trim();
 	// Disable rename detection so both sides of moves must be allowed.
-	const diff = execFileSync('git', ['diff', '--no-renames', '--name-only', '-z', base, head], {
-		encoding: 'utf8',
+	const diff = execFileSync('git', ['diff', '--no-renames', '--name-only', '-z', mergeBase, head], {
+		cwd, encoding: 'utf8',
 	});
 	return diff === '' ? [] : diff.slice(0, -1).split('\0');
 }
