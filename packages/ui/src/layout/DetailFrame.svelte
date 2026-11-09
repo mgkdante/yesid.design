@@ -221,6 +221,13 @@
 		min-width: 0;
 	}
 
+	/* Phones: top-level section cards reach into the page gutter to give their text more room. */
+	@media (max-width: 767px) {
+		.detail-shell-center :global([data-slot='card'].section-card:not([data-slot='card'] *)) {
+			margin-inline: calc(0.5rem - var(--space-page-x));
+		}
+	}
+
 	@media (min-width: 1024px) {
 		.detail-shell-mobile-summary {
 			display: none;

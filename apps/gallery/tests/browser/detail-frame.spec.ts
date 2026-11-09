@@ -43,6 +43,20 @@ test('detail frame layout at this width', async ({ page }) => {
 	expect((await title.boundingBox())!.y).toBeGreaterThanOrEqual((await navBottom()) + NAV_CLEARANCE);
 });
 
+test('section cards reach into the page gutter on phones', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 800 });
+	await page.goto('/detail-frame?sections=1');
+	const card = (await page.locator('[data-slot="card"].section-card').first().boundingBox())!;
+	expect(Math.round(card.x)).toBe(8);
+	expect(Math.round(card.width)).toBe(390 - 16);
+	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+
+	await page.setViewportSize({ width: 800, height: 800 });
+	const center = (await page.locator('[data-slot="detail-shell-center"]').boundingBox())!;
+	const tablet = (await page.locator('[data-slot="card"].section-card').first().boundingBox())!;
+	expect(tablet.x).toBe(center.x);
+});
+
 test('the header circuit grid holds still while the header scrolls', async ({ page }) => {
 	await page.goto('/detail-frame');
 	const header = page.locator('[data-slot="article-header"]');
