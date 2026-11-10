@@ -131,11 +131,15 @@ jobs:
       options: --init --ipc=host
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install container setup prerequisite
+      - name: Bootstrap pinned Bun
+        shell: bash
         run: |
-          apt-get update
-          apt-get install --yes --no-install-recommends unzip
-          rm -rf /var/lib/apt/lists/*
+          # The Playwright image has Node/npm but no unzip. Avoid a mutable APT index.
+          version="$(cat .bun-version)"
+          npm install --prefix "$RUNNER_TEMP/bun-bootstrap" --no-save --ignore-scripts --no-package-lock "@oven/bun-linux-x64@$version"
+          install -D -m 755 "$RUNNER_TEMP/bun-bootstrap/node_modules/@oven/bun-linux-x64/bin/bun" "$HOME/.bun/bin/bun"
+          export PATH="$HOME/.bun/bin:$PATH"
+          test "$(bun --version)" = "$version"
       - uses: ./.github/actions/setup
       - name: Run browser authority
         run: bun run --cwd apps/gallery test:browser --shard=${{ matrix.shard }}/2
