@@ -1,11 +1,103 @@
-import { describe, expect, it } from 'vitest';
-import { OG_HEIGHT, OG_PALETTE, OG_WIDTH, renderOgPng } from '../og.js';
+import { describe, expect, it, vi } from 'vitest';
+import { OG_HEIGHT, OG_LINE_MIN_FONT_SIZE, OG_PALETTE, OG_WIDTH, renderOgPng } from '../og.js';
 import { ogFonts } from '../og-fonts.js';
 import { readOgFonts } from '../og-files.js';
+import { OG_LINE_MAX_LENGTH, resolveShareCopy } from '../share-copy.js';
+import * as satori from '../satori.js';
 
 const card = { eyebrow: 'Blog', wordmark: 'yesid', title: 'A share card', handle: 'example.com', location: 'Montréal' };
 
+const longDescription = 'A practical guide to building accessible interfaces for everyday readers. '
+	+ 'Learn how careful content choices keep publishing workflows clear, useful and easier to maintain for teams and their readers.';
+
 describe('share card', () => {
+	it.each([
+		'  One look\n for\t every site.  ',
+		'W'.repeat(OG_LINE_MAX_LENGTH),
+		Array(6).fill('W'.repeat(32)).join(' '),
+		Array(6).fill('W'.repeat(32)).join(' ') + ' WW',
+		('W'.repeat(34) + ' ').repeat(5) + 'W'.repeat(OG_LINE_MAX_LENGTH - 175),
+		longDescription,
+		`${'WWW '.repeat(49)}WWW.`,
+		`${'W'.repeat(199)}.`,
+		('W'.repeat(34) + ' ').repeat(5) + 'W'.repeat(25),
+		('W'.repeat(18) + ' ').repeat(10) + 'W'.repeat(10),
+		`${'ÉlargissementÀÖÜ '.repeat(6)}https://example.com/${'W'.repeat(78)}`,
+	])(
+		'keeps the full primary and footer inside the padded image at a legible size', async (primary) => {
+			const copy = resolveShareCopy({ locales: ['en'], candidates: [
+				{ id: 'primary', text: { en: primary } }, { id: 'body', text: { en: longDescription } },
+			] }).en!;
+			if (copy.status !== 'selected') throw new Error('Expected usable content');
+			const render = vi.spyOn(satori, 'renderSatoriPng');
+			let call: (typeof render.mock.calls)[number];
+			try {
+				await renderOgPng({ ...card, title: copy }, readOgFonts(), () => new Uint8Array());
+				call = render.mock.calls.at(-1)!;
+			} finally {
+				render.mockRestore();
+			}
+			expect(copy.ogLine).toBe(primary.replace(/\s+/gu, ' ').trim());
+			const bounds: { text: string; top: number; bottom: number; left: number; right: number; fontSize?: number }[] = [];
+			await satori.renderSatoriPng(call[0], {
+				...call[1],
+				// Keep text in this second real render so missing glyphs are observable too.
+				embedFont: false,
+				onNodeDetected(node) {
+					if (node.textContent) bounds.push({
+						text: node.textContent, top: node.top, bottom: node.top + node.height,
+						left: node.left, right: node.left + node.width,
+						fontSize: node.props?.style?.fontSize,
+					});
+				},
+			}, (svg) => {
+				if (/^[W ]+$/u.test(copy.ogLine)) {
+					const rendered = [...svg.matchAll(/<text\b([^>]*)>([^<]*)<\/text>/gu)]
+						.filter(([, attributes]) => attributes!.includes('font-family="inter"') && attributes!.includes('font-weight="500"'))
+						.map(([, , text]) => text).join('');
+					expect(rendered.replace(/\s/gu, '')).toBe(copy.ogLine.replace(/\s/gu, ''));
+				}
+				return new Uint8Array();
+			});
+			expect(bounds.some(({ text }) => text === copy.ogLine)).toBe(true);
+			expect(Number.parseFloat(String(bounds.find(({ text }) => text === copy.ogLine)?.fontSize)))
+				.toBeGreaterThanOrEqual(OG_LINE_MIN_FONT_SIZE);
+			expect(bounds.some(({ text }) => text === card.handle)).toBe(true);
+			expect(bounds.some(({ text }) => text === card.location)).toBe(true);
+			expect(Math.min(...bounds.map(({ top }) => top))).toBeGreaterThanOrEqual(80);
+			expect(Math.max(...bounds.map(({ bottom }) => bottom))).toBeLessThanOrEqual(OG_HEIGHT - 80);
+			expect(Math.min(...bounds.map(({ left }) => left))).toBeGreaterThanOrEqual(80);
+			expect(Math.max(...bounds.map(({ right }) => right))).toBeLessThanOrEqual(OG_WIDTH - 80);
+		},
+	);
+
+	it('draws the complete content-derived OG line in place of the legacy title line', async () => {
+		const text = 'A practical guide to building accessible interfaces for everyday readers.';
+		const copy = resolveShareCopy({ locales: ['en'], candidates: [{ id: 'excerpt', text: { en: text } }] }).en!;
+		if (copy.status !== 'selected') throw new Error('Expected usable content');
+		const render = vi.spyOn(satori, 'renderSatoriPng');
+		try {
+			await renderOgPng({ ...card, title: copy }, readOgFonts(), () => new Uint8Array());
+			// Satori embeds glyph outlines in SVG; inspect its actual input for the full text.
+			const tree = JSON.stringify(render.mock.calls[0]![0]);
+			expect(tree).toContain(JSON.stringify(copy.ogLine));
+			expect(tree).not.toContain(JSON.stringify(card.title));
+		} finally {
+			render.mockRestore();
+		}
+	});
+
+	it('rejects unfit selected text at the legible minimum before rasterization', async () => {
+		const copy = resolveShareCopy({ locales: ['en'], candidates: [
+			{ id: 'primary', text: { en: 'W'.repeat(OG_LINE_MAX_LENGTH * 10) } },
+			{ id: 'body', text: { en: longDescription } },
+		] }).en!;
+		if (copy.status !== 'selected') throw new Error('Expected usable content');
+		const rasterize = vi.fn(() => new Uint8Array());
+		await expect(renderOgPng({ ...card, title: copy }, readOgFonts(), rasterize)).rejects.toThrow(RangeError);
+		expect(rasterize).not.toHaveBeenCalled();
+	});
+
 	it('hands the rasterizer a token-backed card with the grid behind its foreground', async () => {
 		let svg = '';
 		const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);

@@ -3,6 +3,8 @@
   JSON-LD. The app passes resolved values and keeps its locale and URL policy.
 -->
 <script lang="ts" module>
+	import type { ShareCopySelection } from '@yesid/seo-kit/share-copy';
+
 	export interface SeoHeadAlternate {
 		hreflang: string;
 		href: string;
@@ -17,7 +19,8 @@
 
 	export interface SeoHeadProps {
 		title: string;
-		description: string;
+		/** Resolved string, or content selected by `resolveShareCopy`. */
+		description: string | ShareCopySelection;
 		siteName: string;
 		/** Absolute. Leave it out on error pages: no canonical, `og:url` or hreflang. */
 		canonical?: string;
@@ -57,11 +60,12 @@
 		themeColor = tokens.color.dark.background.$value,
 		jsonLd = [],
 	}: SeoHeadProps = $props();
+	const descriptionText = $derived(typeof description === 'string' ? description : description.description);
 </script>
 
 <svelte:head>
 	<title>{title}</title>
-	<meta name="description" content={description} />
+	<meta name="description" content={descriptionText} />
 	{#if canonical}
 		<link rel="canonical" href={canonical} />
 		{#each alternates as alternate (alternate.hreflang)}
@@ -78,7 +82,7 @@
 	{/if}
 
 	<meta property="og:title" content={title} />
-	<meta property="og:description" content={description} />
+	<meta property="og:description" content={descriptionText} />
 	<meta property="og:image" content={image.url} />
 	<meta property="og:image:alt" content={image.alt} />
 	<meta property="og:image:width" content={String(image.width ?? 1200)} />
@@ -101,7 +105,7 @@
 		<meta name="twitter:creator" content={twitter.creator} />
 	{/if}
 	<meta name="twitter:title" content={title} />
-	<meta name="twitter:description" content={description} />
+	<meta name="twitter:description" content={descriptionText} />
 	<meta name="twitter:image" content={image.url} />
 	<meta name="twitter:image:alt" content={image.alt} />
 

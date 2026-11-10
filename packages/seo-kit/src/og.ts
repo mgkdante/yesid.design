@@ -1,8 +1,11 @@
 import tokens from '@yesid/tokens/tokens.json';
 import { renderSatoriPng, type SvgRasterizer } from './satori.js';
+import type { ShareCopySelection } from './share-copy.js';
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
+/** Selected card text never shrinks below this size; unfit input rejects without clipping. */
+export const OG_LINE_MIN_FONT_SIZE = 24;
 
 const dark = tokens.color.dark;
 
@@ -27,7 +30,8 @@ export interface OgCardInput {
 	eyebrow: string;
 	/** The product name; the card adds the accent dot. */
 	wordmark: string;
-	title: string;
+	/** Legacy title line, or content selected by `resolveShareCopy`. */
+	title: string | ShareCopySelection;
 	/** Bottom left, usually the host. */
 	handle: string;
 	/** Bottom right, usually the city. */
@@ -64,7 +68,7 @@ function grid() {
 	return lines;
 }
 
-function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
+function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput, descriptionSize = 32) {
 	return el(
 		'div',
 		{
@@ -89,7 +93,7 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 						display: 'flex',
 						alignItems: 'baseline',
 						fontWeight: 900,
-						fontSize: '180px',
+						fontSize: typeof title === 'string' ? '180px' : '120px',
 						letterSpacing: '-0.04em',
 						lineHeight: 1,
 					},
@@ -99,13 +103,14 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 					'div',
 					{
 						fontWeight: 500,
-						fontSize: '48px',
+						fontSize: typeof title === 'string' ? '48px' : `${descriptionSize}px`,
+						...(typeof title === 'string' ? {} : { wordBreak: 'break-word' }),
 						letterSpacing: '-0.01em',
 						lineHeight: 1.15,
 						maxWidth: '1040px',
 						color: OG_PALETTE.muted,
 					},
-					title,
+					typeof title === 'string' ? title : title.ogLine,
 				),
 			]),
 			el(
@@ -129,11 +134,41 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 	);
 }
 
+function renderSelectedOgPng<Bytes extends Uint8Array>(
+	card: OgCardInput & { title: ShareCopySelection },
+	fonts: readonly OgFont[],
+	rasterize: SvgRasterizer<Bytes>,
+	fontSize = 32,
+): Promise<Bytes> {
+	let fits = true;
+	let measuredLine = false;
+	return renderSatoriPng(ogCard(card, fontSize), {
+		width: OG_WIDTH, height: OG_HEIGHT, fonts: [...fonts],
+		onNodeDetected(node) {
+			if (!node.textContent) return;
+			fits &&= node.top >= 80 && node.top + node.height <= OG_HEIGHT - 80
+				&& node.left >= 80 && node.left + node.width <= OG_WIDTH - 80;
+			if (node.textContent !== card.title.ogLine) return;
+			measuredLine = true;
+			// Reserve room for the eyebrow, 120px wordmark, 24px gap and footer
+			// within the 470px padded height. Measure wrapping with the actual fonts.
+			fits &&= node.height <= 240 && node.width <= 1040;
+		},
+	}, (svg) => {
+		if (fits && measuredLine) return rasterize(svg);
+		if (fontSize === OG_LINE_MIN_FONT_SIZE) throw new RangeError('Share line cannot fit inside the OG card at the minimum legible size');
+		return renderSelectedOgPng(card, fonts, rasterize, Math.max(OG_LINE_MIN_FONT_SIZE, fontSize - 2));
+	});
+}
+
 /** Renders the yesid share card; the consumer rasterizes Satori's SVG (resvg, for example). */
 export function renderOgPng<Bytes extends Uint8Array = Uint8Array>(
 	card: OgCardInput,
 	fonts: readonly OgFont[],
 	rasterize: SvgRasterizer<Bytes>,
 ): Promise<Bytes> {
+	if (typeof card.title !== 'string') {
+		return renderSelectedOgPng({ ...card, title: card.title }, fonts, rasterize);
+	}
 	return renderSatoriPng(ogCard(card), { width: OG_WIDTH, height: OG_HEIGHT, fonts: [...fonts] }, rasterize);
 }

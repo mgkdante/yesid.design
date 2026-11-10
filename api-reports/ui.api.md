@@ -192,6 +192,7 @@ import { PortalProps } from 'bits-ui';
 import * as ResizablePrimitive from 'paneforge';
 import { ScrollArea as ScrollArea_2 } from 'bits-ui';
 import type { Separator } from 'bits-ui';
+import type { ShareCopySelection } from '@yesid/seo-kit/share-copy';
 import type { Snippet } from 'svelte';
 import { SvelteComponent } from 'svelte';
 import type { SVGAttributes } from 'svelte/elements';
@@ -2304,8 +2305,7 @@ interface SeoHeadProps {
     // (undocumented)
     author?: string;
     canonical?: string;
-    // (undocumented)
-    description: string;
+    description: string | ShareCopySelection;
     // (undocumented)
     image: SeoHeadImage;
     // (undocumented)

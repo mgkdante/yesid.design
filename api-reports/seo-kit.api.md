@@ -13,6 +13,11 @@
 - `types` → `./src/jsonld.ts`
 - `default` → `./src/jsonld.ts`
 
+### `./share-copy`
+
+- `types` → `./src/share-copy.ts`
+- `default` → `./src/share-copy.ts`
+
 ### `./sitemap`
 
 - `types` → `./src/sitemap.ts`
@@ -55,6 +60,7 @@
 
 - `Index` → `./src/index.ts` (`.`)
 - `Jsonld` → `./src/jsonld.ts` (`./jsonld`)
+- `ShareCopy` → `./src/share-copy.ts` (`./share-copy`)
 - `Sitemap` → `./src/sitemap.ts` (`./sitemap`)
 - `Og` → `./src/og.ts` (`./og`)
 - `OgFonts` → `./src/og-fonts.ts` (`./og/fonts`)
@@ -223,7 +229,14 @@ declare namespace Index {
         renderSatoriPng,
         SatoriTree,
         SatoriRenderOptions,
-        SvgRasterizer
+        SvgRasterizer,
+        resolveShareCopy,
+        OG_LINE_MAX_LENGTH,
+        ShareCopyCandidate,
+        ShareCopyInput,
+        ShareCopySource,
+        ShareCopySelection,
+        ShareCopyResult
     }
 }
 
@@ -266,11 +279,15 @@ interface JsonLdReference {
     '@id': string;
 }
 
+// @public (undocumented)
+type LocalizedText = Readonly<Record<string, string | null | undefined>>;
+
 declare namespace Og {
     export {
         renderOgPng,
         OG_WIDTH,
         OG_HEIGHT,
+        OG_LINE_MIN_FONT_SIZE,
         OG_PALETTE,
         OgFont,
         OgCardInput
@@ -279,6 +296,12 @@ declare namespace Og {
 
 // @public (undocumented)
 const OG_HEIGHT = 630;
+
+// @public
+const OG_LINE_MAX_LENGTH = 200;
+
+// @public
+const OG_LINE_MIN_FONT_SIZE = 24;
 
 // @public
 const OG_PALETTE: {
@@ -297,8 +320,7 @@ interface OgCardInput {
     eyebrow: string;
     handle: string;
     location: string;
-    // (undocumented)
-    title: string;
+    title: string | ShareCopySelection;
     wordmark: string;
 }
 
@@ -364,6 +386,9 @@ function renderOgPng<Bytes extends Uint8Array = Uint8Array>(card: OgCardInput, f
 // @public (undocumented)
 function renderSatoriPng<Bytes extends Uint8Array = Uint8Array>(tree: unknown, options: SatoriRenderOptions, rasterize: SvgRasterizer<Bytes>): Promise<Bytes>;
 
+// @public
+function resolveShareCopy(input: ShareCopyInput): Record<string, ShareCopyResult>;
+
 // @public (undocumented)
 function robotsTxt(input: RobotsTxtInput): string;
 
@@ -390,6 +415,82 @@ const SECURITY_HEADERS: Readonly<Record<string, string>>;
 
 // @public
 function serializeJsonLd(nodes: readonly object[]): string;
+
+declare namespace ShareCopy {
+    export {
+        resolveShareCopy,
+        OG_LINE_MAX_LENGTH,
+        ShareCopyCandidate,
+        ShareCopyInput,
+        ShareCopySource,
+        ShareCopySelection,
+        ShareCopyResult
+    }
+}
+
+// @public
+interface ShareCopyCandidate {
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    text: LocalizedText;
+}
+
+// @public (undocumented)
+interface ShareCopyInput {
+    // (undocumented)
+    candidates: readonly ShareCopyCandidate[];
+    cta?: Readonly<Record<string, string | undefined>>;
+    defaultLocale?: string;
+    defaults?: {
+        description?: LocalizedText;
+        ogLine?: LocalizedText;
+    };
+    // (undocumented)
+    locales: readonly string[];
+    maxLength?: number;
+    minLength?: number;
+}
+
+// @public
+type ShareCopyResult = ShareCopySelection | {
+    status: 'missing';
+    locale: string;
+    description?: string;
+    descriptionSource?: ShareCopySource;
+    ogLine?: string;
+    ogLineSource?: ShareCopySource;
+};
+
+// @public (undocumented)
+interface ShareCopySelection {
+    // (undocumented)
+    candidateId: string | null;
+    // (undocumented)
+    candidateIndex: number | null;
+    ctaAppended: boolean;
+    description: string;
+    // (undocumented)
+    descriptionSource: ShareCopySource;
+    // (undocumented)
+    locale: string;
+    ogLine: string;
+    // (undocumented)
+    ogLineSource: ShareCopySource;
+    sourceLocale: string;
+    // (undocumented)
+    status: 'selected';
+}
+
+// @public (undocumented)
+interface ShareCopySource {
+    candidateId: string | null;
+    candidateIndex: number | null;
+    // (undocumented)
+    rule: 'primary-cta' | 'primary' | 'sentences' | 'default';
+    // (undocumented)
+    sourceLocale: string;
+}
 
 declare namespace Sitemap {
     export {
