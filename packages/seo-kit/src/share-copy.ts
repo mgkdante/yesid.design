@@ -73,7 +73,8 @@ function withCta(text: string, cta: string, maxLength: number) {
 }
 
 // Deliberately small abbreviation list, plus initials/acronyms and decimal points. Not NLP.
-const abbreviation = /(?<![\p{L}\p{N}_])(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|M|Mme|Mlle|Pr|Sra|Srta|Ud|Uds|e\.g|i\.e|p\.\s*(?:ex|ej)|núm|\p{L})\.$/iu;
+// Initials may carry combining marks (decomposed "É." is the same initial as "É.").
+const abbreviation = /(?<![\p{L}\p{M}\p{N}_])(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|M|Mme|Mlle|Pr|Sra|Srta|Ud|Uds|e\.g|i\.e|p\.\s*(?:ex|ej)|núm|\p{L}\p{M}*)\.$/iu;
 
 /** Returns only complete sentences; an unfinished final tail never becomes share copy. */
 function leadingSentences(text: string, maxLength: number): string {

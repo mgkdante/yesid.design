@@ -209,7 +209,7 @@ describe('resolveShareCopy', () => {
 		] }).en).toMatchObject({ description: excerpt, descriptionSource: { candidateId: 'body', candidateIndex: 3 } });
 	});
 
-	it.each(['A.', 'É.', 'Ö.'])('keeps the initial %s inside an oversized sentence', (initial) => {
+	it.each(['A.', 'É.', 'Ö.', 'É.', 'Ö.', 'U.É.'])('keeps the initial %s inside an oversized sentence', (initial) => {
 		expect(resolveShareCopy({ ...input, minLength: 40, maxLength: 60, candidates: [
 			input.candidates[0]!, { id: 'body', text: { en:
 				`Les interfaces accessibles sont étudiées par Mme. ${initial} Roy avec de nombreux détails supplémentaires pour tous les lecteurs.`,
