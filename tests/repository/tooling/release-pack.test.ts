@@ -47,6 +47,29 @@ function addTargetOnlyPackage(repo: TempCheckout, name = '@yesid/retired-widget'
 }
 
 describe('release packing', () => {
+	it('packs every sibling dependency at the canonical owner even when source URLs predate a transfer', () => {
+		const repo = checkout();
+		for (const { directory } of RELEASE_PACKAGES) {
+			const path = `packages/${directory}/package.json`;
+			const manifest = JSON.parse(repo.read(path));
+			manifest.peerDependencies['@yesid/tokens'] =
+				'https://github.com/mgkdante/yesid.design/releases/download/v1.2.2/yesid-tokens-1.2.2.tgz';
+			repo.write(path, JSON.stringify(manifest));
+		}
+		const paths = packRelease(repo.root, { tag: 'v1.2.3', repository: 'yesid-dev/yesid.design' });
+		for (const path of paths) {
+			const packed = JSON.parse(tarballFile(path, 'package.json'));
+			for (const section of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+				for (const [name, value] of Object.entries(packed[section] ?? {})) {
+					if (!name.startsWith('@yesid/')) continue;
+					expect(value).toBe(
+						`https://github.com/yesid-dev/yesid.design/releases/download/v1.2.3/yesid-${name.slice('@yesid/'.length)}-1.2.3.tgz`,
+					);
+				}
+			}
+		}
+	}, 30_000);
+
 	it('allows releases from the canonical repository', () => {
 		const workflow = readFileSync(new URL('../../../.github/workflows/release.yml', import.meta.url), 'utf8');
 		expect(workflow).toContain("if: github.repository == 'yesid-dev/yesid.design'");
