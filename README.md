@@ -34,12 +34,12 @@ browser tests. It is never released.
 
 ## Install
 
-The packages are not on npm. Each [release](https://github.com/mgkdante/yesid.design/releases)
+The packages are not on npm. Each [release](https://github.com/yesid-dev/yesid.design/releases)
 attaches one tarball per package, and a product lists the ones it uses in `package.json` by URL,
 with the same tag in every URL:
 
 ```text
-https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-<package>-X.Y.Z.tgz
+https://github.com/yesid-dev/yesid.design/releases/download/vX.Y.Z/yesid-<package>-X.Y.Z.tgz
 ```
 
 `bun install` records each tarball's integrity in `bun.lock`. `@yesid/ui` takes `@yesid/tokens`,
@@ -48,7 +48,7 @@ https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-<package
 [dependency block](docs/BUILD-A-YESID-PRODUCT.md#2-install-one-exact-release).
 
 To upgrade, change the tag and the version in every URL and run `bun install`. A rollback is the
-same edit with an earlier release. `gh attestation verify <tarball> --repo mgkdante/yesid.design`
+same edit with an earlier release. `gh attestation verify <tarball> --repo yesid-dev/yesid.design`
 confirms a tarball came from the release workflow.
 
 ## Develop
@@ -56,7 +56,7 @@ confirms a tarball came from the release workflow.
 You need Bun 1.3.11 ([`.bun-version`](.bun-version)) and Node 22.17 or newer ([`.nvmrc`](.nvmrc)).
 
 ```sh
-git clone https://github.com/mgkdante/yesid.design.git
+git clone https://github.com/yesid-dev/yesid.design.git
 cd yesid.design
 bun install --frozen-lockfile
 bun run check

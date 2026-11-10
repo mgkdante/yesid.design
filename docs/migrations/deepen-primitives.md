@@ -19,7 +19,7 @@ The package is not released by this change. The owner reviews the API report whe
   markers on these primitives in either product. Preserve Button ghost's `dark:hover:bg-muted/50`
   and the existing `[a]:hover:bg-primary/80` selectors.
 - Replace exact `var(--radius)` with `var(--radius-md)`, its current resolved value (8px).
-  Transit PR [619](https://github.com/mgkdante/transit/pull/619) changes the sole product reference,
+  Transit PR [619](https://github.com/yesid-dev/transit/pull/619) changes the sole product reference,
   MetricInfo.svelte. Merge that migration before adopting the new token output.
 - Replace `var(--secondary)` with `var(--popover)` if using the retired alias. Its
   `--color-secondary` Tailwind mapping and the eight `--color-sidebar*` mappings are removed.
