@@ -129,8 +129,11 @@ const copies = resolveShareCopy({
 Each `text` is a locale-keyed record; missing, null or undefined translations are allowed.
 Products with locale-keyed content objects can map their fields into these records at the boundary.
 `SeoHead.description` and the OG renderer's `title` still accept strings, so adoption is additive.
-Selected-content cards use smaller wordmark and description type and wrap long words to fit
-the default 200-character limit. Larger custom bounds need product-specific image verification.
+Selected-content cards use a smaller wordmark and start descriptions at 32px, stepping down
+against Satori's measured layout to keep the full text and footer inside the padded image at
+the default 200-code-point limit with the bundled fonts. Prose wraps at word boundaries;
+tokens wider than a line can break within the word. Larger custom bounds and custom fonts
+need product-specific image verification.
 Replace local tagline maps and CTA composition with content fields and this helper when upgrading.
 Consumers must run their own checks and inspect real head tags and generated images for their
 locales, including long text and missing translations; repository tests do not establish adoption.

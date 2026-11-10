@@ -66,7 +66,7 @@ function grid() {
 	return lines;
 }
 
-function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
+function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput, descriptionSize = 32) {
 	return el(
 		'div',
 		{
@@ -101,7 +101,7 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 					'div',
 					{
 						fontWeight: 500,
-						fontSize: typeof title === 'string' ? '48px' : '32px',
+						fontSize: typeof title === 'string' ? '48px' : `${descriptionSize}px`,
 						...(typeof title === 'string' ? {} : { wordBreak: 'break-word' }),
 						letterSpacing: '-0.01em',
 						lineHeight: 1.15,
@@ -132,11 +132,36 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 	);
 }
 
+function renderSelectedOgPng<Bytes extends Uint8Array>(
+	card: OgCardInput & { title: ShareCopySelection },
+	fonts: readonly OgFont[],
+	rasterize: SvgRasterizer<Bytes>,
+	fontSize = 32,
+): Promise<Bytes> {
+	let fits = false;
+	return renderSatoriPng(ogCard(card, fontSize), {
+		width: OG_WIDTH, height: OG_HEIGHT, fonts: [...fonts],
+		onNodeDetected(node) {
+			if (node.textContent !== card.title.ogLine) return;
+			// Reserve room for the eyebrow, 120px wordmark, 24px gap and footer
+			// within the 470px padded height. Measure wrapping with the actual fonts.
+			fits = node.height <= 240 && node.width <= 1040;
+		},
+	}, (svg) => {
+		if (fits) return rasterize(svg);
+		if (fontSize === 1) throw new RangeError('Share description cannot fit inside the OG card');
+		return renderSelectedOgPng(card, fonts, rasterize, Math.max(1, fontSize - 2));
+	});
+}
+
 /** Renders the yesid share card; the consumer rasterizes Satori's SVG (resvg, for example). */
 export function renderOgPng<Bytes extends Uint8Array = Uint8Array>(
 	card: OgCardInput,
 	fonts: readonly OgFont[],
 	rasterize: SvgRasterizer<Bytes>,
 ): Promise<Bytes> {
+	if (typeof card.title !== 'string') {
+		return renderSelectedOgPng({ ...card, title: card.title }, fonts, rasterize);
+	}
 	return renderSatoriPng(ogCard(card), { width: OG_WIDTH, height: OG_HEIGHT, fonts: [...fonts] }, rasterize);
 }

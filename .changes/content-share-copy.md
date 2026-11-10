@@ -13,7 +13,8 @@ missing content explicitly.
 
 Pass a selected result to `SeoHead.description` and `renderOgPng`'s `title` to use
 the same text in meta/OG/Twitter descriptions and on the generated share image.
-Selected-content cards use smaller type and wrap long words to accommodate the
-default 200-character bound. Existing string inputs work unchanged. No per-page hard-coded share copy; write
+Selected-content cards use smaller type, wrap long words and step description size
+down against measured layout to keep the complete default 200-code-point text and
+footer inside the padded image with the bundled fonts. Existing string inputs work unchanged. No per-page hard-coded share copy; write
 it in the content fields. Consumers adopt this API in their own release upgrade
 and verify their real content, head tags and generated images.

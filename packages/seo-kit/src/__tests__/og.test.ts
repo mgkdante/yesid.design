@@ -11,7 +11,14 @@ const longDescription = 'A practical guide to building accessible interfaces for
 	+ 'Learn how careful content choices keep publishing workflows clear, useful and easier to maintain for teams and their readers.';
 
 describe('share card', () => {
-	it.each([longDescription, `${'WWW '.repeat(49)}WWW.`, `${'W'.repeat(199)}.`])(
+	it.each([
+		longDescription,
+		`${'WWW '.repeat(49)}WWW.`,
+		`${'W'.repeat(199)}.`,
+		('W'.repeat(34) + ' ').repeat(5) + 'W'.repeat(25),
+		('W'.repeat(18) + ' ').repeat(10) + 'W'.repeat(10),
+		`${'ÉlargissementÀÖÜ '.repeat(6)}https://example.com/${'W'.repeat(78)}`,
+	])(
 		'keeps long selected descriptions and the footer inside the padded image', async (description) => {
 			const copy = resolveShareCopy({ locales: ['en'], candidates: [{ id: 'excerpt', text: { en: description } }] }).en!;
 			if (copy.status !== 'selected') throw new Error('Expected usable content');
@@ -19,20 +26,27 @@ describe('share card', () => {
 			let call: (typeof render.mock.calls)[number];
 			try {
 				await renderOgPng({ ...card, title: copy }, readOgFonts(), () => new Uint8Array());
-				call = render.mock.calls[0]!;
+				call = render.mock.calls.at(-1)!;
 			} finally {
 				render.mockRestore();
 			}
-			const bounds: { text: string; top: number; bottom: number }[] = [];
+			const bounds: { text: string; top: number; bottom: number; left: number; right: number }[] = [];
 			await satori.renderSatoriPng(call[0], {
 				...call[1],
 				onNodeDetected(node) {
-					if (node.textContent) bounds.push({ text: node.textContent, top: node.top, bottom: node.top + node.height });
+					if (node.textContent) bounds.push({
+						text: node.textContent, top: node.top, bottom: node.top + node.height,
+						left: node.left, right: node.left + node.width,
+					});
 				},
 			}, () => new Uint8Array());
 			expect(bounds.some(({ text }) => text === copy.ogLine)).toBe(true);
+			expect(bounds.some(({ text }) => text === card.handle)).toBe(true);
+			expect(bounds.some(({ text }) => text === card.location)).toBe(true);
 			expect(Math.min(...bounds.map(({ top }) => top))).toBeGreaterThanOrEqual(80);
 			expect(Math.max(...bounds.map(({ bottom }) => bottom))).toBeLessThanOrEqual(OG_HEIGHT - 80);
+			expect(Math.min(...bounds.map(({ left }) => left))).toBeGreaterThanOrEqual(80);
+			expect(Math.max(...bounds.map(({ right }) => right))).toBeLessThanOrEqual(OG_WIDTH - 80);
 		},
 	);
 
