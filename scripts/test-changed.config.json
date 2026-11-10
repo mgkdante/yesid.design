@@ -1,0 +1,98 @@
+{
+  "app": "apps/gallery",
+  "rules": [
+    {
+      "specs": [
+        "station-tabs.spec.ts",
+        "accessibility.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/station-tabs/"
+    },
+    {
+      "specs": [
+        "data-page.spec.ts",
+        "accessibility.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/data-page/"
+    },
+    {
+      "specs": [
+        "site-header.spec.ts",
+        "accessibility.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/site-header/"
+    },
+    {
+      "specs": [
+        "density.spec.ts",
+        "accessibility.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/density/"
+    }
+  ],
+  "browserGroups": [
+    {
+      "match": ".*",
+      "allProjects": [
+        "*"
+      ],
+      "build": [],
+      "projects": [
+        "phone",
+        "desktop"
+      ]
+    }
+  ],
+  "playwright": "playwright.changed.config.ts",
+  "specDir": "apps/gallery/tests/browser",
+  "repositoryTests": true,
+  "fullPlaywright": "playwright.config.ts",
+  "generatedInputs": [
+    {
+      "workspaces": [
+        "packages/tokens",
+        "packages/motion",
+        "packages/ui",
+        "apps/gallery"
+      ],
+      "prefix": "packages/tokens/tokens.json"
+    },
+    {
+      "workspaces": [
+        "packages/tokens",
+        "packages/motion",
+        "packages/ui",
+        "apps/gallery"
+      ],
+      "prefix": "tools/build-tokens.ts"
+    }
+  ],
+  "repositoryGraphPrefixes": [
+    "apps/gallery/src/",
+    "apps/gallery/tests/"
+  ],
+  "unitFileTests": [
+    {
+      "tests": [
+        "src/rune-modules.test.ts"
+      ],
+      "prefix": "packages/ui/src/",
+      "workspace": "packages/ui"
+    },
+    {
+      "tests": [
+        "src/primitives/primitive-cleanup.test.ts"
+      ],
+      "prefix": "docs/evidence/",
+      "workspace": "packages/ui"
+    }
+  ],
+  "repositoryFileTests": [
+    {
+      "prefix": "apps/gallery/tests/browser/",
+      "tests": [
+        "tests/repository/contracts/package-contracts.test.ts"
+      ]
+    }
+  ]
+}
