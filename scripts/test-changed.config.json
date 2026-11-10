@@ -3,25 +3,29 @@
   "rules": [
     {
       "specs": [
-        "station-tabs.spec.ts"
+        "station-tabs.spec.ts",
+        "accessibility.spec.ts"
       ],
       "prefix": "apps/gallery/src/routes/station-tabs/"
     },
     {
       "specs": [
-        "data-page.spec.ts"
+        "data-page.spec.ts",
+        "accessibility.spec.ts"
       ],
       "prefix": "apps/gallery/src/routes/data-page/"
     },
     {
       "specs": [
-        "site-header.spec.ts"
+        "site-header.spec.ts",
+        "accessibility.spec.ts"
       ],
       "prefix": "apps/gallery/src/routes/site-header/"
     },
     {
       "specs": [
-        "density.spec.ts"
+        "density.spec.ts",
+        "accessibility.spec.ts"
       ],
       "prefix": "apps/gallery/src/routes/density/"
     }
@@ -41,5 +45,6 @@
   ],
   "playwright": "playwright.changed.config.ts",
   "specDir": "apps/gallery/tests/browser",
-  "repositoryTests": true
+  "repositoryTests": true,
+  "fullPlaywright": "playwright.config.ts"
 }
