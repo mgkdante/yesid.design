@@ -78,6 +78,30 @@ test('sheet mouse drag snaps nearest and flicks in direction', async ({ page }) 
 	await expect(sheet).toHaveAttribute('data-detent', 'half');
 });
 
+test('sheet touch drag follows the finger and snaps both ways', async ({ page, context }) => {
+	const { sheet, handle } = await open(page);
+	const cdp = await context.newCDPSession(page);
+	// Touch pointers start captured by the touched handle child, unlike a mouse.
+	async function drag(to: number) {
+		const box = (await handle.boundingBox())!;
+		const x = box.x + box.width / 2;
+		const from = box.y + box.height / 2;
+		const start = (await sheet.boundingBox())!.height;
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: from }] });
+		for (let step = 1; step <= 10; step++) {
+			await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: from + (to - from) * step / 10 }] });
+		}
+		expect(Math.abs((await sheet.boundingBox())!.height - start)).toBeGreaterThan(40);
+		await page.waitForTimeout(150);
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+	}
+	await drag(40);
+	await expect(sheet).toHaveAttribute('data-detent', 'full');
+	await drag(page.viewportSize()!.height - 100);
+	await expect(sheet).toHaveAttribute('data-detent', 'peek');
+	await cdp.detach();
+});
+
 test('touch scrolling and header controls do not move the sheet', async ({ page, context }) => {
 	const { sheet } = await open(page);
 	await sheet.getByRole('button', { name: 'Header action: 0' }).click();
