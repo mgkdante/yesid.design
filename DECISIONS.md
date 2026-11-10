@@ -71,6 +71,11 @@ flags. i18n-core contains no framework import, virtual module or product locale 
 runs or injects CSS on import. Consumers explicitly initialize the utility, import the
 stylesheet, and supply any live exclusion selector.
 
+Reading surfaces never ripple: anything inside `[data-ripple-exempt]` is skipped whether or not a
+consumer passes `exclude`, and `exclude` adds to that rule rather than replacing it. Products mark
+articles, editorial cards, charts and maps with the attribute so feedback stays on navigation and
+controls while people read or explore data.
+
 ## D10: Fluid clamp tokens stay structured at the source
 
 Fluid values use the `yesid.clamp` extension with structured `min`, `preferred`, and `max`

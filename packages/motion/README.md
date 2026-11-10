@@ -67,6 +67,16 @@ inner scrollers too, redraws when `trigger` resizes, and returns its cleanup. It
 reduced motion or at 1023px and below, where the art stays fully drawn. `ListingFrame`'s
 `onHeaderMount={blueprintScrub}` passes the header and the frame.
 
+## Global ripple
+
+`initGlobalRipple({ exclude? })` from `./utils/globalRipple` spawns the two-ring click ripple on
+every pointerdown and returns its cleanup; `@yesid/motion/ripple.css` styles the rings. Neither runs
+on import.
+
+Mark reading surfaces (article bodies, editorial cards, charts, maps) with `data-ripple-exempt`.
+Clicks inside them never ripple, so feedback stays on navigation and controls. The rule always
+applies; `exclude` takes an extra selector for product-specific surfaces and adds to it.
+
 ## Smooth scroll
 
 `initLenis()` starts Lenis on the window, driven by the GSAP ticker and bridged to ScrollTrigger.
