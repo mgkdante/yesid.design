@@ -6,8 +6,9 @@ import { TempCheckout } from './temp-checkout.js';
 
 const source = new URL('../../../', import.meta.url);
 const workflow = readFileSync(new URL('.github/workflows/ci.yml', source), 'utf8').replaceAll('\r\n', '\n');
-function script(name: string, job = 'classify') {
-	const block = workflow.split(`  ${job}:`)[1]?.split(/\n  [\w-]+:/u)[0] ?? '';
+const secretWorkflow = readFileSync(new URL('.github/workflows/secret-scan.yml', source), 'utf8').replaceAll('\r\n', '\n');
+function script(name: string, job = 'classify', yaml = workflow) {
+	const block = yaml.split(`  ${job}:`)[1]?.split(/\n  [\w-]+:/u)[0] ?? '';
 	const step = block.split(`      - name: ${name}\n`)[1]?.split(/\n      - /u)[0] ?? '';
 	const run = step.split('        run: |\n')[1];
 	if (!run) throw new Error(`Missing workflow runner: ${name}`);
@@ -44,7 +45,7 @@ function materialize(repo: TempCheckout, base: string, job = 'classify', event =
 	const output = join(scratch.root, 'output').replaceAll('\\', '/');
 	scratch.write('output', '');
 	const result = run(repo, script('Materialize trusted policy', job), {
-		BASE_SHA: base, GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output,
+		BASE_SHA: base, HEAD_SHA: repo.git('rev-parse', 'HEAD'), GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output,
 		RUNNER_TEMP: scratch.root.replaceAll('\\', '/'),
 	});
 	const outputs = Object.fromEntries(readFileSync(output, 'utf8').trim().split('\n').map((line) => line.split('=')));
@@ -52,6 +53,67 @@ function materialize(repo: TempCheckout, base: string, job = 'classify', event =
 }
 
 describe('trusted workflow policy runner', { timeout: 30_000 }, () => {
+	it.each(['classify', 'ci'])('merge group rejects an unreachable or unreadable base in %s', (job) => {
+		const { repo, commit } = fixture();
+		repo.write('untrusted', 'branch only'); const head = commit();
+		for (const base of [head, '', '0'.repeat(40)]) {
+			const { result } = materialize(repo, base, job, 'merge_group');
+			expect(result.status).not.toBe(0);
+		}
+	});
+	it('merge group uses its base policy and full CI despite a forged checkout and release title', () => {
+		const { repo, base, commit } = fixture();
+		repo.write('tools/ci-policy.ts', 'throw new Error("FORGED");');
+		const head = commit();
+		// Main may advance after the group was created; policy still belongs to its base.
+		repo.git('update-ref', 'refs/heads/main', head);
+		const { result, outputs, output } = materialize(repo, base, 'classify', 'merge_group');
+		expect(result.status, result.stderr).toBe(0);
+		const selected = run(repo, script('Select CI lane'), {
+			TRUSTED_POLICY: outputs.directory!, BASE_SHA: base, HEAD_SHA: head,
+			GITHUB_EVENT_NAME: 'merge_group', PR_TITLE: 'chore(release): prepare v1.0.0', GITHUB_OUTPUT: output,
+		});
+		expect(selected.status, selected.stderr).toBe(0);
+		expect(readFileSync(output, 'utf8')).toContain('browser=true\nrelease-only=false\nversion=\n');
+		const unreadable = run(repo, script('Select CI lane'), {
+			TRUSTED_POLICY: outputs.directory!, BASE_SHA: base, HEAD_SHA: '0'.repeat(40),
+			GITHUB_EVENT_NAME: 'merge_group', GITHUB_OUTPUT: output,
+		});
+		expect(unreadable.status).not.toBe(0);
+	});
+	it('merge group fails when its trusted base policy is missing', () => {
+		const { repo, commit } = fixture();
+		repo.git('rm', 'tools/ci-policy.ts'); const base = commit();
+		repo.git('update-ref', 'refs/heads/main', base);
+		for (const job of ['classify', 'ci']) {
+			expect(materialize(repo, base, job, 'merge_group').result.status).not.toBe(0);
+		}
+	});
+	it('wires merge-group events, SHAs and API approval without renaming required checks', () => {
+		for (const yaml of [workflow, secretWorkflow]) expect(yaml).toContain('\n  merge_group:\n');
+		expect(workflow).toContain('\n  ci:\n');
+		expect(secretWorkflow).toContain('    name: gitleaks\n');
+		expect(workflow).toContain('HEAD_SHA: ${{ github.event.merge_group.head_sha || github.event.pull_request.head.sha }}');
+		const approval = workflow.split('      - name: API report approval\n')[1]!.split('\n      - name:')[0]!;
+		expect(approval).toContain("if: github.event_name == 'pull_request' || github.event_name == 'merge_group'");
+		expect(approval).toContain('API_BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}');
+		expect(approval).toContain('bun run api:approve -- --base "$API_BASE_SHA"');
+	});
+	it('scans exactly the merge-group range and propagates scan and range failures', () => {
+		const { repo, base, commit } = fixture();
+		repo.write('group', 'queued change'); const head = commit();
+		const scan = script('Scan merge group range', 'gitleaks', secretWorkflow);
+		const env = { BASE_SHA: base, HEAD_SHA: head };
+		const result = run(repo, `gitleaks() { printf '%s\\n' "$@"; }\n${scan}`, env);
+		expect(result.status, result.stderr).toBe(0);
+		expect(result.stdout.trim().split('\n')).toEqual(['detect', '--redact', '--log-opts', `${base}..${head}`]);
+		expect(run(repo, `gitleaks() { return 7; }\n${scan}`, env).status).toBe(7);
+		for (const missing of ['', '0'.repeat(40)]) {
+			const invalid = run(repo, `gitleaks() { echo SCANNED; }\n${scan}`, { ...env, HEAD_SHA: missing });
+			expect(invalid.status).not.toBe(0);
+			expect(invalid.stdout).not.toContain('SCANNED');
+		}
+	});
 	it.each(['entry', 'import'])('ignores a forged %s and checkout Bun preload config', (attack) => {
 		const { repo, base, commit } = fixture();
 		if (attack === 'entry') repo.write('tools/ci-policy.ts', `import { appendFileSync } from 'node:fs';

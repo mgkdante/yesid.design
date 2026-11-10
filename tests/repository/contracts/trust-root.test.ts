@@ -41,6 +41,13 @@ function topLevelBlock(yaml: string, key: string): string {
 }
 
 describe('distribution workflow trust root', () => {
+	it('bootstraps the browser container without a mutable OS package index', () => {
+		const workflow = readText(CI_WORKFLOW_PATH);
+		const browser = workflow.split('  browser-shards:')[1]!.split('  browser-authority:')[0]!;
+		expect(browser).not.toContain('apt-get');
+		expect(browser).toContain('@oven/bun-linux-x64@');
+		expect(browser).toContain('bun --version');
+	});
 	it.each([
 		['ci.yml', CI_WORKFLOW_PATH],
 		['secret-scan.yml', SECRET_SCAN_WORKFLOW_PATH],

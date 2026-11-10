@@ -686,10 +686,10 @@ export function packRelease(repositoryRootInput: string, options: PackReleaseOpt
 		const directory = join(repositoryRoot, 'packages', pkg.directory);
 		const path = join(directory, 'package.json');
 		const source = readFileSync(path, 'utf8');
-		// Like the former workflow, rewrite all sibling workspace declarations, including
-		// devDependencies. Preserve formatting so Bun receives the same manifest bytes.
+		// Rewrite sibling workspaces and already-pinned design assets, including devDependencies.
+		// A repository transfer must not leave packed siblings depending on owner redirects.
 		const packed = source.replace(
-			/("(@yesid\/[a-z0-9][a-z0-9._-]*)"\s*:\s*)"workspace:[^"]*"/gu,
+			/("(@yesid\/[a-z0-9][a-z0-9._-]*)"\s*:\s*)"(?:workspace:[^"]*|https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/yesid\.design\/releases\/download\/[^"]*)"/gu,
 			(_match, prefix: string, name: string) => {
 				const sibling = inventory.find((candidate) => candidate.name === name);
 				if (!sibling) throw new Error(`${path} names unknown sibling dependency ${name}`);
