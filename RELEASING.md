@@ -100,7 +100,7 @@ gh release download "$TAG" --pattern 'yesid-ui-*.tgz' --dir /tmp/check
 gh attestation verify /tmp/check/yesid-ui-*.tgz --repo yesid-dev/yesid.design
 ```
 
-Releases up to v0.39.1 were signed as mgkdante/yesid.design; verify those with `gh attestation verify <tarball> --owner mgkdante --signer-repo mgkdante/yesid.design`.
+Releases v0.36.1 to v0.39.1 were signed as mgkdante/yesid.design, and v0.36.0 and earlier as mgkdante/yesid.dev-design; verify those with `gh attestation verify <tarball> --owner mgkdante --signer-repo <that repository>`.
 
 If the run fails before publishing, check `gh release view "$TAG"`. `gh release create` deletes
 its draft on failure, but cleanup can fail or the run can be cut off: delete only a confirmed
