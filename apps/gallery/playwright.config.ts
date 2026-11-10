@@ -22,6 +22,7 @@ export default defineConfig({
 	reporter: process.env.CI
 		? [
 				['line'],
+				['json', { outputFile: 'test-results/playwright-timing.json' }],
 				['html', { open: 'never', outputFolder: 'playwright-report' }],
 			]
 		: [['list']],

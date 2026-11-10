@@ -41,6 +41,22 @@ function topLevelBlock(yaml: string, key: string): string {
 }
 
 describe('distribution workflow trust root', () => {
+	it('runs three browser shards with one worker and keeps the authority aggregate', () => {
+		const workflow = readText(CI_WORKFLOW_PATH);
+		expect(workflow).toContain('shard: [1, 2, 3]');
+		expect(workflow).toContain('--shard=${{ matrix.shard }}/3');
+		expect(workflow).toContain('needs: [classify, browser-shards]');
+		const config = readText(join(REPOSITORY_ROOT, 'apps/gallery/playwright.config.ts'));
+		expect(config).toContain('workers: 1');
+		expect(config).toContain('retries: 0');
+	});
+	it('keys Bun cache by OS, pinned Bun and lockfile with an OS restore fallback', () => {
+		const setup = readText(join(GITHUB_DIRECTORY, 'actions/setup/action.yml'));
+		expect(setup).toContain("key: bun-${{ runner.os }}-${{ hashFiles('.bun-version') }}-${{ hashFiles('bun.lock') }}");
+		expect(setup).toContain('bun-${{ runner.os }}-');
+		expect(setup).toContain("path: ${{ env.BUN_INSTALL_CACHE_DIR || '~/.bun/install/cache' }}");
+		expect(readText(CI_WORKFLOW_PATH)).toContain('BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache');
+	});
 	it('bootstraps the browser container without a mutable OS package index', () => {
 		const workflow = readText(CI_WORKFLOW_PATH);
 		const browser = workflow.split('  browser-shards:')[1]!.split('  browser-authority:')[0]!;
