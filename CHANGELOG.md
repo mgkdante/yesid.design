@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.41.0-rc.1
+## 0.41.0
 
 <!-- release-fragment: ripple-exempt-attribute -->
 - `@yesid/motion` (minor): The global ripple now skips any click inside an element marked `data-ripple-exempt`, without needing an `exclude` option.
