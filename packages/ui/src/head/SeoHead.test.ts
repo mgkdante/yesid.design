@@ -25,7 +25,7 @@ const meta = (attribute: 'name' | 'property', key: string) =>
 
 describe('SeoHead', () => {
 	it('writes content-selected copy to meta, Open Graph and Twitter descriptions and updates it', async () => {
-		const candidates = [{ id: 'excerpt', text: {
+		const candidates = [{ id: 'primary', text: { en: 'One look for every site.', fr: 'Une interface claire.' } }, { id: 'excerpt', text: {
 			en: 'A practical guide to building accessible interfaces for everyday readers.',
 			fr: 'Un guide pratique pour rendre les interfaces accessibles à tous les lecteurs.',
 		} }];
@@ -33,11 +33,13 @@ describe('SeoHead', () => {
 		const en = copy.en!;
 		const fr = copy.fr!;
 		if (en.status !== 'selected' || fr.status !== 'selected') throw new Error('Expected usable content');
+		expect(en.ogLine).not.toBe(en.description);
+		expect(fr.ogLine).not.toBe(fr.description);
 		const { rerender } = render(SeoHead, { props: { ...page, description: en } });
 		for (const selected of [en, fr]) {
 			await rerender({ ...page, description: selected });
 			expect(meta('name', 'description')).toBe(selected.description);
-			expect(meta('property', 'og:description')).toBe(selected.ogLine);
+			expect(meta('property', 'og:description')).toBe(selected.description);
 			expect(meta('name', 'twitter:description')).toBe(selected.description);
 		}
 	});

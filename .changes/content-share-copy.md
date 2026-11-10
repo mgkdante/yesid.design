@@ -3,18 +3,39 @@
 "@yesid/ui": minor
 ---
 
-Resolve per-locale share copy from ordered content fields with `resolveShareCopy`
-(root or `@yesid/seo-kit/share-copy`). It preserves complete candidates, applies
-inclusive configurable bounds (50 to 200 Unicode code points by default), appends
-optional localized CTA labels only when they fit, avoids duplicate CTAs across
-straight and curly apostrophes, and falls back to a configured default locale
-(`en` by default). Results identify the chosen field and source locale, or report
-missing content explicitly.
+Resolve independent per-locale description and OG card text from ordered content
+fields with `resolveShareCopy` (root or `@yesid/seo-kit/share-copy`). The first
+candidate is primary short text. The card always preserves its full nonempty
+primary after whitespace collapse, falling back to the default-locale primary
+only when the requested primary is empty. With no primary in either locale, it
+uses leading complete longer-summary sentences, then `defaults.ogLine`.
 
-Pass a selected result to `SeoHead.description` and `renderOgPng`'s `title` to use
-the same text in meta/OG/Twitter descriptions and on the generated share image.
-Selected-content cards use smaller type, wrap long words and step description size
-down against measured layout to keep the complete default 200-code-point text and
-footer inside the padded image with the bundled fonts. Existing string inputs work unchanged. No per-page hard-coded share copy; write
-it in the content fields. Consumers adopt this API in their own release upgrade
-and verify their real content, head tags and generated images.
+Descriptions try primary plus localized CTA, then primary alone, then leading
+complete sentences from longer candidates in order. Bounds remain configurable,
+inclusive Unicode code-point counts, defaulting to 50 to 200. Longer candidates
+never contribute a partial sentence. Sentence splitting handles French/Spanish
+punctuation and closing quotes, with simple documented abbreviation handling.
+CTA composition stays idempotent across straight/curly apostrophes and follows
+the description content's locale independently of the card's locale. After
+requested/default-locale content fails, use `defaults.description`; no generic
+copy is built in. Defaults do not receive a CTA.
+
+Selections expose distinct `description` and `ogLine` plus per-output rule,
+candidate and source-locale provenance. Top-level source/candidate fields alias
+the description source (null candidate for defaults). Missing results retain any
+independently resolved output, so a short primary is not lost when description
+copy is missing. This reshapes the new, unreleased selection contract in this PR.
+
+Pass a selected result to `SeoHead.description` and `renderOgPng`'s `title`.
+Meta/OG/Twitter descriptions use `description`; the generated image uses `ogLine`.
+`OG_LINE_MAX_LENGTH` (200 code points, root or `./share-copy`) is the CMS validation
+limit guaranteed by measured card fitting with bundled fonts. Full text and the
+footer remain within the padding, including multiline and wide/unbroken primary
+text. Type starts at 32px and stops at `OG_LINE_MIN_FONT_SIZE` (24px, `./og`);
+unfit input rejects instead of clipping or shrinking below legibility. Primary
+text beyond the limit is still preserved by the resolver and needs consumer
+verification. Existing string inputs work byte-identically.
+
+No per-page hard-coded share copy; write it in content fields. Consumers adopt
+this API in their own release upgrade and verify real content, head tags and
+images in their locales. Package checks do not establish consumer adoption.

@@ -231,8 +231,10 @@ declare namespace Index {
         SatoriRenderOptions,
         SvgRasterizer,
         resolveShareCopy,
+        OG_LINE_MAX_LENGTH,
         ShareCopyCandidate,
         ShareCopyInput,
+        ShareCopySource,
         ShareCopySelection,
         ShareCopyResult
     }
@@ -277,11 +279,15 @@ interface JsonLdReference {
     '@id': string;
 }
 
+// @public (undocumented)
+type LocalizedText = Readonly<Record<string, string | null | undefined>>;
+
 declare namespace Og {
     export {
         renderOgPng,
         OG_WIDTH,
         OG_HEIGHT,
+        OG_LINE_MIN_FONT_SIZE,
         OG_PALETTE,
         OgFont,
         OgCardInput
@@ -290,6 +296,12 @@ declare namespace Og {
 
 // @public (undocumented)
 const OG_HEIGHT = 630;
+
+// @public
+const OG_LINE_MAX_LENGTH = 200;
+
+// @public
+const OG_LINE_MIN_FONT_SIZE = 24;
 
 // @public
 const OG_PALETTE: {
@@ -407,8 +419,10 @@ function serializeJsonLd(nodes: readonly object[]): string;
 declare namespace ShareCopy {
     export {
         resolveShareCopy,
+        OG_LINE_MAX_LENGTH,
         ShareCopyCandidate,
         ShareCopyInput,
+        ShareCopySource,
         ShareCopySelection,
         ShareCopyResult
     }
@@ -419,7 +433,7 @@ interface ShareCopyCandidate {
     // (undocumented)
     id: string;
     // (undocumented)
-    text: Readonly<Record<string, string | null | undefined>>;
+    text: LocalizedText;
 }
 
 // @public (undocumented)
@@ -428,6 +442,10 @@ interface ShareCopyInput {
     candidates: readonly ShareCopyCandidate[];
     cta?: Readonly<Record<string, string | undefined>>;
     defaultLocale?: string;
+    defaults?: {
+        description?: LocalizedText;
+        ogLine?: LocalizedText;
+    };
     // (undocumented)
     locales: readonly string[];
     maxLength?: number;
@@ -438,23 +456,40 @@ interface ShareCopyInput {
 type ShareCopyResult = ShareCopySelection | {
     status: 'missing';
     locale: string;
+    description?: string;
+    descriptionSource?: ShareCopySource;
+    ogLine?: string;
+    ogLineSource?: ShareCopySource;
 };
 
 // @public (undocumented)
 interface ShareCopySelection {
     // (undocumented)
-    candidateId: string;
+    candidateId: string | null;
     // (undocumented)
-    candidateIndex: number;
-    // (undocumented)
+    candidateIndex: number | null;
     ctaAppended: boolean;
     description: string;
+    // (undocumented)
+    descriptionSource: ShareCopySource;
+    // (undocumented)
     locale: string;
     ogLine: string;
     // (undocumented)
+    ogLineSource: ShareCopySource;
     sourceLocale: string;
     // (undocumented)
     status: 'selected';
+}
+
+// @public (undocumented)
+interface ShareCopySource {
+    candidateId: string | null;
+    candidateIndex: number | null;
+    // (undocumented)
+    rule: 'primary-cta' | 'primary' | 'sentences' | 'default';
+    // (undocumented)
+    sourceLocale: string;
 }
 
 declare namespace Sitemap {

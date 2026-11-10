@@ -4,6 +4,8 @@ import type { ShareCopySelection } from './share-copy.js';
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
+/** Selected card text never shrinks below this size; unfit input rejects without clipping. */
+export const OG_LINE_MIN_FONT_SIZE = 24;
 
 const dark = tokens.color.dark;
 
@@ -138,19 +140,24 @@ function renderSelectedOgPng<Bytes extends Uint8Array>(
 	rasterize: SvgRasterizer<Bytes>,
 	fontSize = 32,
 ): Promise<Bytes> {
-	let fits = false;
+	let fits = true;
+	let measuredLine = false;
 	return renderSatoriPng(ogCard(card, fontSize), {
 		width: OG_WIDTH, height: OG_HEIGHT, fonts: [...fonts],
 		onNodeDetected(node) {
+			if (!node.textContent) return;
+			fits &&= node.top >= 80 && node.top + node.height <= OG_HEIGHT - 80
+				&& node.left >= 80 && node.left + node.width <= OG_WIDTH - 80;
 			if (node.textContent !== card.title.ogLine) return;
+			measuredLine = true;
 			// Reserve room for the eyebrow, 120px wordmark, 24px gap and footer
 			// within the 470px padded height. Measure wrapping with the actual fonts.
-			fits = node.height <= 240 && node.width <= 1040;
+			fits &&= node.height <= 240 && node.width <= 1040;
 		},
 	}, (svg) => {
-		if (fits) return rasterize(svg);
-		if (fontSize === 1) throw new RangeError('Share description cannot fit inside the OG card');
-		return renderSelectedOgPng(card, fonts, rasterize, Math.max(1, fontSize - 2));
+		if (fits && measuredLine) return rasterize(svg);
+		if (fontSize === OG_LINE_MIN_FONT_SIZE) throw new RangeError('Share line cannot fit inside the OG card at the minimum legible size');
+		return renderSelectedOgPng(card, fonts, rasterize, Math.max(OG_LINE_MIN_FONT_SIZE, fontSize - 2));
 	});
 }
 

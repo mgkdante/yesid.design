@@ -1,70 +1,103 @@
 import { describe, expect, it } from 'vitest';
-import { resolveShareCopy, type ShareCopyInput } from '../share-copy.js';
+import { OG_LINE_MAX_LENGTH, resolveShareCopy, type ShareCopyInput } from '../share-copy.js';
 
 const summary = 'A practical guide to building accessible interfaces for everyday readers.';
 const excerpt = 'How a small team made its publishing workflow clearer and easier to maintain.';
+const primary = 'One look for every site.';
+const french = 'Un guide pratique pour rendre les interfaces accessibles à tous les lecteurs.';
 const input: ShareCopyInput = {
 	locales: ['en', 'fr'],
-	candidates: [{ id: 'oneLiner', text: { en: summary } }, { id: 'excerpt', text: { en: excerpt } }],
+	candidates: [{ id: 'oneLiner', text: { en: primary } }, { id: 'excerpt', text: { en: excerpt } }],
 };
 
 describe('resolveShareCopy', () => {
-	it('selects the first usable content field and reports its provenance', () => {
-		expect(resolveShareCopy(input).en).toEqual({
-			status: 'selected', locale: 'en', sourceLocale: 'en', candidateId: 'oneLiner',
-			candidateIndex: 0, description: summary, ogLine: summary, ctaAppended: false,
+	it('keeps a short primary on the card and derives the description from longer sentences', () => {
+		expect(Array.from(primary)).toHaveLength(24);
+		const result = resolveShareCopy({ ...input, candidates: [
+			{ id: 'oneLiner', text: { en: primary } },
+			{ id: 'body', text: { en: `${summary} ${excerpt} ${summary} Unfinished tail` } },
+		], cta: { en: 'Read more.' } }).en;
+		expect(result).toMatchObject({
+			status: 'selected', ogLine: primary, description: `${summary} ${excerpt} Read more.`, ctaAppended: true,
+			ogLineSource: { rule: 'primary', sourceLocale: 'en', candidateId: 'oneLiner', candidateIndex: 0 },
+			descriptionSource: { rule: 'sentences', sourceLocale: 'en', candidateId: 'body', candidateIndex: 1 },
 		});
 	});
 
-	it('skips empty, short and overlong fields without cutting any sentence', () => {
-		const candidates = [
-			{ id: 'empty', text: { en: '   ' } },
-			{ id: 'short', text: { en: 'Too short.' } },
-			{ id: 'long', text: { en: `${summary} ${excerpt} ${summary}` } },
-			{ id: 'body', text: { en: `  ${excerpt}  ` } },
-		];
-		expect(resolveShareCopy({ ...input, candidates }).en).toMatchObject({
-			candidateId: 'body', candidateIndex: 3, description: excerpt, ogLine: excerpt,
+	it('collapses primary whitespace and newlines without dropping any text', () => {
+		expect(resolveShareCopy({ ...input, candidates: [
+			{ id: 'short', text: { en: '  One look\n for\t every   site.  ' } }, input.candidates[1]!,
+		] }).en).toMatchObject({ ogLine: primary, description: excerpt });
+	});
+
+	it('keeps every nonempty primary regardless of description bounds or the card guarantee', () => {
+		for (const text of ['X', 'W'.repeat(OG_LINE_MAX_LENGTH + 1)]) {
+			expect(resolveShareCopy({ ...input, candidates: [
+				{ id: 'short', text: { en: text } }, input.candidates[1]!,
+			] }).en).toMatchObject({ ogLine: text, description: excerpt });
+		}
+	});
+
+	it('uses an English primary for the French card while keeping the French description and CTA', () => {
+		const result = resolveShareCopy({ ...input, candidates: [
+			{ id: 'oneLiner', text: { en: primary, fr: ' \n ' } },
+			{ id: 'body', text: { en: excerpt, fr: french } },
+		], cta: { en: 'Read more.', fr: 'Lire la suite.' } }).fr;
+		expect(result).toMatchObject({ locale: 'fr', ogLine: primary, description: `${french} Lire la suite.`,
+			ogLineSource: { rule: 'primary', sourceLocale: 'en' },
+			descriptionSource: { rule: 'sentences', sourceLocale: 'fr', candidateId: 'body' },
 		});
 	});
 
-	it.each([50, 200])('accepts the inclusive default boundary of %i characters', (length) => {
-		const text = `${'a'.repeat(length - 1)}.`;
-		expect(resolveShareCopy({ ...input, candidates: [{ id: 'seo', text: { en: text } }] }).en)
+	it('prefers local longer copy over a qualifying default-locale primary for descriptions', () => {
+		expect(resolveShareCopy({ ...input, candidates: [
+			{ id: 'short', text: { en: summary, fr: 'Court.' } }, { id: 'body', text: { fr: french } },
+		] }).fr).toMatchObject({ ogLine: 'Court.', description: french, sourceLocale: 'fr' });
+	});
+
+	it('uses the source locale CTA for fallback content, and supports a non-English default locale', () => {
+		expect(resolveShareCopy({ ...input, cta: { en: 'Read more.', fr: 'Lire la suite.' } }).fr)
+			.toMatchObject({ description: `${excerpt} Read more.`, descriptionSource: { sourceLocale: 'en' } });
+		expect(resolveShareCopy({ locales: ['es'], defaultLocale: 'fr', candidates: [
+			{ id: 'short', text: { fr: french } },
+		], cta: { fr: 'Lire la suite.', es: 'Leer más.' } }).es)
+			.toMatchObject({ ogLine: french, description: `${french} Lire la suite.`, sourceLocale: 'fr' });
+	});
+
+	it('uses a default CTA label if its translation is empty', () => {
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { fr: french } }],
+			cta: { en: 'Read more.', fr: '  ' } }).fr).toMatchObject({ description: `${french} Read more.` });
+	});
+
+	it.each([50, 200])('accepts the inclusive default description boundary of %i code points', (size) => {
+		const text = `${'a'.repeat(size - 1)}.`;
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: text } }] }).en)
 			.toMatchObject({ status: 'selected', description: text, ogLine: text });
 	});
 
-	it('honours custom bounds and counts Unicode code points', () => {
+	it('honours custom description bounds and counts Unicode code points', () => {
 		const text = '🧭🧭🧭.';
 		expect(resolveShareCopy({ ...input, minLength: 4, maxLength: 4,
-			candidates: [{ id: 'seo', text: { en: text } }] }).en)
-			.toMatchObject({ status: 'selected', description: text });
+			candidates: [{ id: 'short', text: { en: text } }] }).en).toMatchObject({ description: text });
 	});
 
-	it('adds an optional CTA before checking the minimum length', () => {
+	it('tries primary plus CTA before primary alone and keeps the card CTA-free', () => {
 		const text = 'An accessible publishing workflow.';
 		const cta = 'Read the complete article.';
-		expect(resolveShareCopy({ ...input, candidates: [{ id: 'seo', text: { en: text } }], cta: { en: cta } }).en)
-			.toMatchObject({ description: `${text} ${cta}`, ogLine: `${text} ${cta}`, ctaAppended: true });
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: text } }], cta: { en: cta } }).en)
+			.toMatchObject({ description: `${text} ${cta}`, ogLine: text, ctaAppended: true,
+				descriptionSource: { rule: 'primary-cta' } });
+		const candidate = [{ id: 'short', text: { en: summary } }];
+		expect(resolveShareCopy({ ...input, candidates: candidate, maxLength: summary.length, cta: { en: cta } }).en)
+			.toMatchObject({ description: summary, ctaAppended: false, descriptionSource: { rule: 'primary' } });
 	});
 
-	it('keeps the first candidate without a CTA when appending would exceed the maximum', () => {
-		expect(resolveShareCopy({ ...input, maxLength: summary.length, cta: { en: 'Read more.' } }).en)
-			.toMatchObject({ candidateId: 'oneLiner', description: summary, ctaAppended: false });
-	});
-
-	it('appends a CTA that fits exactly at the maximum', () => {
-		const description = `${summary} Read more.`;
+	it('appends a CTA exactly at max and omits it when accumulated sentences leave no room', () => {
+		const description = `${excerpt} Read more.`;
 		expect(resolveShareCopy({ ...input, maxLength: description.length, cta: { en: 'Read more.' } }).en)
-			.toMatchObject({ description, ogLine: description, ctaAppended: true });
-	});
-
-	it('recognizes a CTA on a new line but not a suffix inside another word', () => {
-		const text = `${summary}\nRead more.`;
-		expect(resolveShareCopy({ ...input, candidates: [{ id: 'seo', text: { en: text } }], cta: { en: 'Read more.' } }).en)
-			.toMatchObject({ description: text, ctaAppended: false });
-		expect(resolveShareCopy({ ...input, candidates: [{ id: 'seo', text: { en: `${summary} Bread more.` } }],
-			cta: { en: 'read more.' } }).en).toMatchObject({ description: `${summary} Bread more. read more.`, ctaAppended: true });
+			.toMatchObject({ description, ctaAppended: true });
+		expect(resolveShareCopy({ ...input, maxLength: excerpt.length, cta: { en: 'Read more.' } }).en)
+			.toMatchObject({ description: excerpt, ctaAppended: false });
 	});
 
 	it.each([
@@ -72,51 +105,87 @@ describe('resolveShareCopy', () => {
 		['See what’s inside.', "See what's inside."],
 		['See what‘s inside.', "See what's inside."],
 		['Read more.', 'Read more.'],
-	])('does not repeat an existing CTA: %s', (existing, cta) => {
+	])('keeps CTA composition idempotent and apostrophe-tolerant: %s', (existing, cta) => {
 		const text = `${summary} ${existing}`;
-		const first = resolveShareCopy({ ...input, candidates: [{ id: 'seo', text: { en: text } }], cta: { en: cta } });
-		expect(first.en).toMatchObject({ description: text, ogLine: text, ctaAppended: false });
-	});
-
-	it('is idempotent when selected content is passed through again', () => {
-		const first = resolveShareCopy({ ...input, cta: { en: 'Read more.' } }).en!;
+		const first = resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: text } }], cta: { en: cta } }).en!;
+		expect(first).toMatchObject({ description: text, ctaAppended: false });
 		if (first.status !== 'selected') throw new Error('Expected usable content');
-		const second = resolveShareCopy({ ...input,
-			candidates: [{ id: 'seo', text: { en: first.description } }], cta: { en: 'Read more.' } }).en;
-		expect(second).toMatchObject({ description: first.description, ogLine: first.ogLine, ctaAppended: false });
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: first.description } }], cta: { en: cta } }).en)
+			.toMatchObject({ description: text, ctaAppended: false });
 	});
 
-	it('exhausts local candidates before falling back and uses localized CTAs', () => {
-		const french = 'Un guide pratique pour rendre les interfaces accessibles à tous les lecteurs.';
-		const result = resolveShareCopy({ ...input, candidates: [
-			{ id: 'oneLiner', text: { en: summary, fr: 'Court.' } },
-			{ id: 'excerpt', text: { fr: french } },
-		], cta: { en: 'Read more.', fr: 'Lire la suite.' } });
-		expect(result.fr).toMatchObject({ sourceLocale: 'fr', candidateId: 'excerpt',
-			description: `${french} Lire la suite.`, ogLine: `${french} Lire la suite.` });
+	it('recognizes a CTA across collapsed newlines but requires a word boundary', () => {
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: `${summary}\nRead more.` } }],
+			cta: { en: 'Read more.' } }).en).toMatchObject({ description: `${summary} Read more.`, ctaAppended: false });
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: `${summary} Bread more.` } }],
+			cta: { en: 'read more.' } }).en).toMatchObject({ description: `${summary} Bread more. read more.`, ctaAppended: true });
 	});
 
-	it('falls back to English content and its CTA when local content is unusable', () => {
-		expect(resolveShareCopy({ ...input, cta: { en: 'Read more.', fr: 'Lire la suite.' } }).fr)
-			.toMatchObject({ locale: 'fr', sourceLocale: 'en', candidateId: 'oneLiner',
-				description: `${summary} Read more.`, ogLine: `${summary} Read more.` });
+	it.each([
+		['fr', '« Une interface claire pour tous les lecteurs. »', 'Une autre phrase utile !', 'Lire la suite.'],
+		['es', '¿Una interfaz clara para todos los lectores?', '¡Una experiencia mucho más fácil!', 'Leer más.'],
+		['fr', '« Une interface claire pour tous les lecteurs ! »', 'Une autre phrase utile ? »', 'Lire la suite.'],
+		['es', '“Una interfaz clara para todos los lectores.”', '¡Otra experiencia mucho más fácil!”', 'Leer más.'],
+	])('keeps complete %s sentences and their closing punctuation', (locale, first, second, cta) => {
+		const description = `${first} ${second} ${cta}`;
+		expect(resolveShareCopy({ locales: [locale], minLength: 30, maxLength: description.length, candidates: [
+			{ id: 'primary', text: { [locale]: 'Bref.' } },
+			{ id: 'body', text: { [locale]: `${first}\n${second} ${'Too long '.repeat(40)}. Unfinished tail` } },
+		], cta: { [locale]: cta } })[locale]).toMatchObject({ description });
 	});
 
-	it('supports a configured fallback even when it is not among the requested locales', () => {
-		expect(resolveShareCopy({ locales: ['es'], defaultLocale: 'fr', candidates: [
-			{ id: 'excerpt', text: { fr: excerpt } },
-		] }).es).toMatchObject({ locale: 'es', sourceLocale: 'fr', description: excerpt });
+	it('does not treat known abbreviations, initials, acronyms or decimals as sentence ends', () => {
+		const first = 'Dr. A. Roy uses e.g. version 2.5 in the U.S. for everyday readers.';
+		const result = resolveShareCopy({ ...input, maxLength: first.length, candidates: [
+			input.candidates[0]!, { id: 'body', text: { en: `${first} ${excerpt}` } },
+		] }).en;
+		expect(result).toMatchObject({ description: first });
+		// The first full sentence is too large. Never use just "Dr." or skip into its middle.
+		expect(resolveShareCopy({ ...input, minLength: 1, maxLength: 10, candidates: [
+			{ id: 'primary', text: {} }, { id: 'body', text: { en: `${first} End.` } },
+		] }).en).toMatchObject({ status: 'missing' });
 	});
 
-	it('uses the default CTA for a missing translation', () => {
-		expect(resolveShareCopy({ ...input, candidates: [{ id: 'seo', text: { fr: excerpt } }],
-			cta: { en: 'Read more.' } }).fr).toMatchObject({ sourceLocale: 'fr', description: `${excerpt} Read more.` });
+	it('tries longer candidates in order and never cuts or skips an oversized leading sentence', () => {
+		expect(resolveShareCopy({ ...input, candidates: [input.candidates[0]!,
+			{ id: 'unfinished', text: { en: summary.slice(0, -1) } },
+			{ id: 'oversized', text: { en: `${'Big '.repeat(70)}sentence. ${summary}` } },
+			{ id: 'body', text: { en: `${excerpt} Unfinished tail` } },
+		] }).en).toMatchObject({ description: excerpt, descriptionSource: { candidateId: 'body', candidateIndex: 3 } });
 	});
 
-	it('reports missing content instead of synthesizing copy or shortening a long candidate', () => {
-		expect(resolveShareCopy({ ...input, candidates: [{ id: 'body', text: { en: summary.repeat(4) } }] }))
-			.toEqual({ en: { status: 'missing', locale: 'en' }, fr: { status: 'missing', locale: 'fr' } });
+	it.each(['A.', 'É.', 'Ö.'])('keeps the initial %s inside an oversized sentence', (initial) => {
+		expect(resolveShareCopy({ ...input, minLength: 40, maxLength: 60, candidates: [
+			input.candidates[0]!, { id: 'body', text: { en:
+				`Les interfaces accessibles sont étudiées par Mme. ${initial} Roy avec de nombreux détails supplémentaires pour tous les lecteurs.`,
+			} },
+		] }).en).toMatchObject({ status: 'missing', ogLine: primary });
+	});
+
+	it('uses complete leading longer sentences for OG only when neither locale has primary text', () => {
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'primary', text: {} },
+			{ id: 'body', text: { fr: `${french} ${french} ${french}` } },
+		] }).fr).toMatchObject({ ogLine: `${french} ${french}`, ogLineSource: { rule: 'sentences', sourceLocale: 'fr' } });
+	});
+
+	it('uses independently configured defaults after content and preserves their provenance', () => {
+		const defaults = { description: { en: summary }, ogLine: { en: 'Default card line.' } };
+		expect(resolveShareCopy({ ...input, candidates: [], defaults }).fr).toMatchObject({
+			description: summary, ogLine: defaults.ogLine.en,
+			descriptionSource: { rule: 'default', sourceLocale: 'en', candidateId: null, candidateIndex: null },
+			ogLineSource: { rule: 'default', sourceLocale: 'en' },
+		});
+		expect(resolveShareCopy({ ...input, candidates: [input.candidates[0]!], defaults }).en)
+			.toMatchObject({ ogLine: primary, description: summary });
+	});
+
+	it('reports missing outputs explicitly, retaining an independently resolved primary', () => {
 		expect(resolveShareCopy({ ...input, candidates: [] }).en).toEqual({ status: 'missing', locale: 'en' });
+		expect(resolveShareCopy({ ...input, candidates: [input.candidates[0]!] }).en)
+			.toMatchObject({ status: 'missing', ogLine: primary });
+		expect(resolveShareCopy({ ...input, candidates: [], defaults: {
+			description: { en: 'Too short.' }, ogLine: { en: 'W'.repeat(OG_LINE_MAX_LENGTH + 1) },
+		} }).en).toEqual({ status: 'missing', locale: 'en' });
 	});
 
 	it.each([[0, 200], [50, 49], [1.5, 200], [50, Infinity], [NaN, 200]])(

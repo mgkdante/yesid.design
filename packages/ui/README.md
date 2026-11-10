@@ -710,8 +710,9 @@ head boot script do not use the generic store. Historical disclosure storage key
 
 `description` also accepts a selected result from `resolveShareCopy` in
 `@yesid/seo-kit/share-copy`. Resolve ordered content fields once and pass the selected object to
-both `SeoHead.description` and `renderOgPng`'s `title`; meta, Open Graph and Twitter descriptions
-then match the line drawn on the share image. Handle a `status: 'missing'` result before rendering.
+both `SeoHead.description` and `renderOgPng`'s `title`. Meta, Open Graph and Twitter description
+tags use the selection's bounded `description`; the image uses its independent primary `ogLine`.
+Handle a `status: 'missing'` result before rendering.
 No per-page hard-coded share copy; write it in the content fields. See the
 [SEO package examples](../seo-kit/README.md#content-derived-descriptions-and-share-cards).
 
