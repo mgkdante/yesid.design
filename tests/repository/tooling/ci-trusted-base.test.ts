@@ -40,11 +40,11 @@ function run(repo: TempCheckout, input: string, env: Record<string, string>) {
 		env: { ...process.env, GITHUB_WORKSPACE: repo.root.replaceAll('\\', '/'), ...env },
 	});
 }
-function materialize(repo: TempCheckout, base: string, job = 'classify', event = 'pull_request') {
+function materialize(repo: TempCheckout, base: string, job = 'classify', event = 'pull_request', prologue = '') {
 	const scratch = new TempCheckout(); repos.push(scratch);
 	const output = join(scratch.root, 'output').replaceAll('\\', '/');
 	scratch.write('output', '');
-	const result = run(repo, script('Materialize trusted policy', job), {
+	const result = run(repo, `${prologue}\n${script('Materialize trusted policy', job)}`, {
 		BASE_SHA: base, HEAD_SHA: repo.git('rev-parse', 'HEAD'), GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output,
 		RUNNER_TEMP: scratch.root.replaceAll('\\', '/'),
 	});
@@ -59,6 +59,21 @@ describe('trusted workflow policy runner', { timeout: 30_000 }, () => {
 		for (const base of ['', '0'.repeat(40)]) {
 			const { result } = materialize(repo, base, job, 'merge_group');
 			expect(result.status).not.toBe(0);
+		}
+	});
+	it.each(['classify', 'ci'])('fails closed on ancestry lookup errors in %s', (job) => {
+		const { repo, base } = fixture();
+		for (const status of [128, 2]) {
+			const fault = `git() {
+  if [[ "$1" == merge-base && "$2" == --is-ancestor && "$3" == "$BASE_SHA" && "$4" == origin/main ]]; then
+    echo 'injected ancestry lookup error' >&2
+    return ${status}
+  fi
+  command git "$@"
+}`;
+			const { result, outputs } = materialize(repo, base, job, 'merge_group', fault);
+			expect(result.status, result.stderr).toBe(status);
+			expect(outputs.directory).toBeUndefined();
 		}
 	});
 	it.each(['classify', 'ci'])('non-first merge group bootstraps main policy in %s', (job) => {
