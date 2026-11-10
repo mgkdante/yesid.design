@@ -40,8 +40,19 @@ jobs:
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           if [[ "$GITHUB_EVENT_NAME" == pull_request || "$GITHUB_EVENT_NAME" == merge_group ]]; then
             [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Invalid PR base SHA' >&2; exit 1; }
-            git merge-base --is-ancestor "$BASE_SHA" origin/main || { echo 'PR base is not reachable from origin/main' >&2; exit 1; }
-            revision="$BASE_SHA"
+            if git merge-base --is-ancestor "$BASE_SHA" origin/main; then
+              revision="$BASE_SHA"
+            elif [[ "$GITHUB_EVENT_NAME" == merge_group ]]; then
+              # A later queue entry can be based on an earlier temporary group.
+              # Validate its ancestry, but load policy only from trusted main.
+              git cat-file -e "$BASE_SHA^{commit}"
+              revision="$(git rev-parse origin/main)"
+              git merge-base --is-ancestor "$BASE_SHA" HEAD
+              git merge-base --is-ancestor "$revision" HEAD
+            else
+              echo 'PR base is not reachable from origin/main' >&2
+              exit 1
+            fi
           else
             revision="$(git rev-parse origin/main)"
           fi
@@ -250,8 +261,19 @@ jobs:
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           if [[ "$GITHUB_EVENT_NAME" == pull_request || "$GITHUB_EVENT_NAME" == merge_group ]]; then
             [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Invalid PR base SHA' >&2; exit 1; }
-            git merge-base --is-ancestor "$BASE_SHA" origin/main || { echo 'PR base is not reachable from origin/main' >&2; exit 1; }
-            revision="$BASE_SHA"
+            if git merge-base --is-ancestor "$BASE_SHA" origin/main; then
+              revision="$BASE_SHA"
+            elif [[ "$GITHUB_EVENT_NAME" == merge_group ]]; then
+              # A later queue entry can be based on an earlier temporary group.
+              # Validate its ancestry, but load policy only from trusted main.
+              git cat-file -e "$BASE_SHA^{commit}"
+              revision="$(git rev-parse origin/main)"
+              git merge-base --is-ancestor "$BASE_SHA" HEAD
+              git merge-base --is-ancestor "$revision" HEAD
+            else
+              echo 'PR base is not reachable from origin/main' >&2
+              exit 1
+            fi
           else
             revision="$(git rev-parse origin/main)"
           fi
