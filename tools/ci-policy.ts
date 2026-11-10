@@ -6,6 +6,12 @@ import { releaseOnly } from './ci-release.js';
 const DOCUMENTATION = new Set(['README.md', 'CONTRIBUTING.md', 'DECISIONS.md']);
 
 export function selectBrowser(event: string, changedFiles: () => readonly string[]): boolean {
+	if (event === 'merge_group') {
+		// Read the range even though merge groups always require full CI.
+		// An unreadable group must fail classification, not select an exemption.
+		changedFiles();
+		return true;
+	}
 	if (event !== 'pull_request') return true;
 	try {
 		const files = changedFiles();

@@ -6,6 +6,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { aggregatePasses, changedFiles, selectBrowser } from '../../../tools/ci-policy.js';
 
 describe('browser selection', () => {
+	it('runs full browser coverage for merge groups, including documentation-only changes', () => {
+		expect(selectBrowser('merge_group', () => ['README.md'])).toBe(true);
+	});
+	it('fails closed when a merge group diff cannot be read', () => {
+		expect(() => selectBrowser('merge_group', () => { throw new Error('unreadable group'); })).toThrow('unreadable group');
+	});
 	it('skips documentation-only changes', () => {
 		expect(selectBrowser('pull_request', () => ['README.md', 'CONTRIBUTING.md', 'DECISIONS.md'])).toBe(false);
 	});

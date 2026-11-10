@@ -89,7 +89,7 @@ describe('release-only reproduction', { timeout: 60_000 }, () => {
 		const repo = fixture(); fragment(repo, 'first'); const base = commit(repo);
 		prepareRelease(repo.root, '0.7.0'); const head = commit(repo);
 		expect(select(repo, base, '0.7.0', 'Unrelated title')).toBeUndefined();
-		for (const event of ['workflow_dispatch', 'push', '']) expect(releaseOnly(event, 'chore(release): prepare v0.7.0', base, head, repo.root)).toBeUndefined();
+		for (const event of ['workflow_dispatch', 'merge_group', 'push', '']) expect(releaseOnly(event, 'chore(release): prepare v0.7.0', base, head, repo.root)).toBeUndefined();
 		expect(select(repo, '0'.repeat(40), '0.7.0')).toBeUndefined();
 		expect(releaseOnly('pull_request', 'chore(release): prepare v0.7.0', base, head, repo.root, 1)).toBeUndefined();
 	});
