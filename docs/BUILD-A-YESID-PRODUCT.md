@@ -24,7 +24,7 @@ Use:
 
 Create the SvelteKit app first. Confirm its normal test, check, and build commands pass before adding the design packages.
 
-This is the Kit 3 setup path for v0.35.0. Review the chosen release before installing its
+This Kit 3 setup path applies from v0.35.0 onward. Review the chosen release before installing its
 URLs. Gallery remains workspace evidence, never product acceptance.
 
 ## 2. Install one exact release
@@ -583,6 +583,12 @@ Set `PUBLIC_PLAUSIBLE_DOMAIN` to the production host (for example `example.com`)
 environment only; unset means off. The client sends only from that host or its subdomains, so leave
 the variable unset for local, preview and fork deployments to keep them silent. Add
 `https://plausible.io` to `connect-src` (see the CSP in section 4).
+
+To send events through a same-origin endpoint instead, so blocklists that match `plausible.io` do not
+drop them, serve `relayAnalyticsEvent` from `@yesid/analytics/relay` and pass that path as `endpoint`.
+The [analytics README](../packages/analytics/README.md#first-party-endpoint) covers the path to choose
+and the route. With an endpoint, analytics needs only `connect-src 'self'`; remove
+`https://plausible.io` so a stray direct send fails.
 
 ## 10. Bump the brand pin deliberately
 
