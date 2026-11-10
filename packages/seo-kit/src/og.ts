@@ -1,5 +1,6 @@
 import tokens from '@yesid/tokens/tokens.json';
 import { renderSatoriPng, type SvgRasterizer } from './satori.js';
+import type { ShareCopySelection } from './share-copy.js';
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
@@ -27,7 +28,8 @@ export interface OgCardInput {
 	eyebrow: string;
 	/** The product name; the card adds the accent dot. */
 	wordmark: string;
-	title: string;
+	/** Legacy title line, or content selected by `resolveShareCopy`. */
+	title: string | ShareCopySelection;
 	/** Bottom left, usually the host. */
 	handle: string;
 	/** Bottom right, usually the city. */
@@ -89,7 +91,7 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 						display: 'flex',
 						alignItems: 'baseline',
 						fontWeight: 900,
-						fontSize: '180px',
+						fontSize: typeof title === 'string' ? '180px' : '120px',
 						letterSpacing: '-0.04em',
 						lineHeight: 1,
 					},
@@ -99,13 +101,14 @@ function ogCard({ eyebrow, wordmark, title, handle, location }: OgCardInput) {
 					'div',
 					{
 						fontWeight: 500,
-						fontSize: '48px',
+						fontSize: typeof title === 'string' ? '48px' : '32px',
+						...(typeof title === 'string' ? {} : { wordBreak: 'break-word' }),
 						letterSpacing: '-0.01em',
 						lineHeight: 1.15,
 						maxWidth: '1040px',
 						color: OG_PALETTE.muted,
 					},
-					title,
+					typeof title === 'string' ? title : title.ogLine,
 				),
 			]),
 			el(

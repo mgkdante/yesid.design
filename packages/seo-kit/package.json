@@ -15,6 +15,10 @@
 			"types": "./src/jsonld.ts",
 			"default": "./src/jsonld.ts"
 		},
+		"./share-copy": {
+			"types": "./src/share-copy.ts",
+			"default": "./src/share-copy.ts"
+		},
 		"./sitemap": {
 			"types": "./src/sitemap.ts",
 			"default": "./src/sitemap.ts"

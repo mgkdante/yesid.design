@@ -1,11 +1,57 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { OG_HEIGHT, OG_PALETTE, OG_WIDTH, renderOgPng } from '../og.js';
 import { ogFonts } from '../og-fonts.js';
 import { readOgFonts } from '../og-files.js';
+import { resolveShareCopy } from '../share-copy.js';
+import * as satori from '../satori.js';
 
 const card = { eyebrow: 'Blog', wordmark: 'yesid', title: 'A share card', handle: 'example.com', location: 'Montréal' };
 
+const longDescription = 'A practical guide to building accessible interfaces for everyday readers. '
+	+ 'Learn how careful content choices keep publishing workflows clear, useful and easier to maintain for teams and their readers.';
+
 describe('share card', () => {
+	it.each([longDescription, `${'WWW '.repeat(49)}WWW.`, `${'W'.repeat(199)}.`])(
+		'keeps long selected descriptions and the footer inside the padded image', async (description) => {
+			const copy = resolveShareCopy({ locales: ['en'], candidates: [{ id: 'excerpt', text: { en: description } }] }).en!;
+			if (copy.status !== 'selected') throw new Error('Expected usable content');
+			const render = vi.spyOn(satori, 'renderSatoriPng');
+			let call: (typeof render.mock.calls)[number];
+			try {
+				await renderOgPng({ ...card, title: copy }, readOgFonts(), () => new Uint8Array());
+				call = render.mock.calls[0]!;
+			} finally {
+				render.mockRestore();
+			}
+			const bounds: { text: string; top: number; bottom: number }[] = [];
+			await satori.renderSatoriPng(call[0], {
+				...call[1],
+				onNodeDetected(node) {
+					if (node.textContent) bounds.push({ text: node.textContent, top: node.top, bottom: node.top + node.height });
+				},
+			}, () => new Uint8Array());
+			expect(bounds.some(({ text }) => text === copy.ogLine)).toBe(true);
+			expect(Math.min(...bounds.map(({ top }) => top))).toBeGreaterThanOrEqual(80);
+			expect(Math.max(...bounds.map(({ bottom }) => bottom))).toBeLessThanOrEqual(OG_HEIGHT - 80);
+		},
+	);
+
+	it('draws the complete content-derived OG line in place of the legacy title line', async () => {
+		const text = 'A practical guide to building accessible interfaces for everyday readers.';
+		const copy = resolveShareCopy({ locales: ['en'], candidates: [{ id: 'excerpt', text: { en: text } }] }).en!;
+		if (copy.status !== 'selected') throw new Error('Expected usable content');
+		const render = vi.spyOn(satori, 'renderSatoriPng');
+		try {
+			await renderOgPng({ ...card, title: copy }, readOgFonts(), () => new Uint8Array());
+			// Satori embeds glyph outlines in SVG; inspect its actual input for the full text.
+			const tree = JSON.stringify(render.mock.calls[0]![0]);
+			expect(tree).toContain(JSON.stringify(copy.ogLine));
+			expect(tree).not.toContain(JSON.stringify(card.title));
+		} finally {
+			render.mockRestore();
+		}
+	});
+
 	it('hands the rasterizer a token-backed card with the grid behind its foreground', async () => {
 		let svg = '';
 		const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);

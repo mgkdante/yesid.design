@@ -13,6 +13,11 @@
 - `types` → `./src/jsonld.ts`
 - `default` → `./src/jsonld.ts`
 
+### `./share-copy`
+
+- `types` → `./src/share-copy.ts`
+- `default` → `./src/share-copy.ts`
+
 ### `./sitemap`
 
 - `types` → `./src/sitemap.ts`
@@ -55,6 +60,7 @@
 
 - `Index` → `./src/index.ts` (`.`)
 - `Jsonld` → `./src/jsonld.ts` (`./jsonld`)
+- `ShareCopy` → `./src/share-copy.ts` (`./share-copy`)
 - `Sitemap` → `./src/sitemap.ts` (`./sitemap`)
 - `Og` → `./src/og.ts` (`./og`)
 - `OgFonts` → `./src/og-fonts.ts` (`./og/fonts`)
@@ -223,7 +229,12 @@ declare namespace Index {
         renderSatoriPng,
         SatoriTree,
         SatoriRenderOptions,
-        SvgRasterizer
+        SvgRasterizer,
+        resolveShareCopy,
+        ShareCopyCandidate,
+        ShareCopyInput,
+        ShareCopySelection,
+        ShareCopyResult
     }
 }
 
@@ -297,8 +308,7 @@ interface OgCardInput {
     eyebrow: string;
     handle: string;
     location: string;
-    // (undocumented)
-    title: string;
+    title: string | ShareCopySelection;
     wordmark: string;
 }
 
@@ -364,6 +374,9 @@ function renderOgPng<Bytes extends Uint8Array = Uint8Array>(card: OgCardInput, f
 // @public (undocumented)
 function renderSatoriPng<Bytes extends Uint8Array = Uint8Array>(tree: unknown, options: SatoriRenderOptions, rasterize: SvgRasterizer<Bytes>): Promise<Bytes>;
 
+// @public
+function resolveShareCopy(input: ShareCopyInput): Record<string, ShareCopyResult>;
+
 // @public (undocumented)
 function robotsTxt(input: RobotsTxtInput): string;
 
@@ -390,6 +403,59 @@ const SECURITY_HEADERS: Readonly<Record<string, string>>;
 
 // @public
 function serializeJsonLd(nodes: readonly object[]): string;
+
+declare namespace ShareCopy {
+    export {
+        resolveShareCopy,
+        ShareCopyCandidate,
+        ShareCopyInput,
+        ShareCopySelection,
+        ShareCopyResult
+    }
+}
+
+// @public
+interface ShareCopyCandidate {
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    text: Readonly<Record<string, string | null | undefined>>;
+}
+
+// @public (undocumented)
+interface ShareCopyInput {
+    // (undocumented)
+    candidates: readonly ShareCopyCandidate[];
+    cta?: Readonly<Record<string, string | undefined>>;
+    defaultLocale?: string;
+    // (undocumented)
+    locales: readonly string[];
+    maxLength?: number;
+    minLength?: number;
+}
+
+// @public
+type ShareCopyResult = ShareCopySelection | {
+    status: 'missing';
+    locale: string;
+};
+
+// @public (undocumented)
+interface ShareCopySelection {
+    // (undocumented)
+    candidateId: string;
+    // (undocumented)
+    candidateIndex: number;
+    // (undocumented)
+    ctaAppended: boolean;
+    description: string;
+    locale: string;
+    ogLine: string;
+    // (undocumented)
+    sourceLocale: string;
+    // (undocumented)
+    status: 'selected';
+}
 
 declare namespace Sitemap {
     export {

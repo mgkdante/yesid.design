@@ -12,6 +12,8 @@ Consumers can use the root export (JSON-LD, sitemap and robots, Satori) or the s
 [`api-reports/seo-kit.api.md`](https://github.com/mgkdante/yesid.design/blob/v0.39.1/api-reports/seo-kit.api.md) for exact types and exports.
 
 - `./jsonld`: node builders and `serializeJsonLd(nodes)`, one `@graph` body with `<` escaped.
+- `./share-copy`: `resolveShareCopy(input)`, content-derived descriptions and OG card text with
+  ordered candidates, optional CTA and locale fallback. Also exported from the root.
 - `./sitemap`: alternate-locale entries, the sitemap document and `robotsTxt`.
 - `./og`: `renderOgPng(card, fonts, rasterize)` draws the share card (eyebrow, wordmark with the
   accent dot, title, handle and location) at `OG_WIDTH` × `OG_HEIGHT` in `OG_PALETTE`, the dark
@@ -40,6 +42,98 @@ Consumers can use the root export (JSON-LD, sitemap and robots, Satori) or the s
 - PNG conversion stays behind the injected rasterizer because native and file ownership varies by
   consumer.
 - The package owns no routes, locale registry, response cache, CSP or deployment adapter.
+
+## Content-derived descriptions and share cards
+
+**No per-page hard-coded share copy; write it in the content fields.** Apply this to every
+project/case study, blog article and generic page. Products choose candidate order from their
+content model, and supply locale keys and CTA labels. The helper knows no slugs or page types.
+
+`resolveShareCopy` tries each candidate in the requested locale before trying the same candidates
+in `defaultLocale` (`en` by default). Text is trimmed, never truncated or split into sentences.
+Bounds are inclusive Unicode code-point counts, defaulting to `minLength: 50, maxLength: 200`.
+Supply positive integers with `maxLength >= minLength`; invalid bounds throw `RangeError`.
+
+For each candidate, a nonempty CTA is appended with a space only when the combined text fits the
+maximum. Otherwise the original candidate can still qualify. The final text must meet the minimum.
+An existing CTA suffix is preserved, treating straight and curly apostrophes as equivalent.
+Missing CTA translations use the default locale's label; fallback content uses that locale's CTA,
+so a fallback description is not mixed with the requested locale's label. Omit `cta` for no CTA.
+
+Each locale returns `status: 'selected'`, identical `description` and `ogLine` strings,
+`candidateId`, zero-based `candidateIndex`, requested `locale`, `sourceLocale` and `ctaAppended`.
+If no content qualifies in either locale, it returns `{ status: 'missing', locale }`. Handle that
+explicitly in the product, for example by rejecting incomplete content during the build. The helper
+does not invent generic copy. The original content and apostrophe style are preserved.
+
+For a project or case study, use the content's one-liner before longer descriptions:
+
+```ts
+import { resolveShareCopy } from '@yesid/seo-kit/share-copy';
+import { renderOgPng } from '@yesid/seo-kit/og';
+
+const copies = resolveShareCopy({
+  locales: ['en', 'fr', 'es'],
+  candidates: [
+    { id: 'oneLiner', text: project.oneLiner },
+    { id: 'excerpt', text: project.excerpt },
+    { id: 'seoDescription', text: project.seoDescription },
+    { id: 'description', text: project.description },
+  ],
+  cta: labels.seeCaseStudy, // { en: 'See the case study.', fr: ..., es: ... }
+});
+const copy = copies[locale];
+if (!copy || copy.status === 'missing') throw new Error('Add usable share copy to the content');
+
+// Reuse this selected object in the head and in the image endpoint/build script.
+const png = await renderOgPng({ ...cardIdentity, title: copy }, fonts, rasterize);
+```
+
+The Svelte head is in `@yesid/ui/head`. Keep the page title; pass the same selection as its
+description. It writes `description`, `og:description` and `twitter:description` from that text:
+
+```svelte
+<SeoHead {...headIdentity} title={project.title[locale]} description={copy} />
+```
+
+For a blog article, prioritize its excerpt and SEO description, then its body summary:
+
+```ts
+const copies = resolveShareCopy({
+  locales,
+  candidates: [
+    { id: 'excerpt', text: article.excerpt },
+    { id: 'seoDescription', text: article.seoDescription },
+    { id: 'bodyDescription', text: article.bodyDescription },
+  ],
+  cta: labels.readArticle,
+});
+```
+
+For a generic page, use the fields it owns. Plain-text summaries belong in content; do not pass
+HTML, Markdown or a full article body expecting this helper to extract or shorten it:
+
+```ts
+const copies = resolveShareCopy({
+  locales,
+  defaultLocale: 'en',
+  candidates: [
+    { id: 'seoDescription', text: page.seoDescription },
+    { id: 'description', text: page.description },
+  ],
+  minLength: 50,
+  maxLength: 200,
+});
+```
+
+Each `text` is a locale-keyed record; missing, null or undefined translations are allowed.
+Products with locale-keyed content objects can map their fields into these records at the boundary.
+`SeoHead.description` and the OG renderer's `title` still accept strings, so adoption is additive.
+Selected-content cards use smaller wordmark and description type and wrap long words to fit
+the default 200-character limit. Larger custom bounds need product-specific image verification.
+Replace local tagline maps and CTA composition with content fields and this helper when upgrading.
+Consumers must run their own checks and inspect real head tags and generated images for their
+locales, including long text and missing translations; repository tests do not establish adoption.
 
 ## Develop
 
