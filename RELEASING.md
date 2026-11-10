@@ -114,7 +114,7 @@ The workflow marks versions with a prerelease suffix as GitHub prereleases. Veri
 assets and provenance just as for stable. Do not install local packs, branch archives or assets
 outside a release tag in a consumer.
 
-In **each** of Transit, yesid.dev and [yesid.login](https://github.com/mgkdante/yesid.login):
+In **each** of Transit, yesid.dev and [yesid.login](https://github.com/yesid-dev/yesid.login):
 
 1. Open the app's adoption PR as a draft from its current `origin/main` against that app's
    `main`, using the exact release candidate `vX.Y.Z-rc.N`. Record that base SHA.
@@ -195,7 +195,7 @@ This proves local tooling, not GitHub publication, provenance or consumer accept
 
 Transit, yesid.dev and yesid.login each take the stable release in their own adoption PR.
 If it began as a draft for rehearsal, continue in that same PR. Change the tag and version in every
-`https://github.com/mgkdante/yesid.design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
+`https://github.com/yesid-dev/yesid.design/releases/download/vX.Y.Z/yesid-<pkg>-X.Y.Z.tgz`
 URL, run `bun install`, and rerun the app's required CI on that exact switched head before merging.
 Each app's guard must fail while any yesid.design package or yesid.design release URL points at
 a release candidate (`-rc`) tag, so a prerelease cannot reach
