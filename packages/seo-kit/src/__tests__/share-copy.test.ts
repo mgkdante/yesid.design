@@ -121,6 +121,27 @@ describe('resolveShareCopy', () => {
 			cta: { en: 'read more.' } }).en).toMatchObject({ description: `${summary} Bread more. read more.`, ctaAppended: true });
 	});
 
+	it.each(['—', '–', '-', '"', '“', '«', '(', '【'])('recognizes an existing CTA after punctuation %s', (separator) => {
+		const text = `${summary} ${separator}Read more.`;
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: text } }],
+			cta: { en: 'Read more.' } }).en).toMatchObject({ description: text, ctaAppended: false });
+	});
+
+	it('recognizes a CTA at the start and preserves apostrophes after punctuation', () => {
+		expect(resolveShareCopy({ locales: ['en'], minLength: 1, candidates: [
+			{ id: 'short', text: { en: 'Read more.' } },
+		], cta: { en: 'Read more.' } }).en).toMatchObject({ description: 'Read more.', ctaAppended: false });
+		const text = `${summary} «See what’s inside.`;
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: text } }],
+			cta: { en: "See what's inside." } }).en).toMatchObject({ description: text, ctaAppended: false });
+	});
+
+	it.each(['B', 'é', '字', '2', '\u0301'])('rejects a CTA embedded after the Unicode word character %s', (prefix) => {
+		const text = `${summary} ${prefix}read more.`;
+		expect(resolveShareCopy({ ...input, candidates: [{ id: 'short', text: { en: text } }],
+			cta: { en: 'read more.' } }).en).toMatchObject({ description: `${text} read more.`, ctaAppended: true });
+	});
+
 	it.each([
 		['fr', '« Une interface claire pour tous les lecteurs. »', 'Une autre phrase utile !', 'Lire la suite.'],
 		['es', '¿Una interfaz clara para todos los lectores?', '¡Una experiencia mucho más fácil!', 'Leer más.'],
@@ -144,6 +165,40 @@ describe('resolveShareCopy', () => {
 		expect(resolveShareCopy({ ...input, minLength: 1, maxLength: 10, candidates: [
 			{ id: 'primary', text: {} }, { id: 'body', text: { en: `${first} End.` } },
 		] }).en).toMatchObject({ status: 'missing' });
+	});
+
+	it.each([
+		['en', 'This project helps teams publish useful reports, dashboards, maps, etc.'],
+		['en', 'This project helps teams publish useful reports for readers in the U.S.'],
+		['en', '“This project helps teams publish useful reports, dashboards, maps, etc.”'],
+		['fr', 'Ce projet aide les équipes à publier des rapports, tableaux et cartes, etc.'],
+		['fr', '« Ce projet aide les équipes à publier des rapports, tableaux et cartes, etc. »'],
+		['fr', 'Ce projet aide les équipes à publier des exemples utiles, p. ex.'],
+		['es', 'Este proyecto permite compartir informes, tablas y mapas con todos, etc.'],
+		['es', '“Este proyecto permite compartir informes, tablas y mapas con todos, etc.”'],
+		['es', 'Este proyecto permite compartir ejemplos útiles con todos, p. ej.'],
+	])('selects a complete %s sentence ending in an abbreviation', (locale, text) => {
+		expect(resolveShareCopy({ locales: [locale], maxLength: Array.from(text).length, candidates: [
+			{ id: 'primary', text: {} }, { id: 'body', text: { [locale]: text } },
+		], defaults: { description: { [locale]: summary }, ogLine: { [locale]: primary } } })[locale])
+			.toMatchObject({ status: 'selected', description: text, ogLine: text,
+				descriptionSource: { rule: 'sentences', sourceLocale: locale },
+				ogLineSource: { rule: 'sentences', sourceLocale: locale } });
+	});
+
+	it.each([
+		['en', 'This project lets every team share important data, e.g.', 'Read the case study.'],
+		['en', 'This project lets every team share important data, i.e.', 'Read the case study.'],
+		['fr', 'Ce projet permet à toutes les équipes de partager des données utiles, p. ex.', 'Voir le cas d’étude.'],
+		['es', 'Este proyecto permite a todos los equipos compartir datos importantes, p. ej.', 'Ver el caso de estudio.'],
+		['es', 'Este proyecto permite compartir los informes del núm.', 'Ver el caso de estudio.'],
+	])('never selects a %s fragment before an abbreviation continuation exceeds the budget', (locale, fragment, cta) => {
+		const text = `${fragment} ${'descriptions détaillées '.repeat(15)}.`;
+		expect(resolveShareCopy({ locales: [locale], maxLength: 150, candidates: [
+			{ id: 'primary', text: {} }, { id: 'body', text: { [locale]: text } },
+		], cta: { [locale]: cta }, defaults: { description: { [locale]: summary }, ogLine: { [locale]: primary } } })[locale])
+			.toMatchObject({ description: summary, ogLine: primary,
+				descriptionSource: { rule: 'default' }, ogLineSource: { rule: 'default' }, ctaAppended: false });
 	});
 
 	it('tries longer candidates in order and never cuts or skips an oversized leading sentence', () => {

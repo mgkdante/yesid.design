@@ -14,6 +14,8 @@ describe('share card', () => {
 	it.each([
 		'  One look\n for\t every site.  ',
 		'W'.repeat(OG_LINE_MAX_LENGTH),
+		Array(6).fill('W'.repeat(32)).join(' '),
+		Array(6).fill('W'.repeat(32)).join(' ') + ' WW',
 		('W'.repeat(34) + ' ').repeat(5) + 'W'.repeat(OG_LINE_MAX_LENGTH - 175),
 		longDescription,
 		`${'WWW '.repeat(49)}WWW.`,
@@ -39,6 +41,8 @@ describe('share card', () => {
 			const bounds: { text: string; top: number; bottom: number; left: number; right: number; fontSize?: number }[] = [];
 			await satori.renderSatoriPng(call[0], {
 				...call[1],
+				// Keep text in this second real render so missing glyphs are observable too.
+				embedFont: false,
 				onNodeDetected(node) {
 					if (node.textContent) bounds.push({
 						text: node.textContent, top: node.top, bottom: node.top + node.height,
@@ -46,7 +50,15 @@ describe('share card', () => {
 						fontSize: node.props?.style?.fontSize,
 					});
 				},
-			}, () => new Uint8Array());
+			}, (svg) => {
+				if (/^[W ]+$/u.test(copy.ogLine)) {
+					const rendered = [...svg.matchAll(/<text\b([^>]*)>([^<]*)<\/text>/gu)]
+						.filter(([, attributes]) => attributes!.includes('font-family="inter"') && attributes!.includes('font-weight="500"'))
+						.map(([, , text]) => text).join('');
+					expect(rendered.replace(/\s/gu, '')).toBe(copy.ogLine.replace(/\s/gu, ''));
+				}
+				return new Uint8Array();
+			});
 			expect(bounds.some(({ text }) => text === copy.ogLine)).toBe(true);
 			expect(Number.parseFloat(String(bounds.find(({ text }) => text === copy.ogLine)?.fontSize)))
 				.toBeGreaterThanOrEqual(OG_LINE_MIN_FONT_SIZE);

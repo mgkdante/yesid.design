@@ -65,7 +65,7 @@ const apostrophes = (text: string) => text.replace(/[‘’]/gu, "'");
 function withCta(text: string, cta: string, maxLength: number) {
 	const normalized = apostrophes(text);
 	const label = apostrophes(cta);
-	if (!cta || normalized === label || (normalized.endsWith(label) && /\s/u.test(normalized.at(-label.length - 1) ?? ''))) {
+	if (!cta || normalized === label || (normalized.endsWith(label) && /[\s\p{P}]$/u.test(normalized.slice(0, -label.length)))) {
 		return text;
 	}
 	const combined = `${text} ${cta}`;
@@ -73,7 +73,7 @@ function withCta(text: string, cta: string, maxLength: number) {
 }
 
 // Deliberately small abbreviation list, plus initials/acronyms and decimal points. Not NLP.
-const abbreviation = /(?<![\p{L}\p{N}_])(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|M|Mme|Mlle|Pr|Sra|Srta|Ud|Uds|e\.g|i\.e|p\.ex|\p{L})\.$/iu;
+const abbreviation = /(?<![\p{L}\p{N}_])(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|M|Mme|Mlle|Pr|Sra|Srta|Ud|Uds|e\.g|i\.e|p\.\s*(?:ex|ej)|núm|\p{L})\.$/iu;
 
 /** Returns only complete sentences; an unfinished final tail never becomes share copy. */
 function leadingSentences(text: string, maxLength: number): string {
@@ -83,7 +83,7 @@ function leadingSentences(text: string, maxLength: number): string {
 		const nextEnd = match.index + match[0].length;
 		if (length(text.slice(0, nextEnd)) > maxLength) break;
 		const punctuationEnd = match.index + match[0].search(/["'”’»)\]}\s]|$/u);
-		if (text[match.index] === '.' && abbreviation.test(text.slice(0, punctuationEnd))) continue;
+		if (nextEnd < text.length && text[match.index] === '.' && abbreviation.test(text.slice(0, punctuationEnd))) continue;
 		end = nextEnd;
 	}
 	return text.slice(0, end).trim();

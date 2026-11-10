@@ -14,8 +14,10 @@ Descriptions try primary plus localized CTA, then primary alone, then leading
 complete sentences from longer candidates in order. Bounds remain configurable,
 inclusive Unicode code-point counts, defaulting to 50 to 200. Longer candidates
 never contribute a partial sentence. Sentence splitting handles French/Spanish
-punctuation and closing quotes, with simple documented abbreviation handling.
-CTA composition stays idempotent across straight/curly apostrophes and follows
+punctuation and closing quotes, accepts abbreviations at the end of text and keeps
+localized `p. ex.` / `p. ej.` continuations together instead of selecting fragments.
+CTA composition recognizes existing suffixes after Unicode punctuation as well
+as whitespace, stays idempotent across straight/curly apostrophes and follows
 the description content's locale independently of the card's locale. After
 requested/default-locale content fails, use `defaults.description`; no generic
 copy is built in. Defaults do not receive a CTA.
@@ -31,7 +33,9 @@ Meta/OG/Twitter descriptions use `description`; the generated image uses `ogLine
 `OG_LINE_MAX_LENGTH` (200 code points, root or `./share-copy`) is the CMS validation
 limit guaranteed by measured card fitting with bundled fonts. Full text and the
 footer remain within the padding, including multiline and wide/unbroken primary
-text. Type starts at 32px and stops at `OG_LINE_MIN_FONT_SIZE` (24px, `./og`);
+text. Real-Satori regressions cover six individually fitting wide words at 197
+and 200 code points, preserving every glyph and the footer within bounds.
+Type starts at 32px and stops at `OG_LINE_MIN_FONT_SIZE` (24px, `./og`);
 unfit input rejects instead of clipping or shrinking below legibility. Primary
 text beyond the limit is still preserved by the resolver and needs consumer
 verification. Existing string inputs work byte-identically.

@@ -91,15 +91,19 @@ primary text and configured defaults need not end in punctuation and are never s
 Sentence boundaries recognize `.`, `!`, `?`, `…`, repeated terminal punctuation, French guillemets
 (including the space before `»`), Spanish `¿`/`¡` and closing straight/curly quotes or brackets.
 Splitting is intentionally conservative and simple, not linguistic analysis: decimal points,
-initials/acronyms and this fixed abbreviation list are kept together: `Mr.`, `Mrs.`, `Ms.`, `Dr.`,
-`Prof.`, `Sr.`, `Jr.`, `St.`, `vs.`, `etc.`, `M.`, `Mme.`, `Mlle.`, `Pr.`, `Sra.`, `Srta.`, `Ud.`,
-`Uds.`, `e.g.`, `i.e.`, `p.ex.`. A boundary requires whitespace or the end after terminal punctuation
-and any closing quotes. Unknown abbreviations may be treated as sentence ends; an abbreviation
-at a real sentence end can conservatively keep that sentence joined to the next. Author plain-text
+initials/acronyms (such as `U.S.`) and a small fixed set of abbreviations stay together, including
+`etc.`, `e.g.`, `i.e.`, `Dr.`, `M.`, `Mme.`, `Sr.`, `Sra.`, `p. ex.`, `p. ej.` and `núm.`.
+The localized `p. ex.` / `p. ej.` forms also work without internal spaces. A boundary requires
+whitespace or the end after terminal punctuation and any closing quotes. A final abbreviation
+at the end of the text counts as a complete sentence, including closing quotes or brackets.
+Unknown abbreviations may be treated as sentence ends; an abbreviation at a sentence end with
+more text after it can conservatively keep that sentence joined to the next. Author plain-text
 summaries accordingly; no HTML/Markdown extraction or language-specific grammar inference occurs.
 
 CTA composition is idempotent and treats straight and curly apostrophes as equivalent while
-preserving the original apostrophe style. A matching suffix must start at a word boundary.
+preserving the original apostrophe style. A matching suffix must start at the beginning of the
+text or after Unicode whitespace or punctuation, including dashes, quotes and parentheses.
+Embedded matches within words do not suppress the CTA.
 The CTA follows the locale of the **description content actually used**, independent of the OG
 line's locale. An empty or missing CTA translation uses the default locale's label. Omit `cta`
 for no CTA. Defaults are used unchanged after whitespace collapse, without adding a CTA, and
