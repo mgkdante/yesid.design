@@ -40,11 +40,11 @@ function run(repo: TempCheckout, input: string, env: Record<string, string>) {
 		env: { ...process.env, GITHUB_WORKSPACE: repo.root.replaceAll('\\', '/'), ...env },
 	});
 }
-function materialize(repo: TempCheckout, base: string, job = 'classify', event = 'pull_request') {
+function materialize(repo: TempCheckout, base: string, job = 'classify', event = 'pull_request', prologue = '') {
 	const scratch = new TempCheckout(); repos.push(scratch);
 	const output = join(scratch.root, 'output').replaceAll('\\', '/');
 	scratch.write('output', '');
-	const result = run(repo, script('Materialize trusted policy', job), {
+	const result = run(repo, `${prologue}\n${script('Materialize trusted policy', job)}`, {
 		BASE_SHA: base, HEAD_SHA: repo.git('rev-parse', 'HEAD'), GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output,
 		RUNNER_TEMP: scratch.root.replaceAll('\\', '/'),
 	});
@@ -53,13 +53,74 @@ function materialize(repo: TempCheckout, base: string, job = 'classify', event =
 }
 
 describe('trusted workflow policy runner', { timeout: 30_000 }, () => {
-	it.each(['classify', 'ci'])('merge group rejects an unreachable or unreadable base in %s', (job) => {
+	it.each(['classify', 'ci'])('merge group rejects an unreadable base in %s', (job) => {
 		const { repo, commit } = fixture();
-		repo.write('untrusted', 'branch only'); const head = commit();
-		for (const base of [head, '', '0'.repeat(40)]) {
+		repo.write('untrusted', 'branch only'); commit();
+		for (const base of ['', '0'.repeat(40)]) {
 			const { result } = materialize(repo, base, job, 'merge_group');
 			expect(result.status).not.toBe(0);
 		}
+	});
+	it.each(['classify', 'ci'])('fails closed on ancestry lookup errors in %s', (job) => {
+		const { repo, base } = fixture();
+		for (const status of [128, 2]) {
+			const fault = `git() {
+  if [[ "$1" == merge-base && "$2" == --is-ancestor && "$3" == "$BASE_SHA" && "$4" == origin/main ]]; then
+    echo 'injected ancestry lookup error' >&2
+    return ${status}
+  fi
+  command git "$@"
+}`;
+			const { result, outputs } = materialize(repo, base, job, 'merge_group', fault);
+			expect(result.status, result.stderr).toBe(status);
+			expect(outputs.directory).toBeUndefined();
+		}
+	});
+	it.each(['classify', 'ci'])('non-first merge group bootstraps main policy in %s', (job) => {
+		const { repo, base: main, commit } = fixture();
+		const trusted = repo.read('tools/ci-policy.ts');
+		repo.write('tools/ci-policy.ts', 'throw new Error("UNTRUSTED_QUEUE_POLICY");');
+		repo.write('tools/ci-release.ts', 'throw new Error("UNTRUSTED_QUEUE_IMPORT");');
+		repo.write('.bun-version', '0.0.0');
+		const previousGroup = commit();
+		repo.write('queued-entry', 'second group'); const head = commit();
+		expect(repo.git('rev-parse', 'main')).toBe(main);
+		const { result, outputs, output } = materialize(repo, previousGroup, job, 'merge_group');
+		expect(result.status, result.stderr).toBe(0);
+		expect(readFileSync(join(outputs.directory!, 'tools/ci-policy.ts'), 'utf8')).toBe(trusted);
+		expect(outputs['bun-version']).toBe(readFileSync(new URL('.bun-version', source), 'utf8').trim());
+		const selected = run(repo, script('Select CI lane'), {
+			TRUSTED_POLICY: outputs.directory!, BASE_SHA: previousGroup, HEAD_SHA: head,
+			GITHUB_EVENT_NAME: 'merge_group', PR_TITLE: 'chore(release): prepare v1.0.0', GITHUB_OUTPUT: output,
+		});
+		expect(selected.status, selected.stderr).toBe(0);
+		expect(readFileSync(output, 'utf8')).toContain('browser=true\nrelease-only=false\nversion=\n');
+		if (job === 'ci') {
+			const needs = {
+				classify: { result: 'success', outputs: { browser: 'true', 'release-only': 'false' } },
+				check: { result: 'success' }, 'browser-authority': { result: 'success' },
+				'token-outputs-windows': { result: 'success' }, 'token-byte-parity': { result: 'success' },
+			};
+			const aggregate = run(repo, script('Require selected jobs to succeed', 'ci'), {
+				TRUSTED_POLICY: outputs.directory!, CI_NEEDS: JSON.stringify(needs),
+			});
+			expect(aggregate.status, aggregate.stderr).toBe(0);
+		}
+	});
+	it.each(['classify', 'ci'])('merge group rejects a base outside its queued ancestry in %s', (job) => {
+		const { repo, commit } = fixture();
+		repo.write('previous-entry', 'other temporary group'); const previousGroup = commit();
+		repo.git('checkout', '-b', 'other-group', 'main');
+		repo.write('queued-entry', 'unrelated group'); commit();
+		expect(materialize(repo, previousGroup, job, 'merge_group').result.status).not.toBe(0);
+	});
+	it.each(['classify', 'ci'])('merge group rejects fallback policy outside queued ancestry in %s', (job) => {
+		const { repo, commit } = fixture();
+		repo.write('previous-entry', 'temporary group'); const previousGroup = commit();
+		repo.git('checkout', 'main');
+		repo.write('new-main', 'not part of this stale group'); commit();
+		repo.git('checkout', 'pr');
+		expect(materialize(repo, previousGroup, job, 'merge_group').result.status).not.toBe(0);
 	});
 	it('merge group uses its base policy and full CI despite a forged checkout and release title', () => {
 		const { repo, base, commit } = fixture();
@@ -144,13 +205,13 @@ console.log('FORGED'); process.exit(0);`);
 			expect(result.stderr).toContain('PR base is not reachable from origin/main');
 		}
 	});
-	it('dispatch uses main policy even when the branch policy is forged', () => {
+	it.each(['workflow_dispatch', 'push'])('%s uses main policy even when the branch policy is forged', (event) => {
 		const { repo, commit } = fixture();
 		repo.write('tools/ci-policy.ts', 'throw new Error("FORGED");'); commit();
-		const { result, outputs, output } = materialize(repo, '', 'classify', 'workflow_dispatch');
+		const { result, outputs, output } = materialize(repo, '', 'classify', event);
 		expect(result.status, result.stderr).toBe(0);
 		const selected = run(repo, script('Select CI lane'), {
-			TRUSTED_POLICY: outputs.directory!, GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_OUTPUT: output,
+			TRUSTED_POLICY: outputs.directory!, GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output,
 		});
 		expect(selected.status, selected.stderr).toBe(0);
 		expect(readFileSync(output, 'utf8')).toContain('browser=true\nrelease-only=false');
