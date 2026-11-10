@@ -49,7 +49,8 @@ https://github.com/yesid-dev/yesid.design/releases/download/vX.Y.Z/yesid-<packag
 
 To upgrade, change the tag and the version in every URL and run `bun install`. A rollback is the
 same edit with an earlier release. `gh attestation verify <tarball> --repo yesid-dev/yesid.design`
-confirms a tarball came from the release workflow.
+confirms a tarball came from the release workflow. This command applies to releases after v0.39.1.
+For v0.39.1 and earlier, use `gh attestation verify <tarball> --owner mgkdante --signer-repo mgkdante/yesid.design`.
 
 ## Develop
 

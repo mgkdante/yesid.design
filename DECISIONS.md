@@ -7,7 +7,7 @@ available in Git history and `CHANGELOG.md`; it does not govern the current pack
 
 `v0.1.0` is the byte-faithful parity release extracted from yesid.dev commit
 `2bdb611d91749dc437c07586cb82129eabe9dfec`, subject only to the deviation register in
-[that release's README](https://github.com/mgkdante/yesid.design/blob/v0.1.0/README.md).
+[that release's README](https://github.com/yesid-dev/yesid.design/blob/v0.1.0/README.md).
 The tag never moves. Later releases advance from that reference rather than rewriting it.
 
 ## D2: Consumers install exact release tarballs

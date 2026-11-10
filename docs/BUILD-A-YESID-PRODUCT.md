@@ -60,7 +60,8 @@ The wider peer range is a compatibility declaration, not a recommendation to res
 Add `shiki >=4 <5` only if importing the optional server-side `@yesid/seo-kit/highlight` subpath. The packages ship TypeScript and Svelte
 source that Vite compiles (see `ssr.noExternal` in section 4).
 `gh attestation verify <tarball> --repo yesid-dev/yesid.design` proves a tarball came from the
-release workflow.
+release workflow. This command applies to releases after v0.39.1.
+For v0.39.1 and earlier, use `gh attestation verify <tarball> --owner mgkdante --signer-repo mgkdante/yesid.design`.
 
 ## 3. Load the tokens and fonts
 

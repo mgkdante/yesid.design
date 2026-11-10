@@ -25,6 +25,9 @@ published to npm.
 
 ## 1. Release pull request
 
+Enqueue an approved PR with `gh pr merge <number> --repo yesid-dev/yesid.design --auto --squash`.
+The merge queue runs the required checks and squash-merges it when they pass.
+
 Each consumer-visible change adds a fragment:
 
 ```md
@@ -51,8 +54,8 @@ bun run release:check -- --version X.Y.Z
 
 For a release that requires rehearsal, use `X.Y.Z-rc.1` instead of `X.Y.Z` in both commands.
 Prepare bumps every manifest and `bun.lock`, folds the fragments into `CHANGELOG.md` and deletes
-them, and moves the package READMEs' links from `blob/v<previous>/` to `blob/vX.Y.Z/`. Merge the
-release-only PR once CI is green and the API report diff has been read. Before the first candidate
+them, and moves the package READMEs' links from `blob/v<previous>/` to `blob/vX.Y.Z/`. Enqueue the
+release-only PR once CI is green and the API report diff has been read, then wait for the queue to merge it. Before the first candidate
 tag, obtain the owner's API report approval; obtain it again before any later candidate tag whose
 report changes. Keep the exact design commit, version, API report diff and approval in the release
 evidence. A contract change also needs the rehearsal below before stable promotion.
@@ -62,7 +65,7 @@ Release-only PRs take a light CI lane only with the exact title
 `chore(release): promote vX.Y.Z` (stable only). CI must reproduce the PR byte for byte in two
 independent runs of the merge base's `release:prepare`, using Bun matching that merge base's
 `.bun-version`. The light lane still runs API report approval, type checks, tests, Ubuntu token
-drift, build, `release:check` and packing all eight packages. It skips both `browser-shards` jobs, their `browser-authority` wrapper, `token-outputs-windows` and `token-byte-parity`. PRs that do not qualify use the normal CI policy, including its documentation-only browser exemption.
+drift, build, `release:check` and packing all eight packages. It skips all three `browser-shards` jobs, their `browser-authority` wrapper, `token-outputs-windows` and `token-byte-parity`. PRs that do not qualify use the normal CI policy, including its documentation-only browser exemption.
 
 ## 2. Tag
 
