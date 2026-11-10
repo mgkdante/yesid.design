@@ -48,6 +48,11 @@ export function sheetDrag(node: HTMLElement, read: () => {
 		}
 		read().height(undefined);
 	}
+	// Touch pointers start implicitly captured by the touched child. Taking capture for the sheet
+	// makes that child fire lostpointercapture, which bubbles here; only the sheet's own loss ends a drag.
+	function lost(e: PointerEvent) {
+		if (e.target === node) finish(e);
+	}
 	function click(e: MouseEvent) {
 		if (suppressClick) { e.preventDefault(); e.stopImmediatePropagation(); suppressClick = false; }
 	}
@@ -55,11 +60,11 @@ export function sheetDrag(node: HTMLElement, read: () => {
 	window.addEventListener('pointermove', move);
 	window.addEventListener('pointerup', finish);
 	window.addEventListener('pointercancel', finish);
-	node.addEventListener('lostpointercapture', finish);
+	node.addEventListener('lostpointercapture', lost);
 	node.addEventListener('click', click, true);
 	return { destroy() {
 		node.removeEventListener('pointerdown', down);
-		node.removeEventListener('lostpointercapture', finish);
+		node.removeEventListener('lostpointercapture', lost);
 		window.removeEventListener('pointermove', move);
 		window.removeEventListener('pointerup', finish);
 		window.removeEventListener('pointercancel', finish);
