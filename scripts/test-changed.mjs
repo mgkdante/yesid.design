@@ -19,6 +19,7 @@ export function changedFiles(root, baseRef = 'origin/main') {
 }
 
 export function selectSpecs(files, available, rules, all = false) {
+	if ((files.length || all) && !available.length) throw new Error('No browser specs available; refusing an empty fallback');
 	const selected = new Set();
 	const reasons = [];
 	for (const raw of files) {
@@ -96,6 +97,11 @@ function run(root, cwd, args, env = {}) {
 	if (result.status !== 0) throw Object.assign(new Error(`Command failed: bun ${args.join(' ')}`), { exitCode: result.status ?? 1 });
 }
 
+export function changedUnitArgs(script, base) {
+	return ['run', 'test', '--changed', base, '--passWithNoTests',
+		...(/--maxWorkers\b/.test(script) ? [] : ['--maxWorkers=4'])];
+}
+
 export function main(root, args) {
 	const { values } = parseArgs({ args, options: {
 		all: { type: 'boolean' }, base: { type: 'string', default: 'origin/main' },
@@ -113,7 +119,7 @@ export function main(root, args) {
 		for (const pkg of selectUnits(files, workspaces(root), false, config.generatedInputs)) {
 			const vitest = /\bvitest\b/.test(pkg.scripts.test) && !pkg.fullTest;
 			console.log(`Unit: ${pkg.path}: affected workspace/dependent; ${vitest ? 'Vitest module graph' : pkg.fullTest ? 'full owning suite (generated inputs)' : 'full owning suite (no Vitest)'}`);
-			run(root, pkg.path, ['run', 'test', ...(vitest ? ['--changed', base, '--passWithNoTests', '--maxWorkers=4'] : [])], config.unitEnv);
+			run(root, pkg.path, vitest ? changedUnitArgs(pkg.scripts.test, base) : ['run', 'test'], config.unitEnv);
 		}
 		if (config.repositoryTests && files.length) run(root, '.', ['run', 'test:repository', '--changed', base, '--passWithNoTests', '--maxWorkers=4']);
 	}

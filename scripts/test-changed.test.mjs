@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { changedFiles, selectSpecs, selectUnits } from './test-changed.mjs';
+import { changedFiles, selectSpecs, selectUnits, changedUnitArgs } from './test-changed.mjs';
 import config from './test-changed.config.json' with { type: 'json' };
 
 const available = ['tests/a.spec.ts', 'tests/b.spec.ts'];
@@ -19,6 +19,8 @@ test('unknown/shared/deleted spec paths fail closed; clean tree and --all are ex
 	}
 	assert.deepEqual(selectSpecs([], available, rules).specs, []);
 	assert.deepEqual(selectSpecs([], available, rules, true).specs, available);
+	assert.throws(() => selectSpecs(['unknown.ts'], [], rules), /empty fallback/);
+	assert.throws(() => selectSpecs([], [], rules, true), /empty fallback/);
 	assert.throws(() => selectSpecs(['src/a/foo'], available, [{ prefix: 'src/a/', specs: ['missing.spec.ts'] }]));
 });
 test('workspace selection includes transitive consumers and conservative root fallback', () => {
@@ -99,4 +101,10 @@ test('mapped Gallery routes retain shared phone and desktop accessibility covera
 		assert.ok(result.specs.includes(`${config.specDir}/accessibility.spec.ts`), rule.prefix);
 		assert.ok(result.specs.some(path => !path.endsWith('/accessibility.spec.ts')), rule.prefix);
 	}
+});
+
+test('changed Vitest arguments preserve existing worker limits without duplicate flags', () => {
+    assert.deepEqual(changedUnitArgs('node prepare.mjs && vitest run --maxWorkers=4', 'abc'),
+        ['run', 'test', '--changed', 'abc', '--passWithNoTests']);
+    assert.equal(changedUnitArgs('vitest run', 'abc').filter(arg => arg.startsWith('--maxWorkers')).length, 1);
 });
