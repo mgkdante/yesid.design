@@ -105,3 +105,18 @@ reports: [SUPPORT.md](SUPPORT.md). Vulnerabilities: [SECURITY.md](SECURITY.md). 
 The code is under the [MIT License](LICENSE). GSAP, the bundled fonts and the Lenis stylesheet keep
 their own licenses; see [NOTICE](NOTICE). The yesid name and marks are covered by
 [TRADEMARK.md](TRADEMARK.md).
+
+## Fast local tests
+
+Run `bun run test:changed` from the repository root (Windows or Linux). It uses
+the merge base with the locally fetched `origin/main`, plus staged, unstaged and
+untracked files. Vitest follows its module graph in affected workspaces; other
+owning test runners run their full suite. Browser specs use the tested map in
+`scripts/test-changed.config.json` and two representative phone/desktop projects.
+Unknown or shared paths select all browser specs at those sizes. Selection and
+reasons are printed; failures propagate. Run `git fetch origin main` to refresh
+the baseline, and `bun run test:changed --all` for full unit and browser suites.
+Install the repository dependencies and Playwright browsers first. This local
+loop supplements the full CI gates.
+The existing project tag filters still apply; theme and reduced-motion variants
+are covered by `--all`. Existing test skips remain visible in the runner report.

@@ -1,0 +1,45 @@
+{
+  "app": "apps/gallery",
+  "rules": [
+    {
+      "specs": [
+        "station-tabs.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/station-tabs/"
+    },
+    {
+      "specs": [
+        "data-page.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/data-page/"
+    },
+    {
+      "specs": [
+        "site-header.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/site-header/"
+    },
+    {
+      "specs": [
+        "density.spec.ts"
+      ],
+      "prefix": "apps/gallery/src/routes/density/"
+    }
+  ],
+  "browserGroups": [
+    {
+      "match": ".*",
+      "allProjects": [
+        "*"
+      ],
+      "build": [],
+      "projects": [
+        "phone",
+        "desktop"
+      ]
+    }
+  ],
+  "playwright": "playwright.changed.config.ts",
+  "specDir": "apps/gallery/tests/browser",
+  "repositoryTests": true
+}
