@@ -125,7 +125,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     container:
       image: mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48
       options: --init --ipc=host
@@ -142,7 +142,15 @@ jobs:
           test "$(bun --version)" = "$version"
       - uses: ./.github/actions/setup
       - name: Run browser authority
-        run: bun run --cwd apps/gallery test:browser --shard=${{ matrix.shard }}/2
+        run: bun run --cwd apps/gallery test:browser --shard=${{ matrix.shard }}/3
+      - name: Upload browser timings
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: browser-timings-${{ github.run_id }}-${{ matrix.shard }}
+          if-no-files-found: warn
+          retention-days: 7
+          path: apps/gallery/test-results/playwright-timing.json
       - name: Upload browser failure evidence
         if: ${{ failure() && !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -160,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require both browser shards to succeed
+      - name: Require all browser shards to succeed
         env:
           SHARDS_RESULT: ${{ needs.browser-shards.result }}
         run: test "$SHARDS_RESULT" = success
@@ -173,6 +181,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        env:
+          # Keep cache and workspace on the same drive for Bun's hard-link installs.
+          BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache
       - name: Check API reports
         run: bun run api:check
       - name: Generate token outputs
