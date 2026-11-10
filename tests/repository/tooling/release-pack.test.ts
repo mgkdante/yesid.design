@@ -47,6 +47,10 @@ function addTargetOnlyPackage(repo: TempCheckout, name = '@yesid/retired-widget'
 }
 
 describe('release packing', () => {
+	it('allows releases from the canonical repository', () => {
+		const workflow = readFileSync(new URL('../../../.github/workflows/release.yml', import.meta.url), 'utf8');
+		expect(workflow).toContain("if: github.repository == 'yesid-dev/yesid.design'");
+	});
 	it('rehearses prepare, check and real packing through rc.1, rc.2 and stable without publishing', () => {
 		const repo = checkout('1.2.3');
 		const root = fileURLToPath(new URL('../../..', import.meta.url));
