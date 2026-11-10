@@ -126,6 +126,35 @@ describe('motion/utils/globalRipple', () => {
 		expect(document.querySelectorAll('.global-ripple, .global-ripple-inner')).toHaveLength(4);
 	});
 
+	it('skips surfaces marked data-ripple-exempt without any exclusion option', () => {
+		const readingSurface = document.createElement('article');
+		readingSurface.dataset.rippleExempt = '';
+		const target = document.createElement('p');
+		readingSurface.appendChild(target);
+		const outside = document.createElement('button');
+		document.body.append(readingSurface, outside);
+		dispose = initGlobalRipple();
+
+		target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+		expect(document.querySelectorAll('.global-ripple, .global-ripple-inner')).toHaveLength(0);
+
+		outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+		expect(document.querySelectorAll('.global-ripple, .global-ripple-inner')).toHaveLength(2);
+	});
+
+	it('honours data-ripple-exempt alongside a consumer exclusion selector', () => {
+		const exempt = document.createElement('figure');
+		exempt.dataset.rippleExempt = '';
+		const excluded = document.createElement('div');
+		excluded.className = 'product-surface';
+		document.body.append(exempt, excluded);
+		dispose = initGlobalRipple({ exclude: '.product-surface' });
+
+		exempt.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+		excluded.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+		expect(document.querySelectorAll('.global-ripple, .global-ripple-inner')).toHaveLength(0);
+	});
+
 	it('returns a no-op disposer during SSR', () => {
 		const originalWindow = globalThis.window;
 		// @ts-expect-error — simulating SSR

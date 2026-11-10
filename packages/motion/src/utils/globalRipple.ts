@@ -11,12 +11,18 @@
 //
 // Reduced-motion: the click ripple stays active because it is user-initiated,
 // brief (<1.2s) and not a vestibular trigger.
+//
+// Reading surfaces (articles, cards, charts, maps) carry data-ripple-exempt and
+// never ripple. A consumer's `exclude` selector adds to that, never replaces it.
 
 const OUTER_DURATION_MS = 1200;
 const INNER_DURATION_MS = 800;
+const EXEMPT_SELECTOR = '[data-ripple-exempt]';
 
 export function initGlobalRipple(options: { exclude?: string } = {}): () => void {
 	if (typeof window === 'undefined') return () => {};
+
+	const skip = options.exclude ? `${EXEMPT_SELECTOR}, ${options.exclude}` : EXEMPT_SELECTOR;
 
 	function spawnRipple(x: number, y: number) {
 		const outer = document.createElement('div');
@@ -35,13 +41,7 @@ export function initGlobalRipple(options: { exclude?: string } = {}): () => void
 	}
 
 	function onPointerDown(e: PointerEvent) {
-		if (
-			options.exclude &&
-			e.target instanceof Element &&
-			e.target.closest(options.exclude)
-		) {
-			return;
-		}
+		if (e.target instanceof Element && e.target.closest(skip)) return;
 		spawnRipple(e.clientX, e.clientY);
 	}
 
