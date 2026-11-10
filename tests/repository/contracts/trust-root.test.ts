@@ -55,7 +55,10 @@ describe('distribution workflow trust root', () => {
 		expect(setup).toContain("key: bun-${{ runner.os }}-${{ hashFiles('.bun-version') }}-${{ hashFiles('bun.lock') }}");
 		expect(setup).toContain('bun-${{ runner.os }}-');
 		expect(setup).toContain("path: ${{ env.BUN_INSTALL_CACHE_DIR || '~/.bun/install/cache' }}");
-		expect(readText(CI_WORKFLOW_PATH)).toContain('BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache');
+		const windows = readText(CI_WORKFLOW_PATH).split('  token-outputs-windows:')[1]!.split('  token-byte-parity:')[0]!;
+		expect(windows).not.toMatch(/^    env:/mu);
+		expect(windows).toContain('        env:');
+		expect(windows).toContain('BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache');
 	});
 	it('bootstraps the browser container without a mutable OS package index', () => {
 		const workflow = readText(CI_WORKFLOW_PATH);

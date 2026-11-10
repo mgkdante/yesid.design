@@ -178,12 +178,12 @@ jobs:
     if: ${{ always() && !cancelled() && (needs.classify.result != 'success' || needs.classify.outputs.release-only != 'true') }}
     runs-on: windows-latest
     timeout-minutes: 15
-    env:
-      # Keep cache and workspace on the same drive for Bun's hard-link installs.
-      BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        env:
+          # Keep cache and workspace on the same drive for Bun's hard-link installs.
+          BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache
       - name: Check API reports
         run: bun run api:check
       - name: Generate token outputs
