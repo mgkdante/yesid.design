@@ -130,3 +130,9 @@ test('filesystem and generated inputs retain token, UI and repository contract c
 	assert.ok(selectUnitFileTests(['docs/evidence/deepen-tabs-trigger-classes.json'], config.unitFileTests)
 		.some(rule => rule.tests.includes('src/primitives/primitive-cleanup.test.ts')));
 });
+
+test('browser edits retain filesystem discovery when an empty and populated spec change together', () => {
+    const files = ['apps/gallery/tests/browser/data-page.spec.ts', 'apps/gallery/tests/browser/empty.spec.ts'];
+    const checks = selectUnitFileTests(files, config.repositoryFileTests);
+    assert.ok(checks.some(rule => rule.tests.includes('tests/repository/contracts/package-contracts.test.ts')));
+});

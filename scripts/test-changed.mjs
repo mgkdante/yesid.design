@@ -174,6 +174,13 @@ export function main(root, args) {
 			const args = repositoryArgs(files, base, config.repositoryGraphPrefixes);
 			console.log(`Repository tests: ${args.includes('--changed') ? 'module graph' : 'full suite for filesystem/unknown contract inputs'}`);
 			run(root, '.', args);
+			if (args.includes('--changed')) {
+				for (const rule of selectUnitFileTests(files, config.repositoryFileTests)) {
+					if (!rule.tests.length) throw new Error(`Invalid repository test boundary: ${rule.prefix}`);
+					console.log(`Repository filesystem input ${rule.prefix}: ${rule.tests.join(', ')}`);
+					run(root, '.', ['run', 'test:repository', ...rule.tests, '--maxWorkers=4']);
+				}
+			}
 		}
 	}
 	if (!selection.specs.length && !all) return;
