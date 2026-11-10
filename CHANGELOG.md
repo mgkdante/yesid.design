@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.40.0-rc.2
+## 0.40.0
 
 <!-- release-fragment: sheet-touch-drag -->
 - `@yesid/ui` (patch): Bottom Sheet detents can now be dragged by touch. A touch drag on the handle used to stop after its first move, because the
