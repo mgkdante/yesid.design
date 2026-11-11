@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.41.1
+
+<!-- release-fragment: surface-rail-close -->
+- `@yesid/ui` (patch): SurfaceRail keeps its controls mounted inside the mobile sheet until the closing animation finishes,
+  so dismissal slides the complete panel away without briefly showing an empty pill. Control state,
+  focus restoration and desktop breakpoint handoff are preserved. No migration is required.
+
 ## 0.41.0
 
 <!-- release-fragment: ripple-exempt-attribute -->
