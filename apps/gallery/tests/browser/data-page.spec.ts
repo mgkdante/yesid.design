@@ -99,6 +99,31 @@ test('the rail is a landmark on desktop and a sheet on phones that keeps its sta
 test.describe('with motion on', () => {
 	test.use({ contextOptions: { reducedMotion: 'no-preference' } });
 
+	test('the rail keeps its contents throughout closing', async ({ page }) => {
+		test.skip(!isPhone(page), 'the rail sheet is only shown on phones');
+		await open(page);
+		await page.getByRole('button', { name: new RegExp(`^${copy.rail.label}`) }).click();
+		const sheet = page.getByRole('dialog', { name: copy.rail.label });
+		await expect(sheet.getByRole('searchbox', { name: copy.search })).toBeVisible();
+		await expect.poll(() => sheet.evaluate((el) => el.getAnimations().length)).toBe(0);
+		const samples = await sheet.evaluate(async (el) => {
+			const heights: number[] = [];
+			const initialHeight = el.getBoundingClientRect().height;
+			el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await new Promise<void>((resolve) => {
+				const sample = () => {
+					if (!el.isConnected) return resolve();
+					heights.push(el.querySelector('aside')?.getBoundingClientRect().height ?? 0);
+					requestAnimationFrame(sample);
+				};
+				requestAnimationFrame(sample);
+			});
+			return { heights, initialHeight };
+		});
+		expect(samples.heights.length).toBeGreaterThan(2);
+		expect(Math.min(...samples.heights)).toBeGreaterThan(samples.initialHeight / 2);
+	});
+
 	test('the rail sheet stays centred while it opens on phones', async ({ page }) => {
 		test.skip(!isPhone(page), 'the rail sheet is only shown on phones');
 		await open(page);

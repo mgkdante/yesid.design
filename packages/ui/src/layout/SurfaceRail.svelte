@@ -46,6 +46,8 @@
 	}: SurfaceRailProps = $props();
 
 	let sheetOpen = $state(false);
+	// Keep the rail in the sheet until its exit animation has finished.
+	let sheetPresent = $state(false);
 	let pillBtn = $state<HTMLButtonElement>();
 	let sheetEl = $state<HTMLDivElement | null>(null);
 	let desktopRailEl = $state<HTMLElement>();
@@ -70,7 +72,11 @@
 	}
 
 	$effect(() => {
-		if (!sheetOpen || !sheetEl || !desktopRailEl) return;
+		if (sheetOpen) sheetPresent = true;
+	});
+
+	$effect(() => {
+		if (!sheetPresent || !sheetEl || !desktopRailEl) return;
 
 		const activeSheet = sheetEl;
 		activeSheet.querySelector('[data-rail-slot]')?.append(desktopRailEl);
@@ -88,10 +94,11 @@
 		const isDesktop = desktop.current;
 		const crossedToDesktop = isDesktop && !wasDesktop;
 		wasDesktop = isDesktop;
-		if (!crossedToDesktop || !sheetOpen) return;
+		if (!crossedToDesktop || !sheetPresent) return;
 
 		const focusWasInSheet = sheetEl?.contains(document.activeElement) ?? false;
 		sheetOpen = false;
+		sheetPresent = false;
 		if (!focusWasInSheet) return;
 
 		void tick().then(() => {
@@ -103,7 +110,8 @@
 	});
 
 	$effect(() => {
-		if (mobileVisible || !sheetOpen) return;
+		if (mobileVisible) return;
+		sheetPresent = false;
 		closeSheet();
 	});
 </script>
@@ -112,7 +120,7 @@
 	bind:this={desktopRailEl}
 	use:scrollChain
 	class={cn('surface-rail', className)}
-	class:surface-rail--mobile={presentation === 'mobile' && sheetOpen}
+	class:surface-rail--mobile={presentation === 'mobile' && sheetPresent}
 	data-slot="surface-rail"
 	aria-label={label}
 	tabindex="-1"
@@ -122,7 +130,9 @@
 
 {#if mobileVisible}
 	<div class="surface-rail-mobile" data-slot="surface-rail-mobile" data-open={sheetOpen}>
-		<Sheet.Root bind:open={sheetOpen}>
+		<Sheet.Root bind:open={sheetOpen} onOpenChangeComplete={(open) => {
+			if (!open) sheetPresent = false;
+		}}>
 			<button
 				bind:this={pillBtn}
 				class="tap-press surface-rail-pill glass-chrome"
