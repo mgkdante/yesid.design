@@ -1,3 +1,4 @@
+import { expectAccessible } from '@yesid/config/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 import {
@@ -530,4 +531,51 @@ test.describe('in a short viewport', () => {
 		await expect.poll(() => list.evaluate((nav) => nav.parentElement!.scrollTop)).toBeGreaterThan(0);
 		expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
 	});
+});
+
+for (const width of [390, 599, 600, 1024, 1440]) {
+	test(`grouped compact shell at ${width}px`, async ({ page }) => {
+		await page.setViewportSize({ width, height: 900 });
+		await visitHeader(page, `${HOME}?compact`);
+		await header(page).getByRole('button', { name: SEARCH_LABEL, exact: true }).click();
+		await expect(page.getByRole('searchbox', { name: 'Search destinations' })).toBeFocused();
+		await expect(page.getByRole('contentinfo').locator('[data-slot="status-dot"], .footer-status-border')).toHaveCount(0);
+		await expect(header(page).getByRole('switch', { name: LABELS.theme })).toHaveCount(width < 600 ? 0 : 1);
+		await toggle(page).click();
+		await expect(menuLinks(page).getByRole('heading')).toHaveText(['Explore routes', 'More destinations']);
+		await expect(page.getByRole('switch', { name: LABELS.theme })).toHaveCount(1);
+		await expect(language(page)).toHaveCount(1);
+		await expect(language(page)).toHaveAttribute('data-sveltekit-reset', 'false');
+		await expect(header(page).getByRole('switch')).toHaveCount(width < 600 ? 0 : 1);
+		if (width < 600) {
+			await expect(menu(page).getByText(LABELS.theme, { exact: true })).toBeVisible();
+			await expect(menu(page).getByText('Language: English / Français', { exact: true })).toBeVisible();
+		}
+		await expectAccessible(page);
+		await expect(page.locator('.menu-overlay')).toHaveCSS('transition-duration', '0s');
+		await toggle(page).focus();
+		for (const item of MENU_ITEMS) {
+			await page.keyboard.press('Tab');
+			await expect(menuLinks(page).getByRole('link', { name: item.ariaLabel ?? new RegExp(`^${literal(item.label)}`) })).toBeFocused();
+		}
+		await language(page).click();
+		await expect(menu(page)).toBeVisible();
+		await expect(language(page)).toBeFocused();
+		await expect(language(page)).toHaveAccessibleName(/Français/);
+		await page.keyboard.press('Escape');
+		await expect(menu(page)).toBeHidden();
+		await expect(toggle(page)).toBeFocused();
+	});
+}
+
+test('compact placement follows the header container and adapts while open', async ({ page }) => {
+	await page.setViewportSize({ width: 1024, height: 900 });
+	await visitHeader(page, `${HOME}?compact`);
+	await toggle(page).click();
+	for (const width of [599, 600, 390, 1024]) {
+		await page.locator('[data-slot="site-header"]').evaluate((node, width) => node.style.setProperty('--site-header-inset-end', `${1024 - width}px`), width);
+		await expect(header(page).getByRole('switch')).toHaveCount(width < 600 ? 0 : 1);
+		await expect(page.getByRole('switch', { name: LABELS.theme })).toHaveCount(1);
+		await expect(language(page)).toHaveCount(1);
+	}
 });

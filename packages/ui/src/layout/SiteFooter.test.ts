@@ -139,6 +139,18 @@ describe('links', () => {
 });
 
 describe('status row', () => {
+	it('omits the lamp, date and empty row when statusPrefix is absent', () => {
+		const view = footer({ statusPrefix: undefined, liveLabel: undefined });
+		expect(root(view).querySelector('[data-slot="status-dot"]')).toBeNull();
+		expect(root(view).textContent).not.toMatch(/\d{4}\.\d{2}\.\d{2}/);
+		expect(root(view).querySelector('.footer-status-border')).toBeNull();
+	});
+	it('keeps statusStart without adding a lamp or date', () => {
+		const view = footer({ statusPrefix: undefined, statusStart: html('<address>Montreal</address>') });
+		expect(view.getByText('Montreal')).toBeInTheDocument();
+		expect(root(view).querySelector('[data-slot="status-dot"]')).toBeNull();
+	});
+
 	it('shows a labelled live lamp, the prefix and today after statusStart', () => {
 		vi.useFakeTimers({ toFake: ['Date'] });
 		vi.setSystemTime(new Date(2026, 6, 30, 12));

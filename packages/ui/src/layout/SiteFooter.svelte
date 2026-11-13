@@ -32,9 +32,9 @@
 		groups: readonly SiteFooterGroup[];
 		/** Start of the status row, such as an address or attribution. */
 		statusStart?: Snippet;
-		statusPrefix: string;
+		statusPrefix?: string;
 		/** Screen-reader text for the live lamp. */
-		liveLabel: string;
+		liveLabel?: string;
 	}
 </script>
 
@@ -94,16 +94,20 @@
 			</nav>
 		{/each}
 	</div>
-	<div
-		class="footer-status-border flex w-full flex-col items-center gap-2 px-6 py-4 font-mono text-caption text-[var(--muted-foreground)] sm:flex-row sm:justify-between sm:px-10 lg:px-16"
-	>
-		{@render statusStart?.()}
-		<span class="flex items-center gap-1.5 text-[var(--accent-text)]">
-			<StatusDot color="orange" pulse label={liveLabel} />
-			{statusPrefix}
-			{systemDate}
-		</span>
-	</div>
+	{#if statusStart || statusPrefix !== undefined}
+		<div
+			class="footer-status-border flex w-full flex-col items-center gap-2 px-6 py-4 font-mono text-caption text-[var(--muted-foreground)] sm:flex-row sm:justify-between sm:px-10 lg:px-16"
+		>
+			{@render statusStart?.()}
+			{#if statusPrefix !== undefined}
+			<span class="flex items-center gap-1.5 text-[var(--accent-text)]">
+				<StatusDot color="orange" pulse label={liveLabel} />
+				{statusPrefix}
+				{systemDate}
+			</span>
+			{/if}
+		</div>
+	{/if}
 </footer>
 
 <style>

@@ -1,16 +1,7 @@
-<!--
-  Floating pill header: wordmark, links, optional search and actions, then the theme, language and
-  menu controls. It opens with a skip link to `#main`; the pill is the page's banner. The menu is a
-  full-screen metro line on a bits-ui Dialog; the pill renders inside the dialog content so it stays
-  reachable and focus-trapped above the open menu.
-  `--site-header-inset-end` narrows the header beside a docked panel, animated over
-  `--site-header-inset-duration`. Snippets can query the header's width with `@container site-header`.
--->
 <script lang="ts" module>
 	import type { Component, Snippet } from 'svelte';
 	import type { LanguageToggleProps } from '../brand/LanguageToggle.svelte';
 	import type { NavigationLifecycle } from '../brand/navigation-lifecycle.js';
-
 	export interface SiteHeaderLink {
 		href: string;
 		label: string;
@@ -18,7 +9,6 @@
 		/** 1 shows from a 375px header, 2 from 500px, 3 from 1024px, and only while the links fit. */
 		priority?: 1 | 2 | 3;
 	}
-
 	export interface SiteHeaderMenuItem {
 		href: string;
 		label: string;
@@ -30,7 +20,10 @@
 		/** A Lucide-style icon component, lit on the current page; without one the item shows a stop. */
 		icon?: Component<{ class?: string }>;
 	}
-
+	export interface SiteHeaderMenuGroup {
+		label: string;
+		items: readonly SiteHeaderMenuItem[];
+	}
 	export interface SiteHeaderLabels {
 		openMenu: string;
 		closeMenu: string;
@@ -44,14 +37,17 @@
 		/** The skip link's text, supplied by the consumer. */
 		skipToContent: string;
 	}
-
 	export interface SiteHeaderProps {
 		/** The persistent app layout's single navigation lifecycle. */
 		navigation: NavigationLifecycle;
 		home: string;
 		wordmark?: string;
 		links: readonly SiteHeaderLink[];
-		menuItems: readonly SiteHeaderMenuItem[];
+		menuItems?: readonly SiteHeaderMenuItem[];
+		/** When supplied, replaces menuItems, including when empty. */
+		menuGroups?: readonly SiteHeaderMenuGroup[];
+		/** Moves theme and language controls into the menu below a 600px header width. */
+		compactControls?: boolean;
 		labels: SiteHeaderLabels;
 		language?: Omit<LanguageToggleProps, 'ref' | 'class'>;
 		/** Shown from a 1024px header; folds away with the links while the menu is open. */
@@ -60,7 +56,6 @@
 		actions?: Snippet;
 	}
 </script>
-
 <script lang="ts">
 	import { onDestroy, tick } from 'svelte';
 	import { Dialog } from 'bits-ui';
@@ -71,27 +66,29 @@
 	import ThemeToggle from '../brand/ThemeToggle.svelte';
 	import Wordmark from '../brand/Wordmark.svelte';
 	import { linksFit } from './links-fit.js';
-
-	let { navigation, home, wordmark, links, menuItems, labels, language, search, actions }: SiteHeaderProps =
+	let { navigation, home, wordmark, links, menuItems = [], menuGroups, compactControls = false, labels, language, search, actions }: SiteHeaderProps =
 		$props();
-
 	const contentId = $props.id();
 	const linksFrom = $derived(Math.min(...links.map((link) => link.priority ?? 1)));
 	const menuFooter = $derived(labels.menuFooter);
 	const skipToContent = $derived(labels.skipToContent);
-
+	let narrow = $state(false);
+	const controlsInMenu = $derived(compactControls && narrow);
+	let pillLanguageLink = $state<HTMLAnchorElement | null>(null);
+	function measureHeader(node: HTMLElement) {
+		const observer = new ResizeObserver(([entry]) => { narrow = entry.contentRect.width < 600; });
+		observer.observe(node);
+		return { destroy: () => observer.disconnect() };
+	}
 	let languageLink = $state<HTMLAnchorElement | null>(null);
 	let menuToggle: HTMLButtonElement;
 	let overlay: HTMLElement | undefined = $state();
-
 	let menuOpen = $state(false);
 	// True while the menu is visible, including its close animation; the pill's compact state follows this.
 	let active = $state(false);
 	let entering = $state(false);
 	let closing = $state(false);
-
 	let dismissVersion = 0;
-
 	function toggleMenu() {
 		if (navigation.pending) return;
 		dismissVersion = navigation.version;
@@ -100,20 +97,17 @@
 			active = true;
 		}
 	}
-
 	// svelte-ignore state_referenced_locally
 	onDestroy(navigation.attachMenu({
 		get open() { return menuOpen; },
 		get active() { return active; },
 		close: () => { menuOpen = false; },
-		languageLink: () => languageLink,
+		languageLink: () => controlsInMenu ? languageLink : pillLanguageLink,
 	}));
-
 	$effect(() => {
 		if (active) return;
 		navigation.menuClosed();
 	});
-
 	$effect(() => {
 		if (menuOpen) {
 			entering = true;
@@ -124,7 +118,6 @@
 			if (isPrefersReducedMotion()) finishClose();
 		}
 	});
-
 	// Paint the menu in its entering state, then drop the class so it transitions in.
 	$effect(() => {
 		if (!entering || closing || !overlay) return;
@@ -135,26 +128,22 @@
 		const timer = setTimeout(() => (entering = false), 30);
 		return () => clearTimeout(timer);
 	});
-
 	// Close anyway if transitionend never fires.
 	$effect(() => {
 		if (!closing) return;
 		const timer = setTimeout(finishClose, 500);
 		return () => clearTimeout(timer);
 	});
-
 	function finishClose() {
 		if (!active || menuOpen || !closing) return;
 		active = false;
 		closing = false;
 		entering = false;
 	}
-
 	function close() {
 		if (menuOpen) dismissVersion = navigation.version;
 		menuOpen = false;
 	}
-
 	async function restoreTrigger(event: Event) {
 		event.preventDefault();
 		const version = dismissVersion;
@@ -162,9 +151,35 @@
 		if (!active && !menuOpen && version === navigation.version) menuToggle.focus({ preventScroll: true });
 	}
 </script>
-
+{#snippet menuItem(item: SiteHeaderMenuItem, i: number, items: readonly SiteHeaderMenuItem[])}
+	<a
+		href={item.href}
+		target={item.external ? '_blank' : undefined}
+		rel={item.external ? 'noopener noreferrer' : undefined}
+		aria-label={item.ariaLabel}
+		class="menu-item"
+		class:menu-item-active={item.current}
+		aria-current={item.current ? 'page' : undefined}
+		onclick={close}
+		style="--item-index: {i}"
+	>
+		{#if item.icon}
+			<item.icon class="menu-icon" />
+		{:else}
+			<span class="menu-stop" class:menu-stop-active={item.current}>
+				{#if item.current}<span class="menu-stop-fill"></span>{/if}
+			</span>
+		{/if}
+		{#if i < items.length - 1}
+			<span class="menu-line" class:menu-line-active={item.current}></span>
+		{/if}
+		<span class="menu-text">
+			<span class="menu-label">{item.label}</span>
+			<span class="menu-subtitle">{item.subtitle ?? ''}</span>
+		</span>
+	</a>
+{/snippet}
 <a class="skip-link" href="#main">{skipToContent}</a>
-
 <!-- Bound to `active` so the focus trap and scroll lock last through the close animation. -->
 <Dialog.Root open={active} onOpenChange={(open) => !open && close()}>
 	<Dialog.Content
@@ -202,6 +217,7 @@
 				<header
 					data-testid="nav"
 					data-slot="site-header"
+					use:measureHeader
 					class="nav-root pointer-events-none fixed left-0 right-0 flex flex-col items-center"
 					style:z-index={active ? 'var(--z-nav)' : 'var(--z-sheet)'}
 				>
@@ -214,7 +230,6 @@
 						use:linksFit={{ paused: active }}
 					>
 						<Wordmark href={home} text={wordmark} autoPlay class="nav-wordmark" />
-
 						{#if links.length}
 							<span class="nav-divider nav-collapsible nav-links-part" class:nav-collapsed={active} aria-hidden="true"
 							></span>
@@ -232,19 +247,19 @@
 								{/each}
 							</div>
 						{/if}
-
 						{#if search}
 							<div inert={active} class="nav-search nav-collapsible" class:nav-collapsed={active}>
 								<span class="nav-divider" aria-hidden="true"></span>
 								{@render search()}
 							</div>
 						{/if}
-
 						<span class="nav-divider" aria-hidden="true"></span>
 						{@render actions?.()}
-						<ThemeToggle label={labels.theme} />
-						{#if language}
-							<LanguageToggle {...language} bind:ref={languageLink} />
+						{#if !controlsInMenu}
+							<span class="pill-controls" class:compact-controls={compactControls}>
+								<ThemeToggle label={labels.theme} />
+								{#if language}<LanguageToggle {...language} bind:ref={pillLanguageLink} />{/if}
+							</span>
 						{/if}
 						<button
 							bind:this={menuToggle}
@@ -262,7 +277,6 @@
 						</button>
 					</nav>
 				</header>
-
 				{#if active}
 					<div
 						bind:this={overlay}
@@ -275,35 +289,30 @@
 					>
 						<Dialog.Title class="sr-only">{labels.menu}</Dialog.Title>
 						<nav class="menu-content" aria-label={labels.menu}>
-							{#each menuItems as item, i (item.href)}
-								<a
-									href={item.href}
-									target={item.external ? '_blank' : undefined}
-									rel={item.external ? 'noopener noreferrer' : undefined}
-									aria-label={item.ariaLabel}
-									class="menu-item"
-									class:menu-item-active={item.current}
-									aria-current={item.current ? 'page' : undefined}
-									onclick={close}
-									style="--item-index: {i}"
-								>
-									{#if item.icon}
-										<item.icon class="menu-icon" />
-									{:else}
-										<span class="menu-stop" class:menu-stop-active={item.current}>
-											{#if item.current}<span class="menu-stop-fill"></span>{/if}
-										</span>
-									{/if}
-									{#if i < menuItems.length - 1}
-										<span class="menu-line" class:menu-line-active={item.current}></span>
-									{/if}
-									<span class="menu-text">
-										<span class="menu-label">{item.label}</span>
-										<span class="menu-subtitle">{item.subtitle ?? ''}</span>
-									</span>
-								</a>
-							{/each}
+							{#if menuGroups !== undefined}
+								{#each menuGroups as group, groupIndex}
+									<h2 class="menu-group-heading" id="{contentId}-group-{groupIndex}">{group.label}</h2>
+									<ul aria-labelledby="{contentId}-group-{groupIndex}">
+										{#each group.items as item, i (item.href)}
+											<li>{@render menuItem(item, i, group.items)}</li>
+										{/each}
+									</ul>
+								{/each}
+							{:else}
+								{#each menuItems as item, i (item.href)}{@render menuItem(item, i, menuItems)}{/each}
+							{/if}
 						</nav>
+						{#if controlsInMenu}
+							<div class="menu-controls">
+								<div><span>{labels.theme}</span><ThemeToggle label={labels.theme} /></div>
+								{#if language && language.locales.length >= 2}
+									<div>
+										<span>{language.label}: {language.locales.map(locale => language.names[locale]).join(' / ')}</span>
+										<LanguageToggle {...language} bind:ref={languageLink} />
+									</div>
+								{/if}
+							</div>
+						{/if}
 						{#if menuFooter}
 							<div class="menu-footer">
 								<span class="menu-footer-line"></span>
@@ -317,9 +326,20 @@
 		{/snippet}
 	</Dialog.Content>
 </Dialog.Root>
-
 <style>
-	/* Off screen until focused, then above the header. */
+	.pill-controls { display: contents; }
+	@container site-header (width < 600px) {
+		.pill-controls.compact-controls { display: none; }
+	}
+	.menu-group-heading {
+		margin-top: 24px;
+		font-family: var(--font-body);
+		font-size: var(--text-small);
+		color: var(--muted-foreground);
+	}
+	.menu-content ul { list-style: none; padding: 0; margin: 0; }
+	.menu-controls { padding-top: 24px; font-family: var(--font-body); }
+	.menu-controls > div { display: flex; align-items: center; gap: 16px; }
 	.skip-link {
 		position: fixed;
 		top: var(--nav-top);
@@ -338,8 +358,6 @@
 	.skip-link:focus {
 		left: 1rem;
 	}
-
-	/* ── Pill ── */
 	.nav-root {
 		top: var(--nav-top);
 		padding-inline-end: var(--site-header-inset-end, 0px);
@@ -363,8 +381,6 @@
 		box-shadow: none;
 		border-color: var(--border-brand-active);
 	}
-
-	/* Sized here so the compaction tiers can shrink it; the wordmark never wraps. */
 	.nav-pill :global(.nav-wordmark) {
 		font-size: var(--text-nav-brand-desktop);
 	}
@@ -384,7 +400,6 @@
 			0 0 8px color-mix(in srgb, var(--glow) 50%, transparent),
 			0 0 16px color-mix(in srgb, var(--glow) 20%, transparent);
 	}
-	/* "You are here" lamp: an amber dot, absolutely placed so it never shifts layout. */
 	.nav-pill-link[aria-current='page']::after {
 		content: '';
 		position: absolute;
@@ -396,7 +411,6 @@
 		transform: translateX(-50%);
 		background: var(--accent);
 	}
-
 	.nav-divider {
 		display: inline-block;
 		width: 2px;
@@ -415,8 +429,6 @@
 		align-items: center;
 		min-width: 0;
 	}
-
-	/* Links that don't fit move to the menu (links-fit); this holds until it measures them. */
 	@container site-header (width < 375px) {
 		.nav-links-part {
 			display: none;
@@ -434,8 +446,6 @@
 			display: none;
 		}
 	}
-
-	/* Compaction tiers squeeze decorative spacing, never the 44px hit areas. */
 	@media (max-width: 767px) {
 		.nav-pill {
 			padding: var(--nav-padding-y) 16px;
@@ -493,7 +503,6 @@
 			padding-inline: 2px;
 		}
 	}
-
 	/* The links (and search) fold away while the menu is open. */
 	.nav-collapsible {
 		overflow: visible;
@@ -513,8 +522,6 @@
 		opacity: 0;
 		margin-inline: 0;
 	}
-
-	/* Hamburger morphing to ✕. */
 	.menu-toggle {
 		display: flex;
 		flex-direction: column;
@@ -560,8 +567,6 @@
 		width: 16px;
 		transform: translateY(-3.25px) rotate(-45deg);
 	}
-
-	/* ── Menu ── */
 	.menu-dialog {
 		position: fixed;
 		inset: 0;
@@ -576,7 +581,6 @@
 	:global([data-theme='light']) .menu-dialog-active {
 		background-image: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--glow) 16%, transparent) 0%, transparent 58%);
 	}
-
 	/* Starts below the pill. Auto margins on the list and footer centre them as a group but collapse to
 	   zero when the group is taller than the overlay, so the first item never rides under the pill. */
 	.menu-overlay {
@@ -611,7 +615,6 @@
 			opacity var(--duration-normal) ease-in,
 			transform var(--duration-normal) cubic-bezier(0.32, 0, 0.67, 0);
 	}
-
 	.menu-content {
 		position: relative;
 		display: flex;
@@ -652,7 +655,6 @@
 			opacity 0.12s ease-in calc(var(--item-index) * 0.02s),
 			transform 0.12s ease-in calc(var(--item-index) * 0.02s);
 	}
-
 	.menu-stop {
 		position: relative;
 		flex-shrink: 0;
@@ -716,7 +718,6 @@
 			color-mix(in srgb, var(--foreground) 6%, transparent)
 		);
 	}
-
 	.menu-text {
 		display: flex;
 		flex-direction: column;
@@ -754,7 +755,6 @@
 		color: var(--muted-foreground);
 		letter-spacing: 0;
 	}
-
 	/* In flow, so it never overlaps the last item. */
 	.menu-footer {
 		display: flex;
@@ -777,7 +777,6 @@
 		color: color-mix(in srgb, var(--primary) 85%, transparent);
 		white-space: nowrap;
 	}
-
 	@media (max-height: 720px) {
 		.menu-item {
 			min-height: 44px;
@@ -785,7 +784,6 @@
 			font-size: clamp(1.5rem, 2vw, 1.75rem);
 		}
 	}
-
 	@media (prefers-reduced-motion: reduce) {
 		.nav-root,
 		.nav-pill,

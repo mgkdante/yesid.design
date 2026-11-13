@@ -292,8 +292,7 @@ const siteFooterProps: SiteFooterProps = {
 	statusPrefix: 'System',
 	liveLabel: 'Live',
 };
-// @ts-expect-error the live lamp needs a screen-reader label
-const invalidSiteFooter: SiteFooterProps = { ...siteFooterProps, liveLabel: undefined };
+const optionalSiteFooter: SiteFooterProps = { ...siteFooterProps, liveLabel: undefined };
 
 const errorIllustrationProps: ErrorIllustrationProps = { code: '404', signLabel: 'SAMPLE' };
 
