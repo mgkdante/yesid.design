@@ -510,3 +510,42 @@ test.describe('summary and heading presentation', () => {
 		}
 	}
 });
+
+
+test.describe('heading hover feedback', () => {
+	for (const width of [390, 1440]) {
+		for (const theme of ['dark', 'light']) {
+			test(`only heading hover emphasizes the section at ${width}px in ${theme}`, async ({ page }) => {
+				await page.setViewportSize({ width, height: 900 });
+				await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+				await page.goto('/sections'); await ready(page);
+				for (const [anchor, bodyText] of [['chart', 'Searchable chart methodology unique phrase'], ['live', 'Live source']]) {
+					const card = page.locator(`[data-toc="${anchor}"]`);
+					const title = card.locator('.section-title').first();
+					await page.mouse.move(0, 0);
+					const normalColor = await title.evaluate(node => getComputedStyle(node).color);
+					const normalBorder = await card.evaluate(node => getComputedStyle(node).borderTopColor);
+					const normalShadow = await card.evaluate(node => getComputedStyle(node).boxShadow);
+					await card.getByText(bodyText, { exact: true }).hover();
+					await title.evaluate(async node => {
+						await Promise.all(node.getAnimations().map(animation => animation.finished));
+					});
+					await expect(title).toHaveCSS('color', normalColor);
+					await expect(card).toHaveCSS('border-top-color', normalBorder);
+					await expect(card).toHaveCSS('box-shadow', normalShadow);
+					await card.locator('[data-section-trigger]').first().hover();
+					await expect(title).not.toHaveCSS('color', normalColor);
+					await expect(card).not.toHaveCSS('border-top-color', normalBorder);
+					await expect(card).not.toHaveCSS('box-shadow', normalShadow);
+					await card.getByText(bodyText, { exact: true }).hover();
+					await title.evaluate(async node => {
+						await Promise.all(node.getAnimations().map(animation => animation.finished));
+					});
+					await expect(title).toHaveCSS('color', normalColor);
+					await expect(card).toHaveCSS('border-top-color', normalBorder);
+					await expect(card).toHaveCSS('box-shadow', normalShadow);
+				}
+			});
+		}
+	}
+});

@@ -238,8 +238,20 @@
 		padding-block: 0;
 	}
 
+	/* The shared Card hover stays neutral while readers interact with section content. */
 	:global([data-slot='card'].section-card:hover) {
+		border-color: var(--border-brand);
+		box-shadow: inset 0 1px 0 var(--edge-highlight);
+	}
+
+	:global([data-slot='card'].section-card):has(
+		> [data-slot='collapsible'] > .section-header:hover,
+		> [data-slot='collapsible'] > .section-heading-row > .section-heading > .section-header:hover
+	) {
 		border-color: var(--accent);
+		box-shadow:
+			var(--shadow-section),
+			inset 0 1px 0 var(--edge-highlight);
 	}
 
 	.section-header {
@@ -316,7 +328,7 @@
 		text-wrap: balance;
 	}
 
-	:global([data-slot='card'].section-card:hover .section-title) {
+	.section-header:hover .section-title {
 		color: var(--accent-text);
 	}
 
