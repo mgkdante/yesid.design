@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.42.0-rc.1
+
+<!-- release-fragment: brand-language-order -->
+- `@yesid/ui` (minor): The language toggle follows the brand language order. Callers that passed another order now
+  see English, French, Spanish, then any other supported locales in their supplied order.
+  The compact header menu follows the same order. Nothing else changes.
+
+<!-- release-fragment: button-visible-focus -->
+- `@yesid/ui` (patch): Restore the shared 2px offset keyboard focus outline on every Button variant, including filled
+  buttons and links. The outline meets 3:1 contrast on page and card surfaces in both themes and
+  keeps the forced-colours outline. No prop changes or caller migration are needed. Unit and
+  Gallery browser regressions cover outline availability, contrast, stable geometry and accessibility.
+
+<!-- release-fragment: header-groups-footer-status -->
+- `@yesid/ui` (minor): SiteHeader accepts labelled menuGroups and opt-in compactControls that move theme and language controls into the menu below 600px of header width. SiteFooter can omit both statusPrefix and liveLabel to hide its lamp and date, and omits an empty status row. Existing props and defaults retain their behavior.
+
+<!-- release-fragment: reading-safe-sections -->
+- `@yesid/ui` (minor): Add an optional `CollapsibleSection` summary snippet for the finding, period and caveat. It stays
+  visible outside the collapsible body, wraps without clamping and describes the heading button.
+  Existing subtitles keep their current behavior.
+
+  Correct section toggling so only the heading button toggles it. Body clicks and taps no longer
+  close text while it is being read. Header actions keep their own behavior. This is a defect fix
+  under DEPRECATION.md: regression tests cover prose clicks, touch followed by click and selection,
+  with Gallery checks at phone and desktop widths. Existing callers need no prop changes; move any
+  finding that must remain fully readable from subtitle into summary. Bulk preferences and jumps
+  are unchanged.
+
+<!-- release-fragment: reading-safe-terminal -->
+- `@yesid/ui` (minor): TerminalPanel now renders a lamp only with `signal={{ color, label, live? }}`. Colors reuse
+  StatusDotColor and the required caller label names the signal for screen readers. Only a live
+  signal pulses, after mount and when motion is allowed. Existing callers lose the automatic
+  traffic-light chrome and green pulse; status, tag, actions and footer remain unchanged.
+  This is a documented implementation-defect correction under DEPRECATION.md: decorative chrome
+  must not claim measured health. Unit and SSR regressions cover omitted and named signals;
+  Gallery checks cover motion gating at phone and desktop sizes.
+
+  Large section cards no longer scale on press under reduced motion. Global overscroll suppression
+  now applies only to fine pointers, preserving native touch overscroll and pull-to-refresh.
+  Gallery checks assert held-press geometry and pointer-specific computed overscroll styles.
+
 ## 0.41.1
 
 <!-- release-fragment: surface-rail-close -->
