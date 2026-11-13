@@ -143,7 +143,7 @@
 ## Direct public assets
 
 - `./station-tabs.css` — direct asset `./station-tabs.css` (`default`), sha256 `00af002eb573b00f418b0d9bc9c8755cf8e07a64a51fdfcda8e6a60e9ca7b0d4`
-- `./base.css` — direct asset `./base.css` (`default`), sha256 `d8f52f3a39e5d0cb3979142624e969bc8473b78d159b86a509dae0b4069ea1ae`
+- `./base.css` — direct asset `./base.css` (`default`), sha256 `6bcc5cf61b3dc764f9e53769eb7eccfd3c7fd39bd981780cec5668c62ea77003`
 - `./boot.json` — direct asset `./src/head/boot.json` (`default`), sha256 `168b9a3e53dc73f0caa95b158fbc77b126b23b11c0c19272c0ac3881742a0030`
 
 ## Declaration namespaces
@@ -2894,6 +2894,11 @@ interface TerminalPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title
     // (undocumented)
     footer?: readonly TerminalFooterItem[];
     noPadding?: boolean;
+    signal?: {
+        color: StatusDotColor;
+        label: string;
+        live?: boolean;
+    };
     // (undocumented)
     status?: string;
     tag?: string;

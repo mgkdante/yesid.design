@@ -268,19 +268,22 @@
 		<Card.Root data-gallery-family="brand:TerminalPanel">
 			<Card.Header>
 				<Card.Title>TerminalPanel</Card.Title>
-				<Card.Description>Signal-head title bar with a tag and status, and a footer readout.</Card.Description>
+				<Card.Description>Terminal chrome without a status claim, or with a named live signal.</Card.Description>
 			</Card.Header>
 			<Card.Content>
 				<TerminalPanel
-					title="dispatch"
+					title="archive"
 					tag="v2"
-					status="online"
+					status="historical"
 					footer={[
 						{ label: 'next', value: '06:04' },
 						{ label: 'state', value: 'on time' },
 					]}
 				>
 					<p class="font-mono text-mono">~ departures --line 2</p>
+				</TerminalPanel>
+				<TerminalPanel title="sample stream" signal={{ color: 'green', label: 'Live sample feed', live: true }}>
+					<p class="font-mono text-mono">Live signal demonstration</p>
 				</TerminalPanel>
 			</Card.Content>
 		</Card.Root>
