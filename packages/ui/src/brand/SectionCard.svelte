@@ -1,6 +1,6 @@
 <!--
-  Collapsible section card. The whole non-interactive card surface toggles it; the header stays
-  the real button. Closed bodies stay mounted (inert) so server markup and anchors are complete.
+  Collapsible section card. Only the heading button toggles it; summaries stay readable.
+  Closed bodies stay mounted (inert) so server markup and anchors are complete.
 -->
 
 <script lang="ts">
@@ -15,6 +15,7 @@
 		ref = $bindable(null),
 		title,
 		subtitle,
+		summary,
 		headerVariant = 'default',
 		open = $bindable(true),
 		index = null,
@@ -40,8 +41,13 @@
 
 	const headerUid = $props.id();
 	const subtitleId = `${headerUid}-summary`;
+	const summaryId = `${headerUid}-finding`;
 	const contentId = `${headerUid}-content`;
 	const usesArticleSummary = $derived(collapsible && headerVariant === 'article-summary');
+	const descriptionIds = $derived(
+		[usesArticleSummary && subtitle ? subtitleId : undefined, summary ? summaryId : undefined]
+			.filter(Boolean).join(' ') || undefined,
+	);
 	const hasHeaderMark = $derived(index !== null || icon !== undefined);
 
 	// Server HTML is complete and readable even for a declared-closed section without JavaScript.
@@ -66,6 +72,8 @@
 		if (!isOpen && content?.contains(document.activeElement)) trigger?.focus();
 	});
 
+	// Interactive children keep their own clicks, nested cards own theirs, and text
+	// selection is reading, not toggling. Only the heading button chooses the state.
 	const triggerProps = $derived({
 		type: 'button' as const,
 		'data-section-trigger': '',
@@ -73,24 +81,12 @@
 		'data-state': isOpen ? 'open' : 'closed',
 		'aria-controls': contentId,
 		'aria-expanded': isOpen,
+		'aria-describedby': descriptionIds,
 		onclick: (event: MouseEvent) => {
 			if (event.button !== 0) event.preventDefault();
 			else choose(!isOpen);
 		},
 	});
-
-	// Interactive children keep their own clicks, nested cards own theirs, and ending a text
-	// selection is reading, not toggling.
-	const INTERACTIVE_CHILD =
-		'a,button,input,select,textarea,[role="button"],[data-card-interactive]';
-	function onCardClick(event: MouseEvent) {
-		const target = event.target as Element | null;
-		if (!target) return;
-		if (target.closest(INTERACTIVE_CHILD)) return;
-		if (target.closest('[data-slot="card"]') !== event.currentTarget) return;
-		if (window.getSelection()?.toString()) return;
-		choose(!isOpen);
-	}
 </script>
 
 {#snippet headerMark()}
@@ -130,7 +126,6 @@
 	data-section-ready={initialized ? '' : undefined}
 	data-section-default={!collapsible || open ? 'open' : 'closed'}
 	data-header-variant={usesArticleSummary ? 'article-summary' : undefined}
-	onclick={collapsible ? onCardClick : undefined}
 >
 	<div
 		data-slot="collapsible"
@@ -146,7 +141,6 @@
 						<button
 							{...triggerProps}
 							bind:this={trigger}
-							aria-describedby={subtitle ? subtitleId : undefined}
 							class="section-header section-header--article-summary {hasHeaderMark
 								? 'section-header--with-mark'
 								: ''} {subtitle ? '' : 'section-header--title-only'}"
@@ -161,6 +155,9 @@
 							>
 								{title}
 							</span>
+							<span class="section-header__chevron" aria-hidden="true">
+								<ChevronToggle open={isOpen} direction="right" />
+							</span>
 						</button>
 					</h2>
 					{#if headerActions}
@@ -168,9 +165,6 @@
 							{@render headerActions()}
 						</div>
 					{/if}
-					<span class="section-header__chevron" aria-hidden="true">
-						<ChevronToggle open={isOpen} direction="right" />
-					</span>
 				</div>
 				{#if subtitle}
 					<p
@@ -196,6 +190,12 @@
 		{:else}
 			<div class="section-pad-x flex items-center gap-2.5 py-4">
 				{@render legacyHeaderContent()}
+			</div>
+		{/if}
+
+		{#if summary}
+			<div id={summaryId} data-slot="section-summary" class="section-summary section-pad-x">
+				{@render summary()}
 			</div>
 		{/if}
 
@@ -246,6 +246,10 @@
 		cursor: pointer;
 	}
 
+	.section-header:focus-visible {
+		outline-offset: -4px;
+	}
+
 	.section-heading {
 		margin: 0;
 		min-width: 0;
@@ -253,14 +257,14 @@
 
 	.section-heading-row {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 1.25rem;
+		grid-template-columns: minmax(0, 1fr);
 		align-items: center;
 		column-gap: 0.625rem;
 		padding-inline-end: var(--collapsible-pad-x);
 	}
 
 	.section-heading-row--actions {
-		grid-template-columns: minmax(0, 1fr) auto 1.25rem;
+		grid-template-columns: minmax(0, 1fr) auto;
 	}
 
 	.section-header-actions {
@@ -274,7 +278,7 @@
 	.section-header--article-summary {
 		display: grid;
 		width: 100%;
-		grid-template-columns: minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr) 1.25rem;
 		align-items: center;
 		column-gap: 0.625rem;
 		min-height: 44px;
@@ -283,7 +287,7 @@
 	}
 
 	.section-header--article-summary.section-header--with-mark {
-		grid-template-columns: 1.75rem minmax(0, 1fr);
+		grid-template-columns: 1.75rem minmax(0, 1fr) 1.25rem;
 	}
 
 	.section-header--article-summary.section-header--title-only {
@@ -312,59 +316,21 @@
 		text-wrap: balance;
 	}
 
-	:global([data-slot='card'].section-card.section-card--toggleable) {
-		cursor: pointer;
-		transition:
-			border-color var(--duration-normal) var(--ease-default),
-			box-shadow var(--duration-normal) var(--ease-default),
-			scale 120ms cubic-bezier(0.2, 0, 0, 1),
-			opacity 120ms cubic-bezier(0.2, 0, 0, 1);
-	}
-	:global(
-		[data-slot='card'].section-card.section-card--toggleable:active:not(
-				:has(
-					a:active,
-					button:active,
-					input:active,
-					select:active,
-					textarea:active,
-					[role='button']:active,
-					[data-card-interactive]:active
-				)
-			)
-	) {
-		scale: 0.97;
-		opacity: 0.92;
-	}
-	@media (prefers-reduced-motion: reduce) {
-		:global(
-			[data-slot='card'].section-card.section-card--toggleable:active:not(
-					:has(
-						a:active,
-						button:active,
-						input:active,
-						select:active,
-						textarea:active,
-						[role='button']:active,
-						[data-card-interactive]:active
-					)
-				)
-		) {
-			scale: 1;
-		}
-		:global([data-slot='card'].section-card.section-card--toggleable) {
-			transition:
-				border-color var(--duration-normal) var(--ease-default),
-				box-shadow var(--duration-normal) var(--ease-default);
-		}
-	}
-
 	:global([data-slot='card'].section-card:hover .section-title) {
 		color: var(--accent-text);
 	}
 
 	:global(.section-title) {
 		transition: color var(--duration-normal) var(--ease-default);
+	}
+
+	.section-summary {
+		font-family: var(--font-body);
+		font-size: var(--text-body);
+		line-height: 1.6;
+		color: var(--foreground);
+		overflow-wrap: anywhere;
+		padding-block-end: 1rem;
 	}
 
 	.section-subtitle {

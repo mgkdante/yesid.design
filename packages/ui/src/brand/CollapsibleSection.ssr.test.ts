@@ -23,3 +23,11 @@ it.each([
 	expect(content).toContain(`data-state="${expanded ? 'open' : 'closed'}"`);
 	expect([content.includes('inert'), content.includes('aria-hidden="true"')]).toEqual([!expanded, !expanded]);
 });
+
+it.each([true, false])('renders a described summary before the complete SSR body when open=%s', (open) => {
+	const { body } = render(Fixture, { props: { open } });
+	const summary = body.match(/<div[^>]*id="([^"]+)"[^>]*data-slot="section-summary"[^>]*>/);
+	expect(summary).not.toBeNull();
+	expect(body).toContain(`aria-describedby="${summary![1]}"`);
+	expect(body.indexOf('Finding over the complete period, with a caveat.')).toBeLessThan(body.indexOf('data-slot="collapsible-content"'));
+});

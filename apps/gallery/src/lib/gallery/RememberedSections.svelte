@@ -12,6 +12,7 @@
 	let chart: HTMLDivElement;
 	let width = $state(0);
 	let updates = $state(0);
+	let inspections = $state(0);
 	onMount(() => {
 		const unregister = navigation.register(entries, { root, landFragments: true });
 		const resize = new ResizeObserver(([entry]) => { width = Math.round(entry.contentRect.width); });
@@ -35,7 +36,13 @@
 	<TocNav heading="Contents" {entries} {navigation} />
 	<FilterGroup label="Filters" items={[]} allLabel="All" collapsible onSelect={() => {}} />
 	<CollapsibleSection title="Map tools" independent anchor="tools"><p>Independent map control</p></CollapsibleSection>
-	<CollapsibleSection title="Chart" anchor="chart">
+	<CollapsibleSection title="Chart" anchor="chart" headerVariant="article-summary" subtitle="Completed observations">
+		{#snippet headerActions()}<button type="button" class="min-h-11 px-2" onclick={() => { inspections += 1; }}>Inspect chart</button>{/snippet}
+		{#snippet summary()}
+			<p data-testid="chart-finding">Most observations met the target during the complete week of November 4 to 10.</p>
+			<p>Missing observations limit this finding to the measured service.</p>
+		{/snippet}
+		<output data-testid="inspections">{inspections}</output>
 		<h2 id="chart-heading">Chart target</h2>
 		<p>Searchable chart methodology unique phrase</p>
 		<div bind:this={chart} data-testid="chart" class="h-32 w-full" data-card-interactive>
@@ -45,6 +52,9 @@
 	</CollapsibleSection>
 	{#if !single && (!late || loaded)}
 		<CollapsibleSection title="Live table" anchor="live">
+			{#snippet summary()}
+				<p lang="fr" data-testid="french-finding">Les observations disponibles pendant la semaine complète du 4 au 10 novembre indiquent que la plupart des passages respectaient la cible annoncée. Ce résultat porte uniquement sur les observations reçues pendant cette période et ne permet pas de conclure que tous les véhicules ou tous les déplacements ont été mesurés. Les périodes sans données restent exclues du calcul et cette limite doit rester lisible même lorsque les détails sont fermés.</p>
+			{/snippet}
 			<DataTable caption="Live measurements" key={(row) => row} columns={[{ key: 'measure', header: 'Measure', cell }]} rows={['Live source']} />
 			<output data-testid="live-updates">{updates}</output>
 			<CollapsibleSection title="Nested media" anchor="media">

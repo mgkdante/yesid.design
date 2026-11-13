@@ -1076,6 +1076,7 @@ interface CollapsibleSectionProps {
     openSignal?: number | null;
     // (undocumented)
     subtitle?: string;
+    summary?: Snippet;
     // (undocumented)
     title: string;
 }

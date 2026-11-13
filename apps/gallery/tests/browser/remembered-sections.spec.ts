@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { injectThemeBoot, themeBootScript } from '../../../../packages/ui/src/head/boot.js';
 
@@ -400,4 +401,112 @@ test('find-in-page can search mounted prose after expansion and Back restores th
 	await page.goBack(); await ready(page);
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
 	await expect.poll(() => page.evaluate(() => scrollY)).toBe(before);
+});
+
+test.describe('reading-safe sections', () => {
+	test.use({ hasTouch: true });
+	for (const width of [390, 1440]) {
+		for (const reducedMotion of ['reduce', 'no-preference'] as const) {
+			test(`heading-only toggle and persistent summaries at ${width}px with ${reducedMotion} motion`, async ({ page }) => {
+				await page.setViewportSize({ width, height: 900 });
+				await page.emulateMedia({ reducedMotion });
+				await page.goto('/sections'); await ready(page);
+				const heading = trigger(page, 'Chart');
+				const prose = page.getByText('Searchable chart methodology unique phrase');
+				await prose.click();
+				await expect(heading).toHaveAttribute('aria-expanded', 'true');
+				await prose.tap();
+				await expect(heading).toHaveAttribute('aria-expanded', 'true');
+				await prose.evaluate(node => {
+					const range = document.createRange();
+					range.selectNodeContents(node);
+					getSelection()?.addRange(range);
+				});
+				await prose.click();
+				await expect(heading).toHaveAttribute('aria-expanded', 'true');
+				await page.evaluate(() => getSelection()?.removeAllRanges());
+				await trigger(page, 'Inspect chart').click();
+				await expect(page.getByTestId('inspections')).toHaveText('1');
+				await expect(heading).toHaveAttribute('aria-expanded', 'true');
+				await heading.focus();
+				await page.keyboard.press('Enter');
+				await expect(heading).toHaveAttribute('aria-expanded', 'false');
+				await page.keyboard.press('Space');
+				await expect(heading).toHaveAttribute('aria-expanded', 'true');
+				await page.getByTestId('sections-toggle').click();
+				await page.reload(); await ready(page);
+				await expect(heading).toHaveAttribute('aria-expanded', 'false');
+				for (const id of ['chart-finding', 'french-finding']) {
+					const finding = page.getByTestId(id);
+					await expect(finding).toBeVisible();
+					expect(await finding.evaluate(node => {
+						const summary = node.closest('[data-slot="section-summary"]')!;
+						return [...summary.querySelectorAll('*'), summary].every(element => {
+							const style = getComputedStyle(element);
+							return ['none', ''].includes(style.webkitLineClamp) && element.scrollHeight <= element.clientHeight + 1;
+						});
+					})).toBe(true);
+				}
+				await expect(heading).toHaveAccessibleName('Chart');
+				await expect(heading).toHaveAccessibleDescription(/Most observations met the target/);
+				const french = await page.getByTestId('french-finding').boundingBox();
+				expect(french!.x + french!.width).toBeLessThanOrEqual(width);
+				const closed = await new AxeBuilder({ page }).include('[data-toc="chart"]').include('[data-toc="live"]').analyze();
+				expect(closed.violations).toEqual([]);
+				await page.goto('/sections/next#media-heading'); await ready(page);
+				await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'true');
+				await expect(trigger(page, 'Nested media')).toHaveAttribute('aria-expanded', 'true');
+				await heading.click();
+				const opened = await new AxeBuilder({ page }).include('[data-toc="chart"]').include('[data-toc="live"]').analyze();
+				expect(opened.violations).toEqual([]);
+				expect(await stored(page)).toBe('collapsed');
+			});
+		}
+	}
+});
+
+
+test.describe('summary and heading presentation', () => {
+	for (const width of [390, 1440]) {
+		for (const theme of ['dark', 'light']) {
+			test(`heading target and summary spacing at ${width}px in ${theme}`, async ({ page }) => {
+				await page.setViewportSize({ width, height: 900 });
+				await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+				await page.goto('/sections'); await ready(page);
+				await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+				await page.evaluate(() => document.fonts.ready);
+				const heading = trigger(page, 'Chart');
+				await expect(heading).toHaveAccessibleName('Chart');
+				await expect(heading.locator('[data-slot="chevron-toggle"]')).toHaveAttribute('aria-hidden', 'true');
+				const row = await heading.boundingBox();
+				expect(row!.height).toBeGreaterThanOrEqual(44);
+				const container = await heading.locator('..').boundingBox();
+				expect(row!.width).toBe(container!.width);
+				await heading.focus();
+				await page.keyboard.press('Tab');
+				await page.keyboard.press('Shift+Tab');
+				await expect(heading).toBeFocused();
+				expect(await heading.evaluate(node => node.matches(':focus-visible'))).toBe(true);
+				await expect(heading).toHaveCSS('outline-style', 'solid');
+				await expect(heading).toHaveCSS('outline-width', '2px');
+				await expect(heading).toHaveCSS('outline-offset', '-4px');
+				for (const anchor of ['chart', 'live']) {
+					const card = page.locator(`[data-toc="${anchor}"]`);
+					const summary = card.locator(':scope > [data-slot="collapsible"] > [data-slot="section-summary"]');
+					const bounds = await summary.boundingBox();
+					const inset = await card.evaluate(node => getComputedStyle(node.querySelector('.section-header')!).paddingLeft);
+					await expect(summary).toHaveCSS('padding-left', inset);
+					await expect(summary).toHaveCSS('padding-right', inset);
+					const body = card.locator(':scope > [data-slot="collapsible"] > .section-body');
+					const bodyBounds = await body.boundingBox();
+					expect(bodyBounds!.y).toBeGreaterThanOrEqual(bounds!.y + bounds!.height);
+					await card.locator('[data-section-trigger]').first().click();
+					const closed = await summary.boundingBox();
+					expect(closed!.width).toBe(bounds!.width);
+					expect(closed!.height).toBe(bounds!.height);
+					await expect(summary).toBeVisible();
+				}
+			});
+		}
+	}
 });
