@@ -613,9 +613,10 @@ navigation per entry in `groups` (`navLabel` when the accessible name differs fr
 `external` links open in a new tab with `rel="noopener noreferrer"`, and `me` adds `rel="me"` for
 the owner's own profiles; `after` adds controls inside the group), and a status row with
 optional `statusStart`, and, when `statusPrefix` is supplied, a live lamp (`liveLabel` for screen
-readers) and today's date. `statusPrefix` and `liveLabel` are optional. Omit `statusPrefix` to
-hide both lamp and date; without `statusStart` the entire status row is omitted. An empty string
-still opts into the status. Existing callers supplying both props keep their output. `data-in-view`
+readers) and today's date. The status props form an all-or-nothing union: supply both
+`statusPrefix` and `liveLabel`, or omit both. This keeps every rendered lamp named for screen
+readers. `statusStart` is independent; without it or the status pair, the entire row is omitted.
+An empty string still opts into the status. Existing callers supplying both props keep their output. `data-in-view`
 reports whether it is on screen.
 
 `ErrorPage` is the error route body: hazard rule, `ErrorIllustration`, `label`, `heading`, `body`,

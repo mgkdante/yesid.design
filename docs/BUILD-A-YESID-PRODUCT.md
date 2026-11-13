@@ -328,8 +328,8 @@ every locale before enabling those routes.
 For grouped menus, pass `menuGroups={[{ label, items }]}` instead of `menuItems`. Groups take
 precedence when both are supplied. Opt into `compactControls` to move theme and language controls
 into the open menu below 600px of header width, leaving room for a labelled `actions` button.
-Omit the footer's `statusPrefix` to hide its lamp and date. The status row remains only if
-`statusStart` is supplied. Existing callers can keep their props unchanged.
+Supply both footer status props (`statusPrefix` and `liveLabel`) or omit both. Omit both to hide
+its lamp and date. The status row remains only if `statusStart` is supplied. Existing callers can keep their props unchanged.
 
 `SiteHeader.language` renders `LanguageToggle`; a second language control is unnecessary.
 Standalone `LanguageToggle` from `@yesid/ui/brand` accepts the same `locale`, `locales`,

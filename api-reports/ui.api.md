@@ -2514,18 +2514,18 @@ interface SiteFooterLink {
 }
 
 // @public (undocumented)
-interface SiteFooterProps {
-    // (undocumented)
+type SiteFooterProps = {
     brand: Snippet;
-    // (undocumented)
-    groups: readonly SiteFooterGroup[];
-    liveLabel?: string;
-    // (undocumented)
-    statusPrefix?: string;
-    statusStart?: Snippet;
-    // (undocumented)
     tagline: string;
-}
+    groups: readonly SiteFooterGroup[];
+    statusStart?: Snippet;
+} & ({
+    statusPrefix: string;
+    liveLabel: string;
+} | {
+    statusPrefix?: never;
+    liveLabel?: never;
+});
 
 // @public (undocumented)
 const SiteHeader: Component<SiteHeaderProps, {}, "">;

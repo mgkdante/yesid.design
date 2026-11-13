@@ -55,6 +55,11 @@ describe('SiteHeader', () => {
 		] });
 		await view.open();
 		const nav = within(view.menu()!);
+		expect(view.getByRole('heading', { name: LABELS.menu, level: 2 })).toBeInTheDocument();
+		expect(nav.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+		const items = nav.getAllByRole('link');
+		expect(items.map(node => node.style.getPropertyValue('--item-index'))).toEqual(['0', '1', '2']);
+		expect(items.map(node => Boolean(node.querySelector('.menu-line')))).toEqual([true, false, false]);
 		expect(nav.getAllByRole('heading').map(node => node.textContent)).toEqual(['Explore routes', 'Get help']);
 		expect(within(nav.getByRole('list', { name: 'Explore routes' })).getAllByRole('link').map(node => node.textContent?.trim())).toEqual(['One', 'Two']);
 		expect(nav.getAllByRole('link').map(node => node.getAttribute('href'))).toEqual(['/one', '/two', '/three']);
@@ -75,7 +80,7 @@ describe('SiteHeader', () => {
 			expect(view.queryByRole('switch')).toBeNull();
 			await view.open();
 			expect(view.getAllByRole('switch', { name: LABELS.theme })).toHaveLength(1);
-			const language = view.getByRole('link', { name: 'Language: English (EN FR)' });
+			const language = view.getByRole('link', { name: 'Language: English / Français: English (EN FR)' });
 			expect(view.getByRole('banner').contains(language)).toBe(false);
 			expect(view.getByText('Language: English / Français')).toBeInTheDocument();
 			view.hooks.before(await view.hooks.click(language));

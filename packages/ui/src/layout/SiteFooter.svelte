@@ -26,16 +26,25 @@
 		after?: Snippet;
 	}
 
-	export interface SiteFooterProps {
+	export type SiteFooterProps = {
 		brand: Snippet;
 		tagline: string;
 		groups: readonly SiteFooterGroup[];
 		/** Start of the status row, such as an address or attribution. */
 		statusStart?: Snippet;
-		statusPrefix?: string;
-		/** Screen-reader text for the live lamp. */
-		liveLabel?: string;
-	}
+	} & (
+		| {
+				/** Supply both status props to render the lamp and date. */
+				statusPrefix: string;
+				/** Screen-reader text for the live lamp. Required with statusPrefix. */
+				liveLabel: string;
+			}
+		| {
+				/** Omit both status props to hide the lamp and date. */
+				statusPrefix?: never;
+				liveLabel?: never;
+			}
+	);
 </script>
 
 <script lang="ts">

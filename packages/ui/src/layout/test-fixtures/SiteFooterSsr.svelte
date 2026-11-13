@@ -1,7 +1,10 @@
 <script lang="ts">
-	import SiteFooter from '../SiteFooter.svelte';
-	let { statusPrefix, liveLabel }: { statusPrefix?: string; liveLabel?: string } = $props();
+	import SiteFooter, { type SiteFooterProps } from '../SiteFooter.svelte';
+	let status: Pick<SiteFooterProps, 'statusPrefix' | 'liveLabel'> = $props();
 </script>
-<SiteFooter tagline="Tagline" groups={[]} {statusPrefix} {liveLabel}>
-	{#snippet brand()}<span>Brand</span>{/snippet}
-</SiteFooter>
+{#snippet brand()}<span>Brand</span>{/snippet}
+{#if status.statusPrefix !== undefined && status.liveLabel !== undefined}
+	<SiteFooter tagline="Tagline" groups={[]} {brand} statusPrefix={status.statusPrefix} liveLabel={status.liveLabel} />
+{:else}
+	<SiteFooter tagline="Tagline" groups={[]} {brand} />
+{/if}

@@ -542,12 +542,21 @@ for (const width of [390, 599, 600, 1024, 1440]) {
 		await expect(page.getByRole('contentinfo').locator('[data-slot="status-dot"], .footer-status-border')).toHaveCount(0);
 		await expect(header(page).getByRole('switch', { name: LABELS.theme })).toHaveCount(width < 600 ? 0 : 1);
 		await toggle(page).click();
-		await expect(menuLinks(page).getByRole('heading')).toHaveText(['Explore routes', 'More destinations']);
+		await expect(menu(page).getByRole('heading', { name: LABELS.menu, level: 2 })).toHaveCount(1);
+		await expect(menuLinks(page).getByRole('heading', { level: 3 })).toHaveText(['Explore routes', 'More destinations']);
 		await expect(page.getByRole('switch', { name: LABELS.theme })).toHaveCount(1);
 		await expect(language(page)).toHaveCount(1);
 		await expect(language(page)).toHaveAttribute('data-sveltekit-reset', 'false');
 		await expect(header(page).getByRole('switch')).toHaveCount(width < 600 ? 0 : 1);
 		if (width < 600) {
+			const controls = menu(page).locator('.menu-controls');
+			await expect(controls.getByText(LABELS.theme, { exact: true })).toHaveAttribute('aria-hidden', 'true');
+			await expect(controls.getByText('Language: English / Français', { exact: true })).toHaveAttribute('aria-hidden', 'true');
+			await expect(controls.getByRole('switch')).toHaveAccessibleName(LABELS.theme);
+			await expect(language(page)).toHaveAccessibleName('Language: English / Français: English (EN FR)');
+			const accessible = await controls.ariaSnapshot();
+			expect(accessible.split(LABELS.theme)).toHaveLength(2);
+			expect(accessible.split('Language: English / Français')).toHaveLength(2);
 			await expect(menu(page).getByText(LABELS.theme, { exact: true })).toBeVisible();
 			await expect(menu(page).getByText('Language: English / Français', { exact: true })).toBeVisible();
 		}
@@ -577,5 +586,18 @@ test('compact placement follows the header container and adapts while open', asy
 		await expect(header(page).getByRole('switch')).toHaveCount(width < 600 ? 0 : 1);
 		await expect(page.getByRole('switch', { name: LABELS.theme })).toHaveCount(1);
 		await expect(language(page)).toHaveCount(1);
+	}
+});
+
+test('group entrance delays follow reading order while metro lines stop at group boundaries', async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: 'no-preference' });
+	await visitHeader(page, `${HOME}?compact`);
+	await toggle(page).click();
+	const items = menuLinks(page).getByRole('link');
+	for (const [index, delay] of ['0s', '0.04s', '0.08s', '0.12s'].entries()) {
+		await expect(items.nth(index)).toHaveCSS('transition-delay', `${delay}, ${delay}, 0s`);
+	}
+	for (const group of await menuLinks(page).getByRole('list').all()) {
+		await expect(group.getByRole('link').last().locator('.menu-line')).toHaveCount(0);
 	}
 });

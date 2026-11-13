@@ -30,17 +30,20 @@ const groups: SiteFooterProps['groups'] = [
 	},
 ];
 
-const footer = (props: Partial<SiteFooterProps> = {}) =>
-	render(SiteFooter, {
+const footer = (props: Partial<SiteFooterProps> = {}) => {
+	const status = Object.hasOwn(props, 'statusPrefix') && props.statusPrefix === undefined
+		? { statusPrefix: undefined, liveLabel: undefined }
+		: { statusPrefix: props.statusPrefix ?? 'SYSTEM', liveLabel: props.liveLabel ?? 'Live' };
+	return render(SiteFooter, {
 		props: {
 			brand: html('<a href="/" data-testid="wordmark">Acme</a>'),
 			tagline: 'Sample analytics',
 			groups,
-			statusPrefix: 'SYSTEM',
-			liveLabel: 'Live',
 			...props,
+			...status,
 		},
 	});
+};
 type View = ReturnType<typeof footer>;
 
 const root = (view: View) => view.container.querySelector<HTMLElement>('[data-testid="footer"]')!;
@@ -146,7 +149,7 @@ describe('status row', () => {
 		expect(root(view).querySelector('.footer-status-border')).toBeNull();
 	});
 	it('keeps statusStart without adding a lamp or date', () => {
-		const view = footer({ statusPrefix: undefined, statusStart: html('<address>Montreal</address>') });
+		const view = footer({ statusPrefix: undefined, liveLabel: undefined, statusStart: html('<address>Montreal</address>') });
 		expect(view.getByText('Montreal')).toBeInTheDocument();
 		expect(root(view).querySelector('[data-slot="status-dot"]')).toBeNull();
 	});
