@@ -841,7 +841,8 @@ declare namespace Brand {
         NavigationEvent,
         OnNavigate,
         SiteNavigation,
-        openSection
+        openSection,
+        LANGUAGE_ORDER
     }
 }
 
@@ -1654,12 +1655,16 @@ declare namespace Index {
         NavigationEvent,
         OnNavigate,
         SiteNavigation,
-        openSection
+        openSection,
+        LANGUAGE_ORDER
     }
 }
 
 // @public
 function injectThemeBoot(html: string): string;
+
+// @public
+const LANGUAGE_ORDER: readonly ["en", "fr", "es"];
 
 // @public (undocumented)
 const LanguageToggle: Component<LanguageToggleProps, {}, "ref">;

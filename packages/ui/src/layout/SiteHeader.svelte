@@ -76,6 +76,7 @@
 	import { magnetic } from '@yesid/motion/actions';
 	import { isPrefersReducedMotion } from '@yesid/motion/stores/reducedMotion';
 	import { getLenis } from '@yesid/motion/utils/lenis';
+	import { orderLanguages } from '../brand/language-order.js';
 	import LanguageToggle from '../brand/LanguageToggle.svelte';
 	import ThemeToggle from '../brand/ThemeToggle.svelte';
 	import Wordmark from '../brand/Wordmark.svelte';
@@ -98,7 +99,7 @@
 		});
 	});
 	const menuLanguageLabel = $derived(language
-		? `${language.label}: ${language.locales.map(locale => language.names[locale]).join(' / ')}`
+		? `${language.label}: ${orderLanguages(language.locales).map(locale => language.names[locale]).join(' / ')}`
 		: '');
 
 	let narrow = $state(false);

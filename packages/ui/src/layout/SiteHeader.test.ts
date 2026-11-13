@@ -74,22 +74,24 @@ describe('SiteHeader', () => {
 			disconnect() {}
 		});
 		try {
-			const view = setup({ compactControls: true });
+			const view = setup({ compactControls: true, language: { locale: 'en', locales: ['fr', 'en', 'es'], href: next => `/${next}`, label: 'Language', names: { ...NAMES, es: 'Español' } } });
 			resize!(390);
 			await tick();
 			expect(view.queryByRole('switch')).toBeNull();
 			await view.open();
 			expect(view.getAllByRole('switch', { name: LABELS.theme })).toHaveLength(1);
-			const language = view.getByRole('link', { name: 'Language: English / Français: English (EN FR)' });
+			const language = view.getByRole('link', { name: 'Language: English / Français / Español: English (EN FR ES)' });
 			expect(view.getByRole('banner').contains(language)).toBe(false);
-			expect(view.getByText('Language: English / Français')).toBeInTheDocument();
+			expect(language.getAttribute('href')).toBe('/fr');
+			expect([...language.querySelectorAll('svg text')].map(node => node.textContent)).toEqual(['EN', 'FR', 'ES']);
+			expect(view.getByText('Language: English / Français / Español')).toBeInTheDocument();
 			view.hooks.before(await view.hooks.click(language));
 			await tick();
 			expect(view.menu()).not.toBeNull();
 			resize!(600);
 			await tick();
 			expect(view.getAllByRole('switch', { name: LABELS.theme })).toHaveLength(1);
-			expect(view.getByRole('banner').contains(view.getByRole('link', { name: 'Language: English (EN FR)' }))).toBe(true);
+			expect(view.getByRole('banner').contains(view.getByRole('link', { name: 'Language: English (EN FR ES)' }))).toBe(true);
 		} finally { vi.unstubAllGlobals(); }
 	});
 	it('keeps the flat menu as direct links without group headings or lists', async () => {
