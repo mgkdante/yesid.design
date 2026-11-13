@@ -5,6 +5,18 @@ import Button from './button.svelte';
 afterEach(() => cleanup());
 
 describe('Button element contract', () => {
+	it.each(['default', 'conversion', 'outline', 'ghost'] as const)(
+		'%s leaves the shared focus outline available on both elements', (variant) => {
+			for (const props of [{ variant }, { variant, href: '/next' }]) {
+				const { container, unmount } = render(Button, { props });
+				const classes = container.firstElementChild?.className.split(/\s+/);
+				expect(classes).not.toContain('outline-none');
+				expect(classes).not.toContain('outline-hidden');
+				unmount();
+			}
+		},
+	);
+
 	it.each([{}, { href: '/next' }])('preserves a caller data-slot for %j', (props) => {
 		const { container } = render(Button, { props: { ...props, 'data-slot': 'custom-button' } });
 		expect(container.querySelector('[data-slot="custom-button"]')).not.toBeNull();
