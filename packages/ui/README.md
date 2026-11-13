@@ -150,6 +150,12 @@ The package owns the variants, the element split, disabled-link behavior and the
 `pressBounce`. `conversion` is the yellow signage CTA (at most one per view); the `cta` sizes
 lift on hover. `icon-tap` is the 44px touch target. A caller's `data-slot` replaces the default.
 
+Keyboard focus inherits the shared `base.css` style: a 2px solid orange outline with a 2px
+offset, including on filled variants. The gap exposes the surrounding surface on both sides
+of the outline, preserving at least 3:1 contrast on page and card backgrounds in both themes.
+Forced colours use the system `CanvasText` outline. Focus does not change layout; pointer focus
+continues to follow `:focus-visible`. No caller changes are needed.
+
 ### Card
 
 A solid panel with a lit top bevel (`edge-highlight`); hover firms the border and adds
