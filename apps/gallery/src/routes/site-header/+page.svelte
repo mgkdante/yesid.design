@@ -28,6 +28,7 @@
 		'https://example.com': ExternalLink,
 	};
 	const compact = $derived(browser && page.url.searchParams.has('compact'));
+	const scrambled = $derived(browser && page.url.searchParams.has('scrambled'));
 	const groupedItems = MENU_ITEMS.map(item => ({ ...item, icon: ICONS[item.href] }));
 	const locale = $derived((browser && page.url.searchParams.get('lang')) || LOCALES[0]);
 </script>
@@ -58,7 +59,7 @@
 	compactControls={compact}
 	actions={compact ? action : undefined}
 	labels={LABELS}
-	language={{ locale, locales: LOCALES, href: languageHref, label: LANGUAGE_LABEL, names: LANGUAGE_NAMES, preserveState: true }}
+	language={{ locale, locales: scrambled ? ['fr', 'en', 'es'] : LOCALES, href: next => scrambled ? `${languageHref(next)}&scrambled&compact` : languageHref(next), label: LANGUAGE_LABEL, names: LANGUAGE_NAMES, preserveState: true }}
 	{search}
 />
 

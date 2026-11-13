@@ -601,3 +601,21 @@ test('group entrance delays follow reading order while metro lines stop at group
 		await expect(group.getByRole('link').last().locator('.menu-line')).toHaveCount(0);
 	}
 });
+
+for (const width of [390, 1440]) {
+    test(`scrambled three-language header follows the brand order at ${width}px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        await visitHeader(page, `${HOME}?scrambled&compact`);
+        if (width < 600) await toggle(page).click();
+        for (const [current, next] of [['English', 'fr'], ['Français', 'es'], ['Español', 'en']]) {
+            const control = language(page);
+            await expect(control.locator('svg text')).toHaveText(['EN', 'FR', 'ES']);
+            await expect(control).toHaveAttribute('href', `${languageHref(next)}&scrambled&compact`);
+            await expect(control).toHaveAccessibleName(width < 600
+                ? `Language: English / Français / Español: ${current} (EN FR ES)`
+                : `Language: ${current} (EN FR ES)`);
+            await control.click();
+            await expect(page).toHaveURL(url => url.searchParams.get('lang') === next);
+        }
+    });
+}

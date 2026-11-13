@@ -3,6 +3,12 @@ Shared UI, tokens and motion packages that every yesid product builds from.
 
 ## Language
 
+**Language signpost**:
+The brand language link with one board per supported locale. The system draws and cycles English,
+French and Spanish in that order, then other locales in their supplied order. Products choose
+which languages they support, their default and their copy.
+_Avoid_: product language order
+
 **Section**:
 A collapsible content card on a detail page, with a heading and a body. Only the heading button toggles it.
 An optional summary keeps the finding, period and caveat visible when the body is open or closed.

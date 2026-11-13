@@ -62,7 +62,8 @@ URL-state preservation, locale-switch detection, route-id normalization, cached 
 relative time, and copy typing. `@yesid/ui` owns the Svelte locale context and `<html lang>` sync.
 Consumers own their locale type and supported, default, prefixed, and published values; Intl tags;
 copy and fallback policy; route exemptions; SvelteKit adapters; request fallback; and runtime
-flags. i18n-core contains no framework import, virtual module or product locale registry.
+flags. The exception is the language signpost display and cycle order, owned by `@yesid/ui`
+under D18. i18n-core contains no framework import, virtual module or product locale registry.
 
 ## D9: Global ripple is explicit and optional
 
@@ -157,3 +158,11 @@ unsupported. Kit 3 is the supported app target.
 The primitives are owned code derived from shadcn-svelte under MIT, with no CLI,
 registry or package dependency. Token names such as `--card` and `--muted` remain
 brand vocabulary. A primitive stays only while a product uses it or it holds real behavior.
+
+## D18: The toggles and language order are brand identity
+
+The language signpost and theme toggle are part of yesid.design's identity. The owner decided
+on 2026-11-13 that the system owns the language order: English, French, Spanish, then English
+again. `@yesid/ui` exports `LANGUAGE_ORDER` and orders supported known locales accordingly;
+other locales follow in the order the product supplies. Products choose their supported languages,
+default and copy. D8 and D16 otherwise remain unchanged.

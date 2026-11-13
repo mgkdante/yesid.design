@@ -623,6 +623,11 @@ Use `actions` for a labelled button such as Search in the freed pill space.
 
 `Wordmark` is the name plus accent dot with the `wordmarkHover` effects (`autoPlay` plays one on
 mount). `LanguageToggle` is a plain signpost link: one board per locale, linking to `href(next)`.
+`LANGUAGE_ORDER`, exported from `@yesid/ui` and `@yesid/ui/brand`, is `['en', 'fr', 'es']`.
+The signpost draws and cycles supported languages in that order, then any other locales in their
+supplied order. For example, `['fr', 'en', 'es']` draws EN, FR, ES and English links to French.
+Products still choose their supported set, default, hrefs and copy. SiteHeader uses the same
+order in the pill and compact menu, including the compact menu's language names.
 Its required `names` map supplies an autonym for every supported locale; no language names ship
 in the component. `preserveState` keeps scroll and page state (`data-sveltekit-reset="false"`);
 the lifecycle restores focus after landing. Inside SiteHeader this uses a bound native link ref;

@@ -120,3 +120,5 @@ export {
 } from './navigation.js';
 
 export { openSection } from './sections-registry.js';
+
+export { LANGUAGE_ORDER } from './language-order.js';

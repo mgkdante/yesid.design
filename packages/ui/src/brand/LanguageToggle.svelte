@@ -23,6 +23,7 @@
 </script>
 
 <script lang="ts">
+	import { orderLanguages } from './language-order.js';
 	import { cn } from '../cn/index.js';
 
 	let {
@@ -37,7 +38,8 @@
 		class: className,
 	}: LanguageToggleProps = $props();
 
-	const next = $derived(locales[(Math.max(0, locales.indexOf(locale)) + 1) % locales.length]);
+	const orderedLocales = $derived(orderLanguages(locales));
+	const next = $derived(orderedLocales[(Math.max(0, orderedLocales.indexOf(locale)) + 1) % orderedLocales.length]);
 	const nextHref = $derived(href(next));
 	const name = $derived(names[locale]);
 
@@ -49,7 +51,7 @@
 	const svgHeight = $derived(Math.round(((vbHeight * 36) / 44) * 10) / 10);
 
 	const boards = $derived(
-		locales.map((loc, k) => {
+		orderedLocales.map((loc, k) => {
 			const yTop = 4 + k * SPAN + (SPAN - PLATE_H) / 2;
 			const mid = yTop + PLATE_H / 2;
 			const right = k % 2 === 1;
