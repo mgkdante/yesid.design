@@ -5,6 +5,8 @@
 	export interface CollapsibleSectionProps {
 		title: string;
 		subtitle?: string;
+		/** Finding, period and caveat, always visible outside the collapsible body. */
+		summary?: Snippet;
 		/** `article-summary`: a heading row with optional actions and a clamped subtitle. */
 		headerVariant?: 'default' | 'article-summary';
 		open?: boolean;

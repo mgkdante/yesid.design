@@ -389,7 +389,9 @@ supplies one fixed `label`; `aria-checked` carries the state.
 
 ### CollapsibleSection
 
-A card with a toggle header, an optional index badge, `icon` and `headerActions` snippets, and an
+A card whose heading button toggles it by click, tap, Enter or Space. Body clicks, taps and text
+selection never toggle it. Header actions keep their own behavior. It has an optional index badge,
+`icon` and `headerActions` snippets, and an
 `anchor` that emits `data-toc` for the TOC family. By default, every mounted collapsible card participates in
 Collapse all / Expand all. Use `<CollapsibleSection independent bind:open={panelOpen}>` for a
 filter or control panel that keeps its own toggle and stays out of bulk actions, counts and the
@@ -415,6 +417,22 @@ targets outside independent panels keep reporting activity, including unlisted t
 This protection also applies with `independent collapsible={false}`. A static panel stays
 visible, and jumps or reveal helpers leave its bound `open` value unchanged. Ordinary static
 cards keep their existing behavior and remain outside bulk actions.
+
+The optional `summary` snippet renders between the header and the body. It stays visible in both
+states, outside the inert collapsible region, wraps without clamping, and describes the heading
+button without becoming part of its name. Use it for the finding, period and material caveat.
+Use `subtitle` for a short label; its existing header placement and article-summary closed clamp
+are unchanged. `SectionCard` owns these rendered mechanics; `CollapsibleSection` owns registration.
+
+```svelte
+<CollapsibleSection title="Service observations" subtitle="Completed week">
+  {#snippet summary()}
+    <p>Most measured passages met the target from November 4 to 10.</p>
+    <p>Missing observations limit this finding to the measured service.</p>
+  {/snippet}
+  <p>Detailed method and evidence.</p>
+</CollapsibleSection>
+```
 
 ### TocNav, TocPill, and section navigation
 

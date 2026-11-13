@@ -4,7 +4,8 @@ Shared UI, tokens and motion packages that every yesid product builds from.
 ## Language
 
 **Section**:
-A collapsible content card on a detail page, with a heading and a body.
+A collapsible content card on a detail page, with a heading and a body. Only the heading button toggles it.
+An optional summary keeps the finding, period and caveat visible when the body is open or closed.
 _Avoid_: card (on detail pages), panel, disclosure
 
 **Expand-all control**:

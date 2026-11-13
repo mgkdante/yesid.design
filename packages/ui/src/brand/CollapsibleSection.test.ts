@@ -83,15 +83,23 @@ describe('disclosure', () => {
 
 });
 
-describe('whole-card toggling', () => {
-	it('toggles from prose or the bare card, and exactly once from the header', async () => {
+describe('heading-only toggling', () => {
+	it('leaves prose and the bare card open, and toggles exactly once from the heading', async () => {
 		const view = section();
 		await click(view.getByTestId('prose'));
-		expect(isOpen(view)).toBe(false);
+		expect(isOpen(view)).toBe(true);
 		await click(query(view, '[data-slot="card"]'));
 		expect(isOpen(view)).toBe(true);
 		await click(trigger(view));
 		expect(isOpen(view)).toBe(false);
+	});
+
+	it('leaves the body open after a touch and its synthesized click', async () => {
+		const view = section();
+		await fireEvent.touchStart(view.getByTestId('prose'));
+		await fireEvent.touchEnd(view.getByTestId('prose'));
+		await click(view.getByTestId('prose'));
+		expect(isOpen(view)).toBe(true);
 	});
 
 	it.each(['button', 'role-button', 'link', 'boundary', 'nested-card'])(
@@ -211,5 +219,21 @@ describe('page disclosure controls', () => {
 		await click(trigger(view));
 		await view.rerender({ openSignal: 1 });
 		expect(isOpen(view)).toBe(false);
+	});
+});
+
+describe('persistent summary', () => {
+	it.each(['default', 'article-summary'] as const)('keeps the %s summary outside the body and button in both states', async (headerVariant) => {
+		const summary = createRawSnippet(() => ({ render: () => '<p>Finding, period and material caveat.</p>' }));
+		const view = section({ headerVariant, subtitle: 'Short label', summary });
+		const finding = view.getByText('Finding, period and material caveat.');
+		const described = trigger(view).getAttribute('aria-describedby')!.split(' ');
+		expect(described.some(id => document.getElementById(id)?.contains(finding))).toBe(true);
+		for (const open of [true, false, true]) {
+			if (isOpen(view) !== open) await click(trigger(view));
+			expect(content(view).contains(finding)).toBe(false);
+			expect(trigger(view).contains(finding)).toBe(false);
+			expect(finding.closest('[inert], [aria-hidden="true"]')).toBeNull();
+		}
 	});
 });

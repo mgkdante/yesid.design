@@ -17,20 +17,22 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
 	});
 }
 
-test('a held section press stays still under reduced motion', async ({ page }) => {
-	await page.emulateMedia({ reducedMotion: 'reduce' });
-	await openGallery(page);
-	const card = page.locator('[data-gallery-family="brand:CollapsibleSection"] .section-card').first();
-	await card.scrollIntoViewIfNeeded();
-	const body = card.locator('[data-slot="collapsible-content"]');
-	await body.hover();
-	await page.mouse.down();
-	try {
-		expect(await card.evaluate(node => node.matches(':active'))).toBe(true);
-		await expect(card).toHaveCSS('scale', '1');
-		await expect(card).toHaveCSS('transform', 'none');
-	} finally { await page.mouse.up(); }
-});
+for (const reducedMotion of ['reduce', 'no-preference'] as const) {
+	test(`a held section press has no scale effect (${reducedMotion})`, async ({ page }) => {
+		await page.emulateMedia({ reducedMotion });
+		await openGallery(page);
+		const card = page.locator('[data-gallery-family="brand:CollapsibleSection"] .section-card').first();
+		await card.scrollIntoViewIfNeeded();
+		const body = card.locator('[data-slot="collapsible-content"]');
+		await body.hover();
+		await page.mouse.down();
+		try {
+			expect(await card.evaluate(node => node.matches(':active'))).toBe(true);
+			await expect(card).toHaveCSS('scale', 'none');
+			await expect(card).toHaveCSS('transform', 'none');
+		} finally { await page.mouse.up(); }
+	});
+}
 
 test('overscroll follows primary pointer capability', async ({ page }) => {
 	await openGallery(page);
