@@ -314,11 +314,19 @@ A blinking block cursor in `accent` (`accent-text` in light); it stops blinking 
 
 ### TerminalPanel and CodeBlock
 
-`TerminalPanel` is the terminal window: a title bar with the three-aspect signal head, the
+`TerminalPanel` is the terminal window: a title bar with the
 `title`, an optional `tag` and `status` and an `actions` snippet, a hazard rule, the body (pass
 `noPadding` when the content pads itself) and an optional `footer` readout of label and value
 pairs. Extra attributes go to the root. Its look comes from the `.terminal-*` classes in
 `base.css`, so markup rendered on the server can wear the same chrome.
+
+There is no lamp or colored window chrome by default. To report a status the caller can verify,
+pass `signal={{ color: 'green', label: 'Live feed', live: true }}`. `color` uses `StatusDotColor`;
+`label` is required and supplies screen-reader text. Omit `live` for a steady lamp. Only `live: true`
+may pulse, after mount and when the `motion-gated` policy permits it. Server output stays still,
+and reduced-motion CSS also suppresses the pulse. `status` remains independent text.
+Removing the automatic green pulse corrects an unmeasured status claim; existing callers need
+no prop changes unless they want to report a verified signal.
 
 `CodeBlock` puts source in a `TerminalPanel` with the `language` as its tag. Pass `copy` labels
 to show a copy button; it copies `code` and shows ✓ for two seconds, or `copy.failed` if the

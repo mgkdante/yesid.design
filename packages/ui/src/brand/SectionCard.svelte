@@ -337,6 +337,21 @@
 		opacity: 0.92;
 	}
 	@media (prefers-reduced-motion: reduce) {
+		:global(
+			[data-slot='card'].section-card.section-card--toggleable:active:not(
+					:has(
+						a:active,
+						button:active,
+						input:active,
+						select:active,
+						textarea:active,
+						[role='button']:active,
+						[data-card-interactive]:active
+					)
+				)
+		) {
+			scale: 1;
+		}
 		:global([data-slot='card'].section-card.section-card--toggleable) {
 			transition:
 				border-color var(--duration-normal) var(--ease-default),

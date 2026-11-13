@@ -59,7 +59,11 @@ html {
 	background-color: var(--background);
 	color: var(--foreground);
 	overflow-x: clip;
-	overscroll-behavior: none;
+}
+
+/* Touch keeps native overscroll and pull-to-refresh. */
+@media (pointer: fine) {
+	html { overscroll-behavior: none; }
 }
 
 body {
