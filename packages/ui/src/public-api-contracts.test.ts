@@ -294,6 +294,11 @@ const siteFooterProps: SiteFooterProps = {
 };
 // @ts-expect-error the live lamp needs a screen-reader label
 const invalidSiteFooter: SiteFooterProps = { ...siteFooterProps, liveLabel: undefined };
+// @ts-expect-error a status prefix must include the live lamp label
+const invalidSiteFooterMissingLabel: SiteFooterProps = { brand: ignoredChildren, tagline: 'Built in Montreal', groups: [], statusPrefix: 'System' };
+// @ts-expect-error a live label without a status prefix is not a status
+const invalidSiteFooterLabel: SiteFooterProps = { brand: ignoredChildren, tagline: 'Built in Montreal', groups: [], liveLabel: 'Live' };
+const optionalSiteFooter: SiteFooterProps = { brand: ignoredChildren, tagline: 'Built in Montreal', groups: [], statusStart: ignoredChildren };
 
 const errorIllustrationProps: ErrorIllustrationProps = { code: '404', signLabel: 'SAMPLE' };
 

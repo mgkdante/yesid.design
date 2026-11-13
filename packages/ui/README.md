@@ -584,6 +584,17 @@ required, with an empty footer string hiding it. The header opens with the named
 `--site-header-inset-duration`. The menu starts below the app's `--chrome-offset` (default `--nav-clearance`); page offsets read
 `--nav-clearance` from `base.css`.
 
+`menuGroups?: readonly SiteHeaderMenuGroup[]` supplies visible group headings and ordered items.
+Each group has `{ label, items }`. When supplied, groups replace `menuItems`, including an empty
+array. `menuItems` is now optional and defaults to an empty array; existing flat menus are unchanged.
+Keep every header destination in the selected menu source. Headings use the supplied case and copy.
+
+`compactControls` defaults to `false`. When enabled, below 600px of header container width the
+pill hides theme and language controls and the open menu shows them with `labels.theme`,
+`language.label` and the supplied language names. At 600px and wider the controls stay in the pill.
+Only one copy is rendered. The language control retains `preserveState` and lifecycle focus handling.
+Use `actions` for a labelled button such as Search in the freed pill space.
+
 `Wordmark` is the name plus accent dot with the `wordmarkHover` effects (`autoPlay` plays one on
 mount). `LanguageToggle` is a plain signpost link: one board per locale, linking to `href(next)`.
 Its required `names` map supplies an autonym for every supported locale; no language names ship
@@ -601,7 +612,11 @@ records the v0.33.0 copy and integration migration for Transit and yesid.dev.
 navigation per entry in `groups` (`navLabel` when the accessible name differs from the heading;
 `external` links open in a new tab with `rel="noopener noreferrer"`, and `me` adds `rel="me"` for
 the owner's own profiles; `after` adds controls inside the group), and a status row with
-`statusStart`, a live lamp (`liveLabel` for screen readers) and today's date. `data-in-view`
+optional `statusStart`, and, when `statusPrefix` is supplied, a live lamp (`liveLabel` for screen
+readers) and today's date. The status props form an all-or-nothing union: supply both
+`statusPrefix` and `liveLabel`, or omit both. This keeps every rendered lamp named for screen
+readers. `statusStart` is independent; without it or the status pair, the entire row is omitted.
+An empty string still opts into the status. Existing callers supplying both props keep their output. `data-in-view`
 reports whether it is on screen.
 
 `ErrorPage` is the error route body: hazard rule, `ErrorIllustration`, `label`, `heading`, `body`,

@@ -21,6 +21,7 @@ export type {
 	SiteHeaderLabels,
 	SiteHeaderLink,
 	SiteHeaderMenuItem,
+	SiteHeaderMenuGroup,
 	SiteHeaderProps,
 } from './SiteHeader.svelte';
 

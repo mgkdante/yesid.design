@@ -7,7 +7,7 @@
 	import FileText from '@lucide/svelte/icons/file-text';
 	import LayoutList from '@lucide/svelte/icons/layout-list';
 	import PanelTop from '@lucide/svelte/icons/panel-top';
-	import { SiteHeader } from '@yesid/ui/layout';
+	import { SiteHeader, SiteFooter } from '@yesid/ui/layout';
 	import {
 		HOME,
 		LABELS,
@@ -27,6 +27,8 @@
 		'/detail-frame': FileText,
 		'https://example.com': ExternalLink,
 	};
+	const compact = $derived(browser && page.url.searchParams.has('compact'));
+	const groupedItems = MENU_ITEMS.map(item => ({ ...item, icon: ICONS[item.href] }));
 	const locale = $derived((browser && page.url.searchParams.get('lang')) || LOCALES[0]);
 </script>
 
@@ -43,11 +45,18 @@
 	/>
 {/snippet}
 
+{#snippet action()}
+	<button type="button" class="min-h-11 px-3 text-small" onclick={() => document.querySelector<HTMLInputElement>('#fixture-search')?.focus()}>Search</button>
+{/snippet}
+
 <SiteHeader
 	{navigation}
 	home={HOME}
 	links={LINKS}
 	menuItems={MENU_ITEMS.map((item) => ({ ...item, icon: ICONS[item.href] }))}
+	menuGroups={compact ? [{ label: 'Explore routes', items: groupedItems.slice(0, 2) }, { label: 'More destinations', items: groupedItems.slice(2) }] : undefined}
+	compactControls={compact}
+	actions={compact ? action : undefined}
 	labels={LABELS}
 	language={{ locale, locales: LOCALES, href: languageHref, label: LANGUAGE_LABEL, names: LANGUAGE_NAMES, preserveState: true }}
 	{search}
@@ -60,4 +69,10 @@
 		menu holds every destination, like the <a href="/listing-frame">listing frame</a>; a language
 		switch from the open menu keeps it open.
 	</p>
+	{#if compact}<input id="fixture-search" type="search" aria-label="Search destinations" class="mt-6 h-11 border border-border-subtle px-4" />{/if}
 </main>
+{#if compact}
+	<SiteFooter tagline="Shared shell fixture" groups={[]}>
+		{#snippet brand()}<a href="/site-header">Gallery</a>{/snippet}
+	</SiteFooter>
+{/if}

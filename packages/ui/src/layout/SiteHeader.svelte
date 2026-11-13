@@ -31,6 +31,11 @@
 		icon?: Component<{ class?: string }>;
 	}
 
+	export interface SiteHeaderMenuGroup {
+		label: string;
+		items: readonly SiteHeaderMenuItem[];
+	}
+
 	export interface SiteHeaderLabels {
 		openMenu: string;
 		closeMenu: string;
@@ -51,7 +56,11 @@
 		home: string;
 		wordmark?: string;
 		links: readonly SiteHeaderLink[];
-		menuItems: readonly SiteHeaderMenuItem[];
+		menuItems?: readonly SiteHeaderMenuItem[];
+		/** When supplied, replaces menuItems, including when empty. */
+		menuGroups?: readonly SiteHeaderMenuGroup[];
+		/** Moves theme and language controls into the menu below a 600px header width. */
+		compactControls?: boolean;
 		labels: SiteHeaderLabels;
 		language?: Omit<LanguageToggleProps, 'ref' | 'class'>;
 		/** Shown from a 1024px header; folds away with the links while the menu is open. */
@@ -72,7 +81,7 @@
 	import Wordmark from '../brand/Wordmark.svelte';
 	import { linksFit } from './links-fit.js';
 
-	let { navigation, home, wordmark, links, menuItems, labels, language, search, actions }: SiteHeaderProps =
+	let { navigation, home, wordmark, links, menuItems = [], menuGroups, compactControls = false, labels, language, search, actions }: SiteHeaderProps =
 		$props();
 
 	const contentId = $props.id();
@@ -80,6 +89,26 @@
 	const menuFooter = $derived(labels.menuFooter);
 	const skipToContent = $derived(labels.skipToContent);
 
+	const indexedGroups = $derived.by(() => {
+		let offset = 0;
+		return menuGroups?.map(group => {
+			const indexed = { ...group, offset };
+			offset += group.items.length;
+			return indexed;
+		});
+	});
+	const menuLanguageLabel = $derived(language
+		? `${language.label}: ${language.locales.map(locale => language.names[locale]).join(' / ')}`
+		: '');
+
+	let narrow = $state(false);
+	const controlsInMenu = $derived(compactControls && narrow);
+	let pillLanguageLink = $state<HTMLAnchorElement | null>(null);
+	function measureHeader(node: HTMLElement) {
+		const observer = new ResizeObserver(([entry]) => { narrow = entry.contentRect.width < 600; });
+		observer.observe(node);
+		return { destroy: () => observer.disconnect() };
+	}
 	let languageLink = $state<HTMLAnchorElement | null>(null);
 	let menuToggle: HTMLButtonElement;
 	let overlay: HTMLElement | undefined = $state();
@@ -106,7 +135,7 @@
 		get open() { return menuOpen; },
 		get active() { return active; },
 		close: () => { menuOpen = false; },
-		languageLink: () => languageLink,
+		languageLink: () => controlsInMenu ? languageLink : pillLanguageLink,
 	}));
 
 	$effect(() => {
@@ -163,6 +192,35 @@
 	}
 </script>
 
+{#snippet menuItem(item: SiteHeaderMenuItem, i: number, items: readonly SiteHeaderMenuItem[], offset = 0)}
+	<a
+		href={item.href}
+		target={item.external ? '_blank' : undefined}
+		rel={item.external ? 'noopener noreferrer' : undefined}
+		aria-label={item.ariaLabel}
+		class="menu-item"
+		class:menu-item-active={item.current}
+		aria-current={item.current ? 'page' : undefined}
+		onclick={close}
+		style="--item-index: {offset + i}"
+	>
+		{#if item.icon}
+			<item.icon class="menu-icon" />
+		{:else}
+			<span class="menu-stop" class:menu-stop-active={item.current}>
+				{#if item.current}<span class="menu-stop-fill"></span>{/if}
+			</span>
+		{/if}
+		{#if i < items.length - 1}
+			<span class="menu-line" class:menu-line-active={item.current}></span>
+		{/if}
+		<span class="menu-text">
+			<span class="menu-label">{item.label}</span>
+			<span class="menu-subtitle">{item.subtitle ?? ''}</span>
+		</span>
+	</a>
+{/snippet}
+
 <a class="skip-link" href="#main">{skipToContent}</a>
 
 <!-- Bound to `active` so the focus trap and scroll lock last through the close animation. -->
@@ -202,6 +260,7 @@
 				<header
 					data-testid="nav"
 					data-slot="site-header"
+					use:measureHeader
 					class="nav-root pointer-events-none fixed left-0 right-0 flex flex-col items-center"
 					style:z-index={active ? 'var(--z-nav)' : 'var(--z-sheet)'}
 				>
@@ -242,9 +301,11 @@
 
 						<span class="nav-divider" aria-hidden="true"></span>
 						{@render actions?.()}
-						<ThemeToggle label={labels.theme} />
-						{#if language}
-							<LanguageToggle {...language} bind:ref={languageLink} />
+						{#if !controlsInMenu}
+							<span class="pill-controls" class:compact-controls={compactControls}>
+								<ThemeToggle label={labels.theme} />
+								{#if language}<LanguageToggle {...language} bind:ref={pillLanguageLink} />{/if}
+							</span>
 						{/if}
 						<button
 							bind:this={menuToggle}
@@ -275,35 +336,30 @@
 					>
 						<Dialog.Title class="sr-only">{labels.menu}</Dialog.Title>
 						<nav class="menu-content" aria-label={labels.menu}>
-							{#each menuItems as item, i (item.href)}
-								<a
-									href={item.href}
-									target={item.external ? '_blank' : undefined}
-									rel={item.external ? 'noopener noreferrer' : undefined}
-									aria-label={item.ariaLabel}
-									class="menu-item"
-									class:menu-item-active={item.current}
-									aria-current={item.current ? 'page' : undefined}
-									onclick={close}
-									style="--item-index: {i}"
-								>
-									{#if item.icon}
-										<item.icon class="menu-icon" />
-									{:else}
-										<span class="menu-stop" class:menu-stop-active={item.current}>
-											{#if item.current}<span class="menu-stop-fill"></span>{/if}
-										</span>
-									{/if}
-									{#if i < menuItems.length - 1}
-										<span class="menu-line" class:menu-line-active={item.current}></span>
-									{/if}
-									<span class="menu-text">
-										<span class="menu-label">{item.label}</span>
-										<span class="menu-subtitle">{item.subtitle ?? ''}</span>
-									</span>
-								</a>
-							{/each}
+							{#if indexedGroups !== undefined}
+								{#each indexedGroups as group, groupIndex}
+									<h3 class="menu-group-heading" id="{contentId}-group-{groupIndex}">{group.label}</h3>
+									<ul aria-labelledby="{contentId}-group-{groupIndex}">
+										{#each group.items as item, i (item.href)}
+											<li>{@render menuItem(item, i, group.items, group.offset)}</li>
+										{/each}
+									</ul>
+								{/each}
+							{:else}
+								{#each menuItems as item, i (item.href)}{@render menuItem(item, i, menuItems)}{/each}
+							{/if}
 						</nav>
+						{#if controlsInMenu}
+							<div class="menu-controls">
+								<div><span aria-hidden="true">{labels.theme}</span><ThemeToggle label={labels.theme} /></div>
+								{#if language && language.locales.length >= 2}
+									<div>
+										<span aria-hidden="true">{menuLanguageLabel}</span>
+										<LanguageToggle {...language} label={menuLanguageLabel} bind:ref={languageLink} />
+									</div>
+								{/if}
+							</div>
+						{/if}
 						{#if menuFooter}
 							<div class="menu-footer">
 								<span class="menu-footer-line"></span>
@@ -319,6 +375,19 @@
 </Dialog.Root>
 
 <style>
+	.pill-controls { display: contents; }
+	@container site-header (width < 600px) {
+		.pill-controls.compact-controls { display: none; }
+	}
+	.menu-group-heading {
+		margin-top: 24px;
+		font-family: var(--font-body);
+		font-size: var(--text-small);
+		color: var(--muted-foreground);
+	}
+	.menu-content ul { list-style: none; padding: 0; margin: 0; }
+	.menu-controls { padding-top: 24px; font-family: var(--font-body); }
+	.menu-controls > div { display: flex; align-items: center; gap: 16px; }
 	/* Off screen until focused, then above the header. */
 	.skip-link {
 		position: fixed;

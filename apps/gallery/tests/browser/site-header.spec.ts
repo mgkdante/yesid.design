@@ -1,3 +1,4 @@
+import { expectAccessible } from '@yesid/config/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 import {
@@ -530,4 +531,73 @@ test.describe('in a short viewport', () => {
 		await expect.poll(() => list.evaluate((nav) => nav.parentElement!.scrollTop)).toBeGreaterThan(0);
 		expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
 	});
+});
+
+for (const width of [390, 599, 600, 1024, 1440]) {
+	test(`grouped compact shell at ${width}px`, async ({ page }) => {
+		await page.setViewportSize({ width, height: 900 });
+		await visitHeader(page, `${HOME}?compact`);
+		await header(page).getByRole('button', { name: SEARCH_LABEL, exact: true }).click();
+		await expect(page.getByRole('searchbox', { name: 'Search destinations' })).toBeFocused();
+		await expect(page.getByRole('contentinfo').locator('[data-slot="status-dot"], .footer-status-border')).toHaveCount(0);
+		await expect(header(page).getByRole('switch', { name: LABELS.theme })).toHaveCount(width < 600 ? 0 : 1);
+		await toggle(page).click();
+		await expect(menu(page).getByRole('heading', { name: LABELS.menu, level: 2 })).toHaveCount(1);
+		await expect(menuLinks(page).getByRole('heading', { level: 3 })).toHaveText(['Explore routes', 'More destinations']);
+		await expect(page.getByRole('switch', { name: LABELS.theme })).toHaveCount(1);
+		await expect(language(page)).toHaveCount(1);
+		await expect(language(page)).toHaveAttribute('data-sveltekit-reset', 'false');
+		await expect(header(page).getByRole('switch')).toHaveCount(width < 600 ? 0 : 1);
+		if (width < 600) {
+			const controls = menu(page).locator('.menu-controls');
+			await expect(controls.getByText(LABELS.theme, { exact: true })).toHaveAttribute('aria-hidden', 'true');
+			await expect(controls.getByText('Language: English / Français', { exact: true })).toHaveAttribute('aria-hidden', 'true');
+			await expect(controls.getByRole('switch')).toHaveAccessibleName(LABELS.theme);
+			await expect(language(page)).toHaveAccessibleName('Language: English / Français: English (EN FR)');
+			const accessible = await controls.ariaSnapshot();
+			expect(accessible.split(LABELS.theme)).toHaveLength(2);
+			expect(accessible.split('Language: English / Français')).toHaveLength(2);
+			await expect(menu(page).getByText(LABELS.theme, { exact: true })).toBeVisible();
+			await expect(menu(page).getByText('Language: English / Français', { exact: true })).toBeVisible();
+		}
+		await expectAccessible(page);
+		await expect(page.locator('.menu-overlay')).toHaveCSS('transition-duration', '0s');
+		await toggle(page).focus();
+		for (const item of MENU_ITEMS) {
+			await page.keyboard.press('Tab');
+			await expect(menuLinks(page).getByRole('link', { name: item.ariaLabel ?? new RegExp(`^${literal(item.label)}`) })).toBeFocused();
+		}
+		await language(page).click();
+		await expect(menu(page)).toBeVisible();
+		await expect(language(page)).toBeFocused();
+		await expect(language(page)).toHaveAccessibleName(/Français/);
+		await page.keyboard.press('Escape');
+		await expect(menu(page)).toBeHidden();
+		await expect(toggle(page)).toBeFocused();
+	});
+}
+
+test('compact placement follows the header container and adapts while open', async ({ page }) => {
+	await page.setViewportSize({ width: 1024, height: 900 });
+	await visitHeader(page, `${HOME}?compact`);
+	await toggle(page).click();
+	for (const width of [599, 600, 390, 1024]) {
+		await page.locator('[data-slot="site-header"]').evaluate((node, width) => node.style.setProperty('--site-header-inset-end', `${1024 - width}px`), width);
+		await expect(header(page).getByRole('switch')).toHaveCount(width < 600 ? 0 : 1);
+		await expect(page.getByRole('switch', { name: LABELS.theme })).toHaveCount(1);
+		await expect(language(page)).toHaveCount(1);
+	}
+});
+
+test('group entrance delays follow reading order while metro lines stop at group boundaries', async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: 'no-preference' });
+	await visitHeader(page, `${HOME}?compact`);
+	await toggle(page).click();
+	const items = menuLinks(page).getByRole('link');
+	for (const [index, delay] of ['0s', '0.04s', '0.08s', '0.12s'].entries()) {
+		await expect(items.nth(index)).toHaveCSS('transition-delay', `${delay}, ${delay}, 0s`);
+	}
+	for (const group of await menuLinks(page).getByRole('list').all()) {
+		await expect(group.getByRole('link').last().locator('.menu-line')).toHaveCount(0);
+	}
 });

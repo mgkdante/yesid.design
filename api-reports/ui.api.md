@@ -1706,6 +1706,7 @@ declare namespace Layout {
         SiteHeaderLabels,
         SiteHeaderLink,
         SiteHeaderMenuItem,
+        SiteHeaderMenuGroup,
         SiteHeaderProps,
         Breadcrumb,
         BreadcrumbItem,
@@ -2513,18 +2514,18 @@ interface SiteFooterLink {
 }
 
 // @public (undocumented)
-interface SiteFooterProps {
-    // (undocumented)
+type SiteFooterProps = {
     brand: Snippet;
-    // (undocumented)
-    groups: readonly SiteFooterGroup[];
-    liveLabel: string;
-    // (undocumented)
-    statusPrefix: string;
-    statusStart?: Snippet;
-    // (undocumented)
     tagline: string;
-}
+    groups: readonly SiteFooterGroup[];
+    statusStart?: Snippet;
+} & ({
+    statusPrefix: string;
+    liveLabel: string;
+} | {
+    statusPrefix?: never;
+    liveLabel?: never;
+});
 
 // @public (undocumented)
 const SiteHeader: Component<SiteHeaderProps, {}, "">;
@@ -2558,6 +2559,14 @@ interface SiteHeaderLink {
 }
 
 // @public (undocumented)
+interface SiteHeaderMenuGroup {
+    // (undocumented)
+    items: readonly SiteHeaderMenuItem[];
+    // (undocumented)
+    label: string;
+}
+
+// @public (undocumented)
 interface SiteHeaderMenuItem {
     // (undocumented)
     ariaLabel?: string;
@@ -2578,6 +2587,7 @@ interface SiteHeaderMenuItem {
 // @public (undocumented)
 interface SiteHeaderProps {
     actions?: Snippet;
+    compactControls?: boolean;
     // (undocumented)
     home: string;
     // (undocumented)
@@ -2586,8 +2596,9 @@ interface SiteHeaderProps {
     language?: Omit<LanguageToggleProps, 'ref' | 'class'>;
     // (undocumented)
     links: readonly SiteHeaderLink[];
+    menuGroups?: readonly SiteHeaderMenuGroup[];
     // (undocumented)
-    menuItems: readonly SiteHeaderMenuItem[];
+    menuItems?: readonly SiteHeaderMenuItem[];
     navigation: NavigationLifecycle;
     search?: Snippet;
     // (undocumented)

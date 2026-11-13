@@ -48,6 +48,58 @@ afterEach(() => {
 });
 
 describe('SiteHeader', () => {
+	it('names groups with visible headings and preserves item order, preferring groups over flat items', async () => {
+		const view = setup({ menuGroups: [
+			{ label: 'Explore routes', items: [{ href: '/one', label: 'One' }, { href: '/two', label: 'Two' }] },
+			{ label: 'Get help', items: [{ href: '/three', label: 'Three' }] },
+		] });
+		await view.open();
+		const nav = within(view.menu()!);
+		expect(view.getByRole('heading', { name: LABELS.menu, level: 2 })).toBeInTheDocument();
+		expect(nav.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+		const items = nav.getAllByRole('link');
+		expect(items.map(node => node.style.getPropertyValue('--item-index'))).toEqual(['0', '1', '2']);
+		expect(items.map(node => Boolean(node.querySelector('.menu-line')))).toEqual([true, false, false]);
+		expect(nav.getAllByRole('heading').map(node => node.textContent)).toEqual(['Explore routes', 'Get help']);
+		expect(within(nav.getByRole('list', { name: 'Explore routes' })).getAllByRole('link').map(node => node.textContent?.trim())).toEqual(['One', 'Two']);
+		expect(nav.getAllByRole('link').map(node => node.getAttribute('href'))).toEqual(['/one', '/two', '/three']);
+	});
+	it('moves a single set of labelled controls into the compact menu and back on resize', async () => {
+		let resize: ((width: number) => void) | undefined;
+		vi.stubGlobal('ResizeObserver', class {
+			constructor(private callback: ResizeObserverCallback) {}
+			observe(node: HTMLElement) {
+				if (node.dataset.slot === 'site-header') resize = width => this.callback([{ contentRect: { width } } as ResizeObserverEntry], this as unknown as ResizeObserver);
+			}
+			disconnect() {}
+		});
+		try {
+			const view = setup({ compactControls: true });
+			resize!(390);
+			await tick();
+			expect(view.queryByRole('switch')).toBeNull();
+			await view.open();
+			expect(view.getAllByRole('switch', { name: LABELS.theme })).toHaveLength(1);
+			const language = view.getByRole('link', { name: 'Language: English / Français: English (EN FR)' });
+			expect(view.getByRole('banner').contains(language)).toBe(false);
+			expect(view.getByText('Language: English / Français')).toBeInTheDocument();
+			view.hooks.before(await view.hooks.click(language));
+			await tick();
+			expect(view.menu()).not.toBeNull();
+			resize!(600);
+			await tick();
+			expect(view.getAllByRole('switch', { name: LABELS.theme })).toHaveLength(1);
+			expect(view.getByRole('banner').contains(view.getByRole('link', { name: 'Language: English (EN FR)' }))).toBe(true);
+		} finally { vi.unstubAllGlobals(); }
+	});
+	it('keeps the flat menu as direct links without group headings or lists', async () => {
+		const view = setup();
+		await view.open();
+		expect(within(view.menu()!).queryByRole('heading')).toBeNull();
+		expect(within(view.menu()!).queryByRole('list')).toBeNull();
+		expect([...view.menu()!.children].map(node => node.tagName)).toEqual(['A', 'A']);
+	});
+
 	it('stops a smooth scroll still in flight when a navigation starts', () => {
 		const { hooks } = setup();
 		lenis.current = { isScrolling: 'smooth', isStopped: false, scroll: 4200, scrollTo: vi.fn(), stop: vi.fn(), start: vi.fn() };
