@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.42.0-rc.3
+## 0.42.0
 
 <!-- release-fragment: no-endless-decorative-loops -->
 - `@yesid/ui` (patch): Correct the WCAG 2.2.2 Pause, Stop, Hide defect: default decorative ErrorIllustration lamps,

@@ -1,6 +1,6 @@
 {
 	"name": "@yesid/analytics",
-	"version": "0.42.0-rc.3",
+	"version": "0.42.0",
 	"private": true,
 	"type": "module",
 	"description": "Consumer-neutral cookieless Plausible client, first-party event relay, URL reduction, and web-vitals collection.",
