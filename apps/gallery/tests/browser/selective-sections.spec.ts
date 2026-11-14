@@ -1,6 +1,15 @@
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { expect, test } from '@playwright/test';
-import boot from '../../../../packages/ui/src/head/boot.json';
+import { expect, test, type TestInfo } from '@playwright/test';
+import boot from '../../../../packages/ui/src/head/boot.json' with { type: 'json' };
+
+function proofPath(info: TestInfo, name: string): string {
+	const directory = process.env.SELECTIVE_EVIDENCE_DIR;
+	if (!directory) return info.outputPath(name);
+	mkdirSync(directory, { recursive: true });
+	return join(directory, `${info.project.name}-${name}`);
+}
 
 for (const choice of ['first', 'collapsed', 'expanded', 'blocked']) {
 	for (const motion of ['reduce', 'no-preference'] as const) {
@@ -45,7 +54,7 @@ for (const choice of ['first', 'collapsed', 'expanded', 'blocked']) {
 			expect(evidence.frames.length).toBeGreaterThan(0);
 			if (choice !== 'expanded') expect(evidence.frames.every(height => height === 0)).toBe(true);
 			await testInfo.attach('pre-paint-geometry', { body: JSON.stringify(evidence), contentType: 'application/json' });
-			await page.screenshot({ path: testInfo.outputPath(`selective-${choice}.png`), fullPage: true });
+			await page.screenshot({ path: proofPath(testInfo, `selective-${choice}-${motion}.png`), fullPage: true });
 			await page.getByTestId('sections-toggle').click();
 			await expect(technical).toHaveAttribute('aria-expanded', String(choice === 'collapsed'));
 		});
@@ -70,10 +79,12 @@ for (const theme of ['light', 'dark']) {
 			await page.goto('/sections/selective');
 			await expect(page.locator('html')).toHaveAttribute('data-gallery-ready', 'true');
 			for (const state of ['mixed', 'collapsed', 'expanded']) {
+				await expect(page.getByRole('button', { name: 'Service finding', exact: true })).toHaveAttribute('aria-expanded', String(state !== 'collapsed'));
+				await expect(page.getByRole('button', { name: 'Technical details', exact: true })).toHaveAttribute('aria-expanded', String(state === 'expanded'));
 				await expect(page.getByText('Les détails techniques', { exact: false })).toBeVisible();
 				await expect(page.getByText('Los detalles técnicos', { exact: false })).toBeVisible();
 				expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-				await page.screenshot({ path: testInfo.outputPath(`${theme}-${width}-${state}.png`), fullPage: true });
+				await page.screenshot({ path: proofPath(testInfo, `${theme}-${width}-${state}.png`), fullPage: true });
 				await page.getByTestId('sections-toggle').click();
 			}
 		});
