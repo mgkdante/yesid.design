@@ -17,6 +17,8 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
 				expect(response?.ok(), 'Gallery route must load successfully').toBe(true);
 				await page.evaluate(() => document.fonts.ready);
 				await expect(page.locator('body')).toBeVisible();
+				expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches))
+					.toBe(reducedMotion === 'reduce');
 				const unexpected = (settled: boolean) => page.evaluate((afterRest) => {
 					return document.getAnimations().flatMap((animation) => {
 						const effect = animation.effect;
@@ -27,7 +29,9 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
 							target.matches('[data-slot="skeleton"]') &&
 							target.closest('[aria-busy="true"]')) return [];
 						const infinite = effect?.getTiming().iterations === Infinity;
-						if (!infinite && (!afterRest || animation.playState !== 'running')) return [];
+						const statusLamp = target instanceof Element &&
+							target.matches('[data-slot="status-dot"], .led-pulse');
+						if (!infinite && !statusLamp && (!afterRest || animation.playState !== 'running')) return [];
 						return [{
 							name: animation instanceof CSSAnimation ? animation.animationName : animation.id,
 							target: target instanceof Element ? target.outerHTML.slice(0, 200) : null,
@@ -35,9 +39,18 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
 						}];
 					});
 				}, settled);
-				expect.soft(await unexpected(false), 'no infinite decoration after load').toEqual([]);
+				expect.soft(await unexpected(false), 'no infinite decoration or pulsing lamps after load').toEqual([]);
 				await page.waitForTimeout(6000);
 				expect(await unexpected(true), 'no decoration running after six seconds').toEqual([]);
+				if (route === '/') {
+					const loading = page.locator('[data-gallery-state="loading"][aria-busy="true"]');
+					const animations = await loading.evaluate((region) => region.getAnimations({ subtree: true }).length);
+					if (reducedMotion === 'reduce') expect(animations).toBe(0);
+					else expect(animations).toBeGreaterThan(0);
+					await loading.evaluate((region) => region.setAttribute('aria-busy', 'false'));
+					await expect.poll(() => page.locator('[data-gallery-state="loading"]')
+						.evaluate((region) => region.getAnimations({ subtree: true }).length)).toBe(0);
+				}
 			});
 		}
 	});

@@ -211,10 +211,11 @@ glows. Six tiers: `glow-sm`, `glow-md`, `glow-lg`, `card`, `section`, `nav`. No 
 ## Motion
 
 Decorative animation must not loop endlessly (WCAG 2.2.2). Default-on decoration stays
-in its reduced-motion frame. Explicit opt-in emphasis lasts at most five seconds, then rests.
-Respect reduced motion. Loading indicators, including Skeleton and spinners, may loop only
-while their content is actually loading; the caller removes them when loading completes.
-Pointer and scroll responses follow input and settle when input stops.
+in its reduced-motion frame. Status dots and live-signal lamps stay still, including explicit
+pulse requests kept for compatibility. Other explicit opt-in emphasis lasts at most five seconds,
+then rests. Respect reduced motion. Loading indicators, including Skeleton and spinners, may loop
+only inside an explicitly busy region while content is loading; the caller removes them when
+loading completes. Pointer and scroll responses follow input and settle when input stops.
 
 ## Shapes
 

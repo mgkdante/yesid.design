@@ -8,6 +8,8 @@ frames. The Gallery browser regression fails on the original source and checks e
 at load and after six seconds under normal and reduced motion, allowing only busy Skeletons.
 
 Owner-approved compatibility exception (instruction dated 2026-11-14 in DEPRECATION.md):
-opt-in gradient Separator is still; StatusDot pulse, TerminalPanel signal.live and led-pulse
-last two cycles (four seconds) then rest. All props, types and exports remain unchanged.
-Skeleton and spinners may loop only while loading; callers own their loading lifetime.
+opt-in gradient Separator, StatusDot pulse, TerminalPanel signal.live and led-pulse are still.
+Pulse and live remain accepted for compatibility and produce no visual pulse; all props, types
+and exports remain. Skeleton only animates inside aria-busy="true"; callers remove loading
+indicators when loading completes. The UI API report changes only the SHA-256 receipt for the
+public base.css asset because led-pulse is now still; declarations and export surfaces are unchanged.

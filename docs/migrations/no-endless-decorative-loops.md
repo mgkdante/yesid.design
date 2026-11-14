@@ -13,9 +13,9 @@ Working-tree callers were searched too; these receipts do not establish adoption
 | StopLabel pulse-glow, 2s infinite | Default decorative marker | dev brand wrapper, about sections | Still marker, existing reduced-motion shadow |
 | TerminalCursor terminal-blink, 1s infinite | Default decorative block | dev home Manifesto/CloserTerminalBoard, AboutCta, ContactPage | Steady block, existing reduced-motion frame |
 | Separator gradient-flow, 3s infinite | Opt-in variant=gradient, decorative rule | No gradient callers; products use hazard/default | Still two-color gradient, matching reduced motion |
-| StatusDot pulse / base.css led-pulse, 2s infinite | Opt-in pulse, status emphasis | dev HeroSqlPanel opts in; Transit FreshnessStamp/ConformanceBadge/health and login People use status dots | Two cycles, four seconds, then underlying steady lamp |
-| TerminalPanel signal.live via StatusDot | Opt-in verified live status emphasis | Search found no explicit product signal.live callers | Same four-second bound; label and status remain |
-| Skeleton pulse, 2s infinite | Loading-only placeholder | Transit EdgeState loading branch | Retained only for loading lifetime; caller removes on completion |
+| StatusDot pulse / base.css led-pulse, 2s infinite | Opt-in pulse, status emphasis | dev HeroSqlPanel opts in; Transit FreshnessStamp/ConformanceBadge/health and login People use status dots | Still; pulse prop and led-pulse class retained for compatibility |
+| TerminalPanel signal.live via StatusDot | Opt-in verified live status emphasis | Search found no explicit product signal.live callers | Still; live prop retained for compatibility, label and status remain |
+| Skeleton pulse, 2s infinite | Loading-only placeholder | Transit EdgeState loading branch | Animates only inside aria-busy=true; caller removes on completion |
 | ManifestoCanvas ticker | Default mounted canvas; pointer proximity converges to steady nodes, click ripples 1.2s/0.8s | dev home Manifesto; also indirect ArticleHeader users | No autonomous cyclic animation; redraw driver remains, offscreen no-op, reduced-motion bitmap |
 | @motion ticker fan-out | Explicit subscribe; shared frame delivery, no visual output itself | dev heroTypewriter; ManifestoCanvas | Infrastructure retained; consumer owns subscription cleanup |
 | @motion Lenis GSAP ticker | Explicit init, input-driven smooth scroll (1.2s duration) | SiteRoot in products | Infrastructure retained; no autonomous decorative cycle |
@@ -33,7 +33,20 @@ spinner component. Consumer spinners are allowed only during actual loading.
 
 Default-on decoration is a WCAG 2.2.2 defect fix. Opt-in Separator and LED behavior follows the
 owner-approved exception in DEPRECATION.md, quoting the brief's instruction dated 2026-11-14.
-There is no prop, type, export or API report change. No product dependency or source was changed.
+There is no prop, type or export removal. Pulse and live are accepted for compatibility and
+produce no visual pulse. No product dependency or source was changed.
+
+The only API report change is the SHA-256 receipt for the public ./base.css asset in
+api-reports/ui.api.md, because .led-pulse now sets animation: none. It changes from
+`a1f3cec9ccbd13089d4ffe6c21d7c2161abba797cec0ef3c311ce7527a11b0d5` to
+`97a182b178c161670068db5539e3ab32b6766240da33849f3ecf56e4bb134cbe`.
+Declaration namespaces, props, types and exports are unchanged. Owner API approval is required
+before tagging and remains with the orchestrator; this source PR does not tag or publish.
+
+The token-artifacts regression was caused by editing generated DESIGN.md directly.
+Its isolated test reported stale DESIGN.md. Motion guidance now lives in
+packages/tokens/src/generators/design-md.ts and DESIGN.md is regenerated with bun run tokens:build.
+base.css is handwritten source, not one of the token generator's four output artifacts.
 
 `decorative-motion.spec.ts` visits every Gallery route in normal and reduced motion, checking
 `document.getAnimations()` at load for infinite iterations and again after six seconds for

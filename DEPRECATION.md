@@ -60,9 +60,9 @@ consumer or clean-room verification.
 
 - **Y-30, owner instruction 2026-11-14:** "make sure we're removing the pulsing dots from
   the whole site ... from everywhere." This scoped compatibility exception permits the patch
-  to make opt-in gradient Separator still and to bound StatusDot `pulse`, TerminalPanel
-  `signal.live` and `.led-pulse` to two cycles (four seconds), without a deprecation window.
-  Props, types and exports remain. ErrorIllustration, MetroStation, StopLabel and TerminalCursor
+  to make opt-in gradient Separator, StatusDot `pulse`, TerminalPanel `signal.live` and
+  `.led-pulse` still, without a deprecation window. The pulse and live props/types remain
+  accepted for compatibility and produce no visual pulse. All exports remain. ErrorIllustration, MetroStation, StopLabel and TerminalCursor
   had default-on decorative loops; their still reduced-motion frames correct the WCAG 2.2.2
   defect. The date and quotation are supplied by the owner brief, not a publication receipt.
   See [inventory and regression proof](docs/migrations/no-endless-decorative-loops.md).
