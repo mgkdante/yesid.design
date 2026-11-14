@@ -9,7 +9,7 @@ Svelte head component lives in `@yesid/ui/head`.
 ## Interface
 
 Consumers can use the root export (JSON-LD, sitemap and robots, Satori) or the subpaths. See
-[`api-reports/seo-kit.api.md`](https://github.com/yesid-dev/yesid.design/blob/v0.42.0-rc.1/api-reports/seo-kit.api.md) for exact types and exports.
+[`api-reports/seo-kit.api.md`](https://github.com/yesid-dev/yesid.design/blob/v0.42.0-rc.2/api-reports/seo-kit.api.md) for exact types and exports.
 
 - `./jsonld`: node builders and `serializeJsonLd(nodes)`, one `@graph` body with `<` escaped.
 - `./share-copy`: `resolveShareCopy(input)`, content-derived descriptions and OG card text with
