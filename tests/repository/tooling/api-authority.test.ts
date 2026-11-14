@@ -399,8 +399,8 @@ describe('deterministic package API reports', () => {
 		const buttonPath = join(root, 'packages/ui/src/primitives/button/button.svelte');
 		replaceInFile(
 			buttonPath,
-			'\t\tsize?: ButtonSize;\n\t};',
-			'\t\tsize?: ButtonSize;\n\t\tauthorityProbe?: boolean;\n\t};',
+			'\t\tsize?: ButtonSize;',
+			'\t\tsize?: ButtonSize;\n\t\tauthorityProbe?: boolean;',
 		);
 		replaceInFile(buttonPath, 'ref = $bindable(null),', 'ref = null,');
 

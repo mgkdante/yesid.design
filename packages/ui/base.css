@@ -71,6 +71,12 @@ body {
 	word-break: break-word;
 }
 
+/* Preserve words in prose tables; only an overlong single word may split. */
+th, td {
+	word-break: normal;
+	overflow-wrap: break-word;
+}
+
 img, svg, video, iframe, canvas {
 	max-width: 100%;
 	height: auto;

@@ -55,6 +55,10 @@
 		navigation: NavigationLifecycle;
 		home: string;
 		wordmark?: string;
+		/** Replaces the default wordmark area. The caller owns its links and motion. */
+		brand?: Snippet;
+		/** Plays the default wordmark once on mount. Defaults to true. */
+		wordmarkAutoPlay?: boolean;
 		links: readonly SiteHeaderLink[];
 		menuItems?: readonly SiteHeaderMenuItem[];
 		/** When supplied, replaces menuItems, including when empty. */
@@ -82,9 +86,12 @@
 	import Wordmark from '../brand/Wordmark.svelte';
 	import { linksFit } from './links-fit.js';
 
-	let { navigation, home, wordmark, links, menuItems = [], menuGroups, compactControls = false, labels, language, search, actions }: SiteHeaderProps =
+	let { navigation, home, wordmark, brand, wordmarkAutoPlay = true, links, menuItems = [], menuGroups, compactControls = false, labels, language, search, actions }: SiteHeaderProps =
 		$props();
 
+	const hasMenu = $derived(menuGroups !== undefined
+		? menuGroups.some(group => group.items.length > 0) : menuItems.length > 0);
+	const compactMenuControls = $derived(compactControls && hasMenu);
 	const contentId = $props.id();
 	const linksFrom = $derived(Math.min(...links.map((link) => link.priority ?? 1)));
 	const menuFooter = $derived(labels.menuFooter);
@@ -107,7 +114,7 @@
 	let fallbackControls = $state<HTMLSpanElement>();
 	let headerElement: HTMLElement;
 	onMount(() => {
-		if (!compactControls) {
+		if (!compactMenuControls) {
 			hydrated = true;
 			return;
 		}
@@ -119,7 +126,7 @@
 		}
 		hydrated = true;
 	});
-	const controlsInMenu = $derived(compactControls && narrow);
+	const controlsInMenu = $derived(compactMenuControls && narrow);
 	let pillLanguageLink = $state<HTMLAnchorElement | null>(null);
 	function measureHeader(node: HTMLElement) {
 		const observer = new ResizeObserver(([entry]) => { narrow = entry.contentRect.width < 600; });
@@ -127,7 +134,7 @@
 		return { destroy: () => observer.disconnect() };
 	}
 	let languageLink = $state<HTMLAnchorElement | null>(null);
-	let menuToggle: HTMLButtonElement;
+	let menuToggle = $state<HTMLButtonElement>();
 	let overlay: HTMLElement | undefined = $state();
 
 	let menuOpen = $state(false);
@@ -205,7 +212,7 @@
 		event.preventDefault();
 		const version = dismissVersion;
 		await tick();
-		if (!active && !menuOpen && version === navigation.version) menuToggle.focus({ preventScroll: true });
+		if (!active && !menuOpen && version === navigation.version) menuToggle?.focus({ preventScroll: true });
 	}
 </script>
 
@@ -259,7 +266,7 @@
 			const lenis = getLenis();
 			lenis?.scrollTo(lenis.scroll, { immediate: true });
 			event.preventDefault();
-			menuToggle.focus({ preventScroll: true });
+			menuToggle?.focus({ preventScroll: true });
 		}}
 	>
 		{#snippet child({ props })}
@@ -288,10 +295,12 @@
 						aria-label={labels.nav}
 						class="nav-pill pointer-events-auto flex items-center"
 						class:nav-pill-compact={active}
-						class:nav-pill-compact-controls={compactControls}
+						class:nav-pill-compact-controls={compactMenuControls}
 						use:linksFit={{ paused: active }}
 					>
-						<Wordmark href={home} text={wordmark} autoPlay class="nav-wordmark" />
+						{#if brand}{@render brand()}{:else}
+							<Wordmark href={home} text={wordmark} autoPlay={wordmarkAutoPlay} class="nav-wordmark" />
+						{/if}
 
 						{#if links.length}
 							<span class="nav-divider nav-collapsible nav-links-part" class:nav-collapsed={active} aria-hidden="true"
@@ -324,14 +333,15 @@
 							<span
 								bind:this={fallbackControls}
 								id="{contentId}-controls"
-								popover={compactControls && !hydrated ? 'auto' : undefined}
+								popover={compactMenuControls && !hydrated ? 'auto' : undefined}
 								class="pill-controls"
-								class:compact-controls={compactControls}
+								class:compact-controls={compactMenuControls}
 							>
-								<ThemeToggle label={labels.theme} />
-								{#if language}<LanguageToggle {...language} bind:ref={pillLanguageLink} />{/if}
+								<span class="fallback-control-row"><span class="fallback-control-label" aria-hidden="true">{labels.theme}</span><ThemeToggle label={labels.theme} /></span>
+								{#if language}<span class="fallback-control-row"><span class="fallback-control-label" aria-hidden="true">{menuLanguageLabel}</span><LanguageToggle {...language} bind:ref={pillLanguageLink} /></span>{/if}
 							</span>
 						{/if}
+						{#if hasMenu}
 						<button
 							bind:this={menuToggle}
 							type="button"
@@ -339,14 +349,15 @@
 							class="menu-toggle"
 							class:menu-toggle-open={active}
 							aria-label={active ? labels.closeMenu : labels.openMenu}
-							aria-expanded={compactControls && !hydrated ? undefined : menuOpen}
-							popovertarget={compactControls && !hydrated ? `${contentId}-controls` : undefined}
-							aria-controls={compactControls && !hydrated ? `${contentId}-controls` : contentId}
+							aria-expanded={compactMenuControls && !hydrated ? undefined : menuOpen}
+							popovertarget={compactMenuControls && !hydrated ? `${contentId}-controls` : undefined}
+							aria-controls={compactMenuControls && !hydrated ? `${contentId}-controls` : contentId}
 							onclick={toggleMenu}
 						>
 							<span class="menu-toggle-line menu-toggle-top"></span>
 							<span class="menu-toggle-line menu-toggle-bottom"></span>
 						</button>
+						{/if}
 					</nav>
 				</header>
 
@@ -401,17 +412,18 @@
 </Dialog.Root>
 
 <style>
-	.pill-controls { display: contents; }
+	.pill-controls, .fallback-control-row { display: contents; }
+	.fallback-control-label { display: none; }
 	.pill-controls[popover] { border: 0; padding: 0; background: transparent; color: inherit; }
 	@container site-header (width < 600px) {
 		.pill-controls.compact-controls { display: none; }
 		.pill-controls[popover]:popover-open {
 			display: flex;
-			align-items: center;
-			justify-content: center;
+			align-items: stretch;
+			flex-direction: column;
 			gap: 16px;
 			position: fixed;
-			inset: var(--nav-clearance) 8px auto;
+			inset: calc(var(--nav-clearance) + 8px) 8px auto;
 			margin: 0 auto;
 			width: fit-content;
 			padding: 16px;
@@ -420,6 +432,8 @@
 			background: var(--background);
 			color: var(--foreground);
 		}
+		.pill-controls[popover]:popover-open .fallback-control-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+		.pill-controls[popover]:popover-open .fallback-control-label { display: inline; font-family: var(--font-body); }
 	}
 	.menu-group-heading {
 		margin-top: 24px;
@@ -629,6 +643,7 @@
 
 	/* Hamburger morphing to ✕. */
 	.menu-toggle {
+		border-radius: var(--radius-pill);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
