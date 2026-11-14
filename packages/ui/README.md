@@ -174,6 +174,11 @@ of the outline, preserving at least 3:1 contrast on page and card backgrounds in
 Forced colours use the system `CanvasText` outline. Focus does not change layout; pointer focus
 continues to follow `:focus-visible`. No caller changes are needed.
 
+`wrap` defaults to `false`. Set `wrap` on either a button or an anchor to allow labels
+on multiple lines with a content-driven height and vertical padding. Keep a constrained width
+(for example 200px) on the button or its parent; fixed caller heights still override this option.
+Button transitions name color, background-color, border-color, box-shadow and translate explicitly.
+
 ### Card
 
 A solid panel with a lit top bevel (`edge-highlight`); hover firms the border and adds
@@ -819,6 +824,21 @@ A hash-based CSP allows it with the source in
 `@yesid/ui/boot.json` (`{ "hash": "sha256-…" }`), which Node config files can import. A CSP that
 relies on `'unsafe-inline'` must not add the hash, because any hash switches `'unsafe-inline'` off.
 
+### Header brand and empty menus
+
+`SiteHeader.brand?: Snippet` replaces the default Wordmark area. The caller owns the snippet's
+links, sizing and motion. For example, compose a still house `Wordmark` beside a product link
+reading "login". ThemeToggle and LanguageToggle keep their existing look and behavior.
+`wordmarkAutoPlay` defaults to `true`; pass `false` to stop the default Wordmark's mount animation
+while preserving its hover effect. It has no effect on a supplied `brand` snippet.
+
+When the effective menu has no items, the menu button is omitted. `menuGroups` takes precedence
+when supplied, including empty groups. With no menu, `compactControls` keeps the controls in the
+pill so they stay reachable. Existing menus retain their controls and behavior.
+The native compact popover before hydration has an 8px gap below the pill and the same visible
+control labels as the hydrated menu. Its toggle artwork remains unchanged. The menu button's
+focus outline follows its round corner shape.
+
 ## Base stylesheet
 
 `@yesid/ui/base.css` is the base layer both products share: resets, the dark variant, selection,
@@ -840,6 +860,10 @@ from the app stylesheet after Tailwind:
 ```
 
 Like every package stylesheet, it is opt-in; no JavaScript import loads it.
+
+Table headers and cells use `word-break: normal` and `overflow-wrap: break-word`: ordinary
+words stay whole, while a single word wider than its cell can wrap. Products with custom table
+wrapping rules should review their cascade when adopting this defect fix.
 
 ## Develop
 

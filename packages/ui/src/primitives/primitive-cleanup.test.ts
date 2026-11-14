@@ -25,10 +25,10 @@ it('preserves every retained computed class string except the enumerated unused 
 			expect(row, `${family} ${JSON.stringify(props)} has a baseline`).toBeDefined();
 			const expected = row!.before.split(' ').filter((token) => !/^(?:has-data-\[icon=inline-|in-data-\[slot=button-group\]|(?:dark:)?aria-invalid:)/.test(token)).join(' ');
 			expect(row!.after).toBe(expected);
-			// Keep the historical cleanup evidence; Button now inherits the base focus outline.
+			// Keep the historical cleanup evidence; Button now inherits the base focus outline and names its transitions explicitly.
 			const retiredButtonFocus = ['outline-none', 'focus-visible:border-ring', 'focus-visible:ring-ring/50', 'focus-visible:ring-3'];
 			const current = family === 'button'
-				? row!.after.split(' ').filter((token) => !retiredButtonFocus.includes(token)).join(' ')
+				? row!.after.split(' ').filter((token) => !retiredButtonFocus.includes(token)).map(token => token === 'transition-all' ? 'transition-[color,background-color,border-color,box-shadow,translate]' : token).join(' ')
 				: row!.after;
 			expect(variants(props), `${family} ${JSON.stringify(props)}`).toBe(current);
 		}

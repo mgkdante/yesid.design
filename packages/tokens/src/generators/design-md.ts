@@ -176,6 +176,10 @@ Four CSS Grid recipes: Full-Bleed · Contained · Content+Sidebars · Edge-Title
 widths cap at \`64rem\` (content) / \`72rem\` (wide). Page gutters scale via \`--space-page-x\`.
 Section spacing scales via \`--space-section-y\`. Consumer integration guidance lives in
 docs/BUILD-A-YESID-PRODUCT.md.
+SiteHeader accepts a caller-owned \`brand\` snippet and \`wordmarkAutoPlay={false}\` for its default
+wordmark. Empty menus omit the menu button and keep the identity controls reachable in the pill.
+Button \`wrap\` opts into multiline labels and content-driven height. Table cells preserve whole
+words, wrapping a single word only when it exceeds the cell width.
 
 ## Elevation & Depth
 

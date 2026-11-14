@@ -11,7 +11,7 @@
 	// `conversion` is the yellow "talk to us" signage action: at most one per view, never data.
 	export const buttonVariants = tv(
 		{
-			base: "rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+			base: "rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-[color,background-color,border-color,box-shadow,translate] select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 			variants: {
 				variant: {
 					default:
@@ -59,6 +59,8 @@
 	type ButtonOwnProps = {
 		variant?: ButtonVariant;
 		size?: ButtonSize;
+		/** Wraps labels and lets content determine the height. Defaults to false. */
+		wrap?: boolean;
 	};
 	type ForbidProps<Keys extends PropertyKey> = { [Key in Keys]?: never };
 	type AnchorOnlyProps = Exclude<keyof HTMLAnchorAttributes, keyof HTMLButtonAttributes>;
@@ -87,6 +89,7 @@
 		class: className,
 		variant = 'default',
 		size = 'default',
+		wrap = false,
 		ref = $bindable(null),
 		...elementProps
 	}: ButtonProps = $props();
@@ -98,7 +101,7 @@
 		data-slot="button"
 		{...anchorProps}
 		bind:this={ref}
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size }), wrap && 'h-auto whitespace-normal py-2 [overflow-wrap:break-word] [word-break:normal]', className)}
 		href={disabled ? undefined : href}
 		aria-disabled={disabled || undefined}
 		role={disabled ? 'link' : undefined}
@@ -113,7 +116,7 @@
 		data-slot="button"
 		{...buttonProps}
 		bind:this={ref}
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size }), wrap && 'h-auto whitespace-normal py-2 [overflow-wrap:break-word] [word-break:normal]', className)}
 		{type}
 		{disabled}
 		use:pressBounce
