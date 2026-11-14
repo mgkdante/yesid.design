@@ -1,7 +1,8 @@
 <!--
-  Listing page frame: on desktop a vertical edge title and accent rail beside the page; a
-  blueprint header; the hazard rule; a filter column (search plus a filter panel that collapses
-  below 1024px) and the results.
+  Listing page frame. Expressive (default): on desktop a vertical edge title and accent rail beside
+  the page, a blueprint header and the hazard rule. Reading: the visible horizontal h1 at every
+  width, sentence-case subtitle, no artwork, edge title or rail, and a neutral line. Both: a filter
+  column (search plus a filter panel that collapses below 1024px) and the results.
 
   CSS shows the panel from 1024px in every state, so desktop filters work before hydration and
   without JavaScript. Below 1024px a closed panel is `visibility: hidden`, never `inert`.
@@ -10,14 +11,19 @@
 	import type { Snippet } from 'svelte';
 
 	export interface ListingFrameProps {
-		/** The page h1; visually hidden from 1024px, where the edge title shows. */
+		/**
+		 * `expressive` (default): edge title, accent rail, blueprint header and hazard rule.
+		 * `reading`: the visible horizontal title at every width; ignores `edgeTitle` and `blueprint`.
+		 */
+		presentation?: 'expressive' | 'reading';
+		/** The page h1; in the expressive presentation visually hidden from 1024px, where the edge title shows. */
 		heading: string;
-		/** Defaults to `heading`. Decorative, so hidden from assistive technology. */
+		/** Defaults to `heading`. Decorative, so hidden from assistive technology. Expressive only. */
 		edgeTitle?: string;
 		subtitle: string;
 		description?: string;
-		/** Header artwork, usually a `BlueprintShell`, drawn in the frame's `--blueprint-ink`. */
-		blueprint: Snippet;
+		/** Header artwork, usually a `BlueprintShell`, drawn in the frame's `--blueprint-ink`. Expressive only. */
+		blueprint?: Snippet;
 		/** Beside the header copy from 1024px, below it on smaller screens. */
 		aside?: Snippet;
 		/** Runs once on mount, e.g. to start a scroll scrub; the returned cleanup runs on unmount. */
@@ -37,6 +43,7 @@
 	import { Separator } from '../primitives/separator/index.js';
 
 	let {
+		presentation = 'expressive',
 		heading,
 		edgeTitle,
 		subtitle,
@@ -50,6 +57,7 @@
 		children,
 	}: ListingFrameProps = $props();
 
+	const reading = $derived(presentation === 'reading');
 	const uid = $props.id();
 	const panelId = `${uid}-filters`;
 	let filterOpen = $state(false);
@@ -63,26 +71,34 @@
 	});
 </script>
 
-<section bind:this={frameEl} class="listing-layout" data-slot="listing-frame">
-	<div class="edge-title-column" data-slot="listing-edge-title" aria-hidden="true">
-		<div class="edge-title">{edgeTitle ?? heading}<span class="edge-dot">.</span></div>
-		<div class="metro-dots metro-dots-top">
-			<div class="metro-line"></div>
-			<div class="metro-dot metro-dot-sm"></div>
-			<div class="metro-dot metro-dot-sm"></div>
-			<div class="metro-dot metro-dot-sm"></div>
-			<div class="metro-dot metro-dot-lg"></div>
+<section
+	bind:this={frameEl}
+	class="listing-layout"
+	class:listing-layout--reading={reading}
+	data-slot="listing-frame"
+	data-presentation={presentation}
+>
+	{#if !reading}
+		<div class="edge-title-column" data-slot="listing-edge-title" aria-hidden="true">
+			<div class="edge-title">{edgeTitle ?? heading}<span class="edge-dot">.</span></div>
+			<div class="metro-dots metro-dots-top">
+				<div class="metro-line"></div>
+				<div class="metro-dot metro-dot-sm"></div>
+				<div class="metro-dot metro-dot-sm"></div>
+				<div class="metro-dot metro-dot-sm"></div>
+				<div class="metro-dot metro-dot-lg"></div>
+			</div>
+			<div class="metro-dots metro-dots-bottom">
+				<div class="metro-dot metro-dot-lg"></div>
+				<div class="metro-dot metro-dot-sm"></div>
+				<div class="metro-dot metro-dot-sm"></div>
+				<div class="metro-dot metro-dot-sm"></div>
+				<div class="metro-line"></div>
+			</div>
 		</div>
-		<div class="metro-dots metro-dots-bottom">
-			<div class="metro-dot metro-dot-lg"></div>
-			<div class="metro-dot metro-dot-sm"></div>
-			<div class="metro-dot metro-dot-sm"></div>
-			<div class="metro-dot metro-dot-sm"></div>
-			<div class="metro-line"></div>
-		</div>
-	</div>
 
-	<div class="accent-rail" data-slot="listing-accent-rail" aria-hidden="true"></div>
+		<div class="accent-rail" data-slot="listing-accent-rail" aria-hidden="true"></div>
+	{/if}
 
 	<div class="listing-main">
 		<header
@@ -90,9 +106,11 @@
 			class="listing-blueprint-header"
 			data-slot="blueprint-listing-header"
 		>
-			<div class="listing-blueprint-art" data-slot="blueprint-listing-art">
-				{@render blueprint()}
-			</div>
+			{#if !reading}
+				<div class="listing-blueprint-art" data-slot="blueprint-listing-art">
+					{@render blueprint?.()}
+				</div>
+			{/if}
 
 			<div
 				class="listing-header-content"
@@ -100,9 +118,13 @@
 				data-slot="blueprint-listing-content"
 			>
 				<div class="listing-header-text">
-					<h1 class="listing-mobile-heading">
-						{heading}<span class="listing-heading-dot" aria-hidden="true">.</span>
-					</h1>
+					{#if reading}
+						<h1 class="listing-heading">{heading}</h1>
+					{:else}
+						<h1 class="listing-mobile-heading">
+							{heading}<span class="listing-heading-dot" aria-hidden="true">.</span>
+						</h1>
+					{/if}
 					<p class="listing-header-subtitle">{subtitle}</p>
 					{#if description}
 						<p class="listing-header-description">{description}</p>
@@ -113,7 +135,11 @@
 			</div>
 		</header>
 
-		<Separator variant="hazard" data-testid="listing-page-separator" />
+		{#if reading}
+			<div class="listing-line" data-testid="listing-page-separator" aria-hidden="true"></div>
+		{:else}
+			<Separator variant="hazard" data-testid="listing-page-separator" />
+		{/if}
 
 		<div class="listing-grid">
 			<aside class="listing-filter-column" data-slot="listing-filter-column">
@@ -471,6 +497,73 @@
 		.listing-content {
 			padding: 2rem 1.5rem 6rem;
 		}
+	}
+
+	/* Reading presentation: a plain heading block on the page colour, inset like the filter column
+	   and the results below it so the title, the line and the search share one left edge. */
+	.listing-layout--reading {
+		--listing-inset: 1rem;
+	}
+
+	.listing-layout--reading .listing-blueprint-header {
+		display: block;
+		min-height: 0;
+		overflow: visible;
+	}
+
+	.listing-layout--reading .listing-header-content {
+		padding: 1.5rem var(--listing-inset) clamp(1.5rem, 1rem + 2vw, 2.5rem);
+		text-shadow: none;
+	}
+
+	.listing-heading {
+		max-width: 24em;
+		margin: 0;
+		font-family: var(--font-heading);
+		font-size: var(--text-title);
+		font-weight: 750;
+		line-height: 1.15;
+		letter-spacing: var(--tracking-tight);
+		color: var(--foreground);
+		overflow-wrap: anywhere;
+		text-wrap: balance;
+	}
+
+	.listing-layout--reading .listing-header-subtitle {
+		max-width: 38em;
+		margin-top: 0.75rem;
+		font-family: var(--font-body);
+		font-size: var(--text-reading-support);
+		line-height: 1.5;
+		text-transform: none;
+		color: color-mix(in srgb, var(--muted-foreground) 35%, var(--foreground));
+	}
+
+	.listing-layout--reading .listing-header-description {
+		max-width: 38em;
+		margin-top: 0.5rem;
+		font-size: var(--text-small);
+		line-height: 1.5;
+		color: var(--muted-foreground);
+	}
+
+	.listing-line {
+		height: 1px;
+		margin-inline: var(--listing-inset);
+		background: var(--border);
+	}
+
+	@media (min-width: 768px) and (max-width: 1023.98px) {
+		.listing-layout--reading {
+			--listing-inset: 1.5rem;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.listing-layout.listing-layout--reading {
+			display: block;
+		}
+
 	}
 
 	@media (prefers-reduced-motion: reduce) {

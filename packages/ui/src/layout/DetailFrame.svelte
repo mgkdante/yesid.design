@@ -1,6 +1,10 @@
 <!--
-  Detail and article page frame: header, hazard rule, optional toolbar band, then a grid of an
-  optional left rail, the center and an optional right rail, then `after`. Frame rails stick
+  Detail and article page frame: header, a rule (hazard tape by default, a neutral line, or none),
+  optional toolbar band, then a grid of an optional left rail, the center and an optional right
+  rail, then `after`. `header` renders before the grid, so an opening placed there precedes both
+  rails in the DOM and on phones; `summary` is the top of the center column, after the left rail.
+  With both rails the frame sets `--detail-center-width` from 1024px, the center track's width,
+  which the reading ArticleHeader uses to line up with the center column. Frame rails stick
   below the site chrome (`--detail-rail-top`, default `--chrome-offset`) and hide below 1024px
   unless `leftMobile`. `rail` replaces the left cell with the caller's own element, such as a rail
   that turns into a sheet on mobile. With `toc`, the frame tracks the active entry and shows
@@ -26,9 +30,18 @@
 	} & ({ openAria: string; closeAria: string } | { openAria?: never; closeAria?: never });
 
 	export interface DetailFrameProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
+		/**
+		 * Rendered first, before the rule and the grid: the place for the page header and for an
+		 * opening that must come before both rails in the DOM and on phones.
+		 */
 		header?: Snippet;
+		/** Below the header: `hazard` tape (default), a neutral `line`, or `none`. */
+		rule?: 'hazard' | 'line' | 'none';
 		toolbar?: Snippet;
-		/** Top of the center column. */
+		/**
+		 * Top of the center column, inside the grid: after the left rail in the DOM, and below it on
+		 * phones when `leftMobile` or `paneOwnedRail` shows it. Use `header` for an opening.
+		 */
 		summary?: Snippet;
 		/** Below the toolbar, below 1024px only. */
 		mobileSummary?: Snippet;
@@ -59,6 +72,7 @@
 
 	let {
 		header,
+		rule = 'hazard',
 		toolbar,
 		summary,
 		mobileSummary,
@@ -111,7 +125,11 @@
 >
 	{@render header?.()}
 
-	<Separator variant="hazard" class="detail-shell-tape" />
+	{#if rule === 'hazard'}
+		<Separator variant="hazard" class="detail-shell-tape" />
+	{:else if rule === 'line'}
+		<div class="detail-shell-line" data-slot="detail-shell-line" aria-hidden="true"></div>
+	{/if}
 
 	{#if toolbar}
 		<div class="detail-shell-toolbar" data-slot="detail-shell-toolbar">
@@ -181,10 +199,17 @@
 
 <style>
 	.detail-shell {
+		--detail-grid-gap: 2rem;
 		--detail-rail-width: clamp(16rem, 24vw, 22rem);
 		--detail-center-max: var(--container-content);
 		--detail-rail-sticky-top: var(--detail-rail-top, var(--chrome-offset, 0px));
 		display: block;
+	}
+
+	.detail-shell-line {
+		height: 1px;
+		margin-inline: var(--space-page-x);
+		background: var(--border);
 	}
 
 	.detail-shell-toolbar {
@@ -229,12 +254,24 @@
 	}
 
 	@media (min-width: 1024px) {
+		/* The center track's width for headers outside the grid, in the two symmetric layouts. */
+		.detail-shell:has(> .detail-shell-grid--three) {
+			--detail-center-width: calc((100% - 2 * var(--space-page-x) - 2 * var(--detail-grid-gap)) / 2);
+		}
+
+		.detail-shell:has(> .detail-shell-grid--three.detail-shell-grid--measured) {
+			--detail-center-width: min(
+				var(--detail-measure),
+				100% - 2 * var(--space-page-x) - 2 * var(--detail-grid-gap) - 24rem
+			);
+		}
+
 		.detail-shell-mobile-summary {
 			display: none;
 		}
 
 		.detail-shell-grid {
-			gap: 2rem;
+			gap: var(--detail-grid-gap);
 			align-items: stretch;
 			justify-content: center;
 		}
@@ -293,6 +330,10 @@
 	@media (min-width: 1024px) and (max-width: 1279.98px) {
 		.detail-shell-grid--three {
 			gap: 1.25rem;
+		}
+
+		.detail-shell:has(> .detail-shell-grid--three) {
+			--detail-grid-gap: 1.25rem;
 		}
 	}
 </style>

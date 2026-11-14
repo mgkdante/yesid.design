@@ -16,6 +16,7 @@
 		title,
 		subtitle,
 		summary,
+		firstVisitClosed = false,
 		headerVariant = 'default',
 		open = $bindable(true),
 		index = null,
@@ -122,6 +123,7 @@
 		: ''}"
 	style="--accent: {accentColor};"
 	data-toc={anchor}
+	data-section-first-visit-closed={bulk && firstVisitClosed ? '' : undefined}
 	data-section-bulk={bulk ? '' : undefined}
 	data-section-ready={initialized ? '' : undefined}
 	data-section-default={!collapsible || open ? 'open' : 'closed'}

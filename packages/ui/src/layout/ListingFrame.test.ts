@@ -66,6 +66,39 @@ describe('edge title', () => {
 	});
 });
 
+describe('reading presentation', () => {
+	const reading = (props: Partial<ListingFrameProps> = {}) => frame({ presentation: 'reading', ...props });
+
+	it('keeps the expressive presentation as the default', () => {
+		expect(slot(frame(), 'listing-frame').dataset.presentation).toBe('expressive');
+		expect(slot(reading(), 'listing-frame').dataset.presentation).toBe('reading');
+	});
+
+	it('shows one plain h1 and no edge title, rail or artwork', () => {
+		const view = reading({ edgeTitle: 'Un catalogue', description: 'Every line.', aside });
+		const header = slot(view, 'blueprint-listing-header');
+		expect(header.querySelectorAll('h1')).toHaveLength(1);
+		expect(view.getByRole('heading', { level: 1 }).textContent).toBe('Lines');
+		for (const name of ['listing-edge-title', 'listing-accent-rail', 'blueprint-listing-art']) {
+			expect(slot(view, name)).toBeNull();
+		}
+		expect(view.queryByTestId('blueprint')).toBeNull();
+		expect(view.queryByText('Un catalogue')).toBeNull();
+		for (const text of ['Network', 'Every line.']) expect(header.textContent).toContain(text);
+		expect(header.contains(view.getByTestId('aside'))).toBe(true);
+	});
+
+	it('works without a blueprint and draws a neutral line instead of hazard tape', () => {
+		const view = render(ListingFrame, {
+			props: { presentation: 'reading', heading: 'Lines', subtitle: 'Network', filterLabel: 'Filters', filters, children },
+		});
+		const rule = view.getByTestId('listing-page-separator');
+		expect(rule.getAttribute('aria-hidden')).toBe('true');
+		expect(rule.getAttribute('data-slot')).not.toBe('separator');
+		expect(view.getByTestId('results')).toBeInTheDocument();
+	});
+});
+
 describe('layout order', () => {
 	it('runs from the separator through the filter column to the results', () => {
 		const view = frame({ search });

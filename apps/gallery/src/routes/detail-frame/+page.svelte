@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { CollapsibleSection, SectionsToggle, useSectionJump, type TocEntry } from '@yesid/ui/brand';
 	import { ArticleHeader, DetailFrame } from '@yesid/ui/layout';
+	import { longTitles } from '../article-header/fixture';
 
 	const sections = [
 		{ id: 'signals', title: 'Signals' },
@@ -24,6 +25,16 @@
 	const railTop = $derived(Number(params.get('railTop')));
 	// Space an app leaves under its chrome inside --chrome-offset.
 	const chromeGap = $derived(Number(params.get('chromeGap')));
+	const presentation = $derived(params.get('presentation') === 'reading' ? 'reading' : 'expressive');
+	const rule = $derived.by(() => {
+		const value = params.get('rule');
+		return value === 'line' || value === 'none' ? value : undefined;
+	});
+	const long = $derived.by(() => {
+		const lang = params.get('lang');
+		return lang === 'fr' || lang === 'es' ? longTitles[lang] : undefined;
+	});
+	const opening = $derived(params.get('opening') === '1');
 	let releaseJump: (() => void) | undefined;
 	let jumpResult = $state('idle');
 	function holdJump() {
@@ -49,8 +60,13 @@
 	</div>
 {/if}
 
-<div class="ml-[calc(50%-50vw)] w-screen pt-[var(--chrome-offset)]" style="--chrome-offset: {88 + chromeGap}px; --chrome-gap: {chromeGap}px">
+<div
+	class="ml-[calc(50%-50vw)] w-screen pt-[var(--chrome-offset)]"
+	style="--chrome-offset: {88 + chromeGap}px; --chrome-gap: {chromeGap}px"
+	lang={long?.lang}
+>
 	<DetailFrame
+		{rule}
 		left={layout === 'right' ? undefined : leftRail}
 		right={layout === 'two' ? undefined : rightRail}
 		paneOwnedRail={layout === 'pane'}
@@ -61,12 +77,14 @@
 	>
 		{#snippet header()}
 			<ArticleHeader
-				title="Reading the line"
+				{presentation}
+				title={long?.title ?? 'Reading the line'}
 				highlight="line"
-				category="Field notes"
+				category={long?.category ?? 'Field notes'}
+				subtitle={long?.subtitle}
 				backHref="/"
 				backLabel="All notes"
-				meta={['12 min read', { text: 'May 2026', datetime: '2026-05', label: 'Published' }]}
+				meta={long?.meta ?? ['12 min read', { text: 'May 2026', datetime: '2026-05', label: 'Published' }]}
 				edgeLeft="REV 04"
 				edgeRight="GRID 02"
 				watermark="NOTES"
@@ -75,6 +93,15 @@
 					<button type="button" class="min-h-11 rounded-md border border-border px-3 py-1 text-small">Share</button>
 				{/snippet}
 			</ArticleHeader>
+			{#if opening}
+				<!-- An opening that must come before both rails: in the header snippet, not `summary`. -->
+				<div class="detail-opening" data-testid="article-opening">
+					<p>
+						In brief: the line runs on time four days in five. The fifth day loses its morning to a
+						single signal fault, and the timetable never recovers before noon.
+					</p>
+				</div>
+			{/if}
 		{/snippet}
 
 		{#if sectionFixture}<SectionsToggle copy={sectionCopy} />{/if}
@@ -117,3 +144,20 @@
 {#snippet rightRail()}
 	<p class="font-mono text-caption text-muted-foreground">Related: line 4 timetable, platform plan.</p>
 {/snippet}
+
+<style>
+	/* Lines up with the reading header and the center column. */
+	.detail-opening {
+		box-sizing: border-box;
+		max-width: calc(var(--detail-center-width, 46rem) + 2 * var(--space-page-x));
+		margin-inline: auto;
+		padding: 0 var(--space-page-x) 1.75rem;
+	}
+
+	.detail-opening p {
+		max-width: 38em;
+		margin: 0;
+		font-size: var(--text-reading);
+		line-height: 1.6;
+	}
+</style>

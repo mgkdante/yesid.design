@@ -28,6 +28,8 @@
 
 	let params = $state(new URLSearchParams());
 	onMount(() => (params = new URLSearchParams(page.url.searchParams.toString())));
+	const reading = $derived(params.get('presentation') === 'reading');
+	const spanish = $derived(params.get('lang') === 'es');
 
 	let query = $state('');
 	let mode = $state<string | null>(null);
@@ -73,18 +75,22 @@
 	</dl>
 {/snippet}
 
+{#snippet blueprint()}
+	<BlueprintShell {hero} {details} labels={['GRID 02', 'AXIS 17', 'REV 04']} />
+{/snippet}
+
+<div class="contents" lang={spanish ? 'es' : 'fr'}>
 <ListingFrame
-	heading="Catalogue"
+	presentation={reading ? 'reading' : 'expressive'}
+	heading={spanish ? 'Responsabilidades e internacionalización: trabajos e investigaciones' : 'Catalogue'}
 	edgeTitle="Un catalogue de travaux et de recherches"
-	subtitle="Travaux et recherches"
+	subtitle={spanish ? 'Trabajos e investigaciones' : 'Travaux et recherches'}
 	description="Exemple de page de liste avec filtres, recherche et résultats."
 	filterLabel="Filtres"
-	onHeaderMount={blueprintScrub}
+	onHeaderMount={reading ? undefined : blueprintScrub}
 	aside={params.get('aside') === '0' ? undefined : totals}
+	blueprint={reading ? undefined : blueprint}
 >
-	{#snippet blueprint()}
-		<BlueprintShell {hero} {details} labels={['GRID 02', 'AXIS 17', 'REV 04']} />
-	{/snippet}
 
 	{#snippet search()}
 		<SearchInput bind:value={query} label="Rechercher" placeholder="Rechercher" />
@@ -124,3 +130,4 @@
 		{/each}
 	</ul>
 </ListingFrame>
+</div>
