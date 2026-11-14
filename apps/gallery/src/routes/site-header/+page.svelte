@@ -21,13 +21,14 @@
 	} from '#lib/gallery/site-header-fixture.ts';
 
 	const navigation = getContext<NavigationLifecycle>('gallery-navigation');
+	let { compactFixture = false }: { compactFixture?: boolean } = $props();
 	const ICONS: Record<string, typeof PanelTop> = {
 		[HOME]: PanelTop,
 		'/listing-frame': LayoutList,
 		'/detail-frame': FileText,
 		'https://example.com': ExternalLink,
 	};
-	const compact = $derived(browser && page.url.searchParams.has('compact'));
+	const compact = $derived(compactFixture || (browser && page.url.searchParams.has('compact')));
 	const scrambled = $derived(browser && page.url.searchParams.has('scrambled'));
 	const groupedItems = MENU_ITEMS.map(item => ({ ...item, icon: ICONS[item.href] }));
 	const locale = $derived((browser && page.url.searchParams.get('lang')) || LOCALES[0]);
@@ -57,7 +58,7 @@
 	menuItems={MENU_ITEMS.map((item) => ({ ...item, icon: ICONS[item.href] }))}
 	menuGroups={compact ? [{ label: 'Explore routes', items: groupedItems.slice(0, 2) }, { label: 'More destinations', items: groupedItems.slice(2) }] : undefined}
 	compactControls={compact}
-	actions={compact ? action : undefined}
+	actions={compact && !compactFixture ? action : undefined}
 	labels={LABELS}
 	language={{ locale, locales: scrambled ? ['fr', 'en', 'es'] : LOCALES, href: next => scrambled ? `${languageHref(next)}&scrambled&compact` : languageHref(next), label: LANGUAGE_LABEL, names: LANGUAGE_NAMES, preserveState: true }}
 	{search}

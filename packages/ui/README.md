@@ -627,6 +627,13 @@ pill hides theme and language controls and the open menu shows them with `labels
 Only one copy is rendered. The language control retains `preserveState` and lifecycle focus handling.
 Use `actions` for a labelled button such as Search in the freed pill space.
 
+Before hydration, the menu button opens the existing controls with a native HTML popover,
+including when JavaScript is delayed or disabled. Language remains a real navigation link;
+the theme switch is reachable and retains its existing JavaScript-dependent behavior.
+Hydration hands off to the dialog without changing the pill's layout. Compact mode also keeps
+priority-1 links eligible below 375px when they fit; priorities 2 and 3 still fold away.
+Callers without `compactControls` retain the existing below-375px link folding.
+
 `Wordmark` is the name plus accent dot with the `wordmarkHover` effects (`autoPlay` plays one on
 mount). `LanguageToggle` is a plain signpost link: one board per locale, linking to `href(next)`.
 `LANGUAGE_ORDER`, exported from `@yesid/ui` and `@yesid/ui/brand`, is `['en', 'fr', 'es']`.
