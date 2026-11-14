@@ -75,6 +75,6 @@
 </main>
 {#if compact}
 	<SiteFooter tagline="Shared shell fixture" groups={[]}>
-		{#snippet brand()}<a href="/site-header">Gallery</a>{/snippet}
+		{#snippet brand()}<a href="/site-header" class="inline-flex min-h-11 items-center">Gallery</a>{/snippet}
 	</SiteFooter>
 {/if}
