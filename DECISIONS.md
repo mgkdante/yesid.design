@@ -141,7 +141,7 @@ choice. Back and locale reading-position restoration remain the product's respon
 
 The head boot script applies initial geometry before paint; hydration adopts it without changing
 layout. The server sends complete, readable section bodies. Without JavaScript they stay readable;
-if storage access throws, interactive sections use declared defaults. Old `persisted:*` disclosure
+if storage access throws, opted sections start closed and other interactive sections use declared defaults. Old `persisted:*` disclosure
 keys and `quiet-mode` are ignored. The owner approved this contract on 2026-11-05 and changed
 the first-visit default from collapsed to expanded on 2026-11-07.
 

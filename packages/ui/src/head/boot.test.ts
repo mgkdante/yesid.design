@@ -33,6 +33,7 @@ afterEach(() => {
 	localStorage.clear();
 	document.documentElement.dataset.theme = 'dark';
 	delete document.documentElement.dataset.sectionsChoice;
+	delete document.documentElement.dataset.sectionsSaved;
 	delete document.documentElement.dataset.sectionsRecovering;
 });
 
@@ -40,14 +41,33 @@ describe('theme boot script', () => {
 	it.each([null, 'collapsed', 'expanded', 'false', '{broken'])('reads only a valid bulk choice (%s), without writing a default', (stored) => {
 		if (stored !== null) localStorage.setItem('sections-choice', stored);
 		runBoot();
-		expect(document.documentElement.dataset.sectionsChoice).toBe(stored === 'collapsed' || stored === 'expanded' ? stored : 'default');
+		expect(document.documentElement.dataset.sectionsChoice).toBe(stored === 'collapsed' ? 'collapsed' : 'expanded');
 		expect(localStorage.getItem('sections-choice')).toBe(stored);
+		expect(document.documentElement.hasAttribute('data-sections-saved')).toBe(stored === 'collapsed' || stored === 'expanded');
 	});
 
 	it('keeps declared geometry when storage access is blocked', () => {
 		vi.stubGlobal('localStorage', { getItem() { throw new DOMException('Blocked', 'SecurityError'); } });
 		expect(runBoot).not.toThrow();
 		expect(document.documentElement.dataset.sectionsChoice).toBeUndefined();
+		expect(document.documentElement.hasAttribute('data-sections-saved')).toBe(false);
+	});
+
+	it('clears the saved-choice signal when storage is cleared or later becomes blocked', () => {
+		localStorage.setItem('sections-choice', 'expanded');
+		runBoot();
+		expect(document.documentElement.hasAttribute('data-sections-saved')).toBe(true);
+		localStorage.clear();
+		dispatchEvent(new StorageEvent('storage', { key: null }));
+		expect(document.documentElement.dataset.sectionsChoice).toBe('expanded');
+		expect(document.documentElement.hasAttribute('data-sections-saved')).toBe(false);
+		localStorage.setItem('sections-choice', 'collapsed');
+		dispatchEvent(new StorageEvent('storage', { key: 'sections-choice' }));
+		expect(document.documentElement.hasAttribute('data-sections-saved')).toBe(true);
+		vi.stubGlobal('localStorage', { getItem() { throw new DOMException('Blocked', 'SecurityError'); } });
+		dispatchEvent(new StorageEvent('storage', { key: 'sections-choice' }));
+		expect(document.documentElement.dataset.sectionsChoice).toBeUndefined();
+		expect(document.documentElement.hasAttribute('data-sections-saved')).toBe(false);
 	});
 
 	it('exposes pending content even if observer setup and cleanup throw', () => {

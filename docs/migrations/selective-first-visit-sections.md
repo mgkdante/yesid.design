@@ -14,6 +14,12 @@ On a page with `SectionsToggle` and at least two collapsible content sections, p
 A saved `sections-choice` of `expanded` or `collapsed` wins. Missing or malformed values use
 the selective first-visit defaults without writing storage. If storage is blocked, the opt-in
 still closes; other sections use declared defaults. Individual toggles do not persist.
+At boot, the compatibility signal `data-sections-choice` keeps its existing values: `collapsed` only
+for a saved collapse, `expanded` otherwise, and absent when storage access throws. Existing
+consumer expressions such as `dataset.sectionsChoice === 'expanded'` stay true on a first
+visit without an opt-in. A separate private `data-sections-saved` marker distinguishes a valid
+saved choice from the default; explicit bulk actions also set it for the current document,
+even when persistence is blocked.
 Below the bulk threshold and for independent panels, `open` still owns the default.
 Keep the page's main answer outside collapsible bodies. Do not mark content independent to
 avoid the visitor's bulk choice. Fragments and TOC jumps still reveal their targets.
@@ -45,5 +51,9 @@ forward the new prop through its product-owned `NetworkTile` wrapper when it ado
 with its localized title and summary. Selecting the optional section is a product decision;
 no title matching, new CMS field or product-specific branch is introduced here.
 yesid.login has no content-section adoption. Product rehearsal remains required at release adoption.
+
+Transit's `legal.copy.ts` currently says content sections start expanded on a first visit
+(EN line 101, FR line 364). Transit updates that product-owned wording when it opts a section
+in; this source PR does not change legal copy.
 
 Gallery proof: `/sections/selective`, first visit mixed, saved Collapse all, saved Expand all.

@@ -10,6 +10,8 @@ export function rememberSections(open: boolean): void {
 	if (typeof document === 'undefined') return;
 	const choice = open ? 'expanded' : 'collapsed';
 	document.documentElement.dataset.sectionsChoice = choice;
+	// Keep an explicit in-document bulk choice authoritative even if persistence is blocked.
+	document.documentElement.dataset.sectionsSaved = '';
 	try { localStorage.setItem(SECTIONS_CHOICE_KEY, choice); } catch {}
 }
 
@@ -26,7 +28,8 @@ export function initialSectionOpen(element: HTMLElement | null, declared: boolea
 	if (target && element.contains(target)) return true;
 	if (independent || !hasBulkSections()) return declared;
 	const choice = document.documentElement.dataset.sectionsChoice;
-	return choice === 'collapsed' ? false : choice === 'expanded' ? true : firstVisitClosed ? false : choice === 'default' ? true : declared;
+	if (firstVisitClosed && !document.documentElement.hasAttribute('data-sections-saved')) return false;
+	return choice === 'collapsed' ? false : choice === 'expanded' ? true : declared;
 }
 
 export function hasBulkSections(): boolean {

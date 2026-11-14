@@ -8,6 +8,7 @@ const key = 'sections-choice';
 afterEach(() => {
 	localStorage.clear();
 	delete document.documentElement.dataset.sectionsChoice;
+	delete document.documentElement.dataset.sectionsSaved;
 	delete document.documentElement.dataset.sectionsAvailable;
 });
 
@@ -42,3 +43,23 @@ for (const choice of [null, 'collapsed', 'expanded'] as const) {
 		expect(localStorage.getItem(key)).toBe(choice);
 	});
 }
+
+it('keeps the consumer bulkExpanded expression true on a first visit without opt-ins', () => {
+	new Function(themeBootScript)();
+	const view = render(Fixture);
+	expect(document.documentElement.dataset.sectionsChoice).toBe('expanded');
+	const bulkExpanded = document.documentElement.dataset.sectionsChoice === 'expanded';
+	expect(bulkExpanded).toBe(true);
+	expect(view.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('true');
+	expect(view.getByRole('button', { name: 'Second' }).getAttribute('aria-expanded')).toBe('true');
+});
+
+it('keeps an explicit Expand all authoritative when an opted section mounts later', async () => {
+	new Function(themeBootScript)();
+	const first = render(Fixture, { firstVisitClosed: true });
+	await fireEvent.click(first.getByRole('button', { name: copy.collapse }));
+	await fireEvent.click(first.getByRole('button', { name: copy.expand }));
+	first.unmount();
+	const next = render(Fixture, { firstVisitClosed: true });
+	expect(next.getByRole('button', { name: 'Second' }).getAttribute('aria-expanded')).toBe('true');
+});

@@ -222,6 +222,9 @@ test('late content preserves a deliberate individual choice', async ({ page }) =
 
 test('first visit opens content with a neutral control, keeps exclusions open, and remembers only bulk choices', async ({ page }) => {
 	await page.goto('/sections'); await ready(page);
+	await expect(page.locator('html')).toHaveAttribute('data-sections-choice', 'expanded');
+	expect(await page.evaluate(() => document.documentElement.dataset.sectionsChoice === 'expanded')).toBe(true);
+	await expect(page.locator('html')).not.toHaveAttribute('data-sections-saved');
 	await expect(trigger(page, 'Chart')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Live table')).toHaveAttribute('aria-expanded', 'true');
 	await expect(trigger(page, 'Contents')).toHaveAttribute('aria-expanded', 'true');
