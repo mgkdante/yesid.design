@@ -1,6 +1,10 @@
 import type { ErrorPageIllustration, ErrorPageLink } from '@yesid/ui/layout';
 
-/** Gallery query options for /error-page; every option left out keeps today's page. */
+/**
+ * Gallery options for /error-page/[options], a prerendered path so the chosen props are in the
+ * first markup. The segment joins tokens with dots: an illustration, a language, and any of
+ * `no-label`, `no-tape` and `unnamed` (no `suggestionsLabel`). /error-page itself is today's page.
+ */
 export interface ErrorPageGalleryOptions {
 	illustration: ErrorPageIllustration;
 	label: boolean;
@@ -12,18 +16,44 @@ export interface ErrorPageGalleryOptions {
 export type ErrorPageGalleryLang = 'en' | 'fr' | 'es';
 
 export const ILLUSTRATIONS: readonly ErrorPageIllustration[] = ['large-first', 'small-after', 'none'];
+export const LANGS: readonly ErrorPageGalleryLang[] = ['en', 'fr', 'es'];
 
-export function readOptions(params: Pick<URLSearchParams, 'get'>): ErrorPageGalleryOptions {
-	const illustration = params.get('illustration') as ErrorPageIllustration | null;
-	const lang = params.get('lang') as ErrorPageGalleryLang | null;
-	return {
-		illustration: illustration && ILLUSTRATIONS.includes(illustration) ? illustration : 'large-first',
-		label: params.get('label') !== '0',
-		tape: params.get('tape') !== '0',
-		named: params.get('named') !== '0',
-		lang: lang && lang in copy ? lang : 'en',
-	};
+export const DEFAULT_OPTIONS: ErrorPageGalleryOptions = {
+	illustration: 'large-first',
+	label: true,
+	tape: true,
+	named: true,
+	lang: 'en',
+};
+
+/** The path segment for a set of options; `parseOptions` reads it back. */
+export function optionsSegment(options: Partial<ErrorPageGalleryOptions>): string {
+	const { illustration, label, tape, named, lang } = { ...DEFAULT_OPTIONS, ...options };
+	return [illustration, !label && 'no-label', !tape && 'no-tape', !named && 'unnamed', lang]
+		.filter(Boolean)
+		.join('.');
 }
+
+/** Reads a path segment; `undefined` for an unknown token. */
+export function parseOptions(segment: string): ErrorPageGalleryOptions | undefined {
+	const options = { ...DEFAULT_OPTIONS };
+	for (const token of segment.split('.')) {
+		if ((ILLUSTRATIONS as readonly string[]).includes(token)) options.illustration = token as ErrorPageIllustration;
+		else if ((LANGS as readonly string[]).includes(token)) options.lang = token as ErrorPageGalleryLang;
+		else if (token === 'no-label') options.label = false;
+		else if (token === 'no-tape') options.tape = false;
+		else if (token === 'unnamed') options.named = false;
+		else return undefined;
+	}
+	return options;
+}
+
+/** Every prerendered option set: each illustration in each language, plus the quiet sets. */
+export const OPTION_SEGMENTS: readonly string[] = [
+	...ILLUSTRATIONS.flatMap((illustration) => LANGS.map((lang) => optionsSegment({ illustration, lang }))),
+	optionsSegment({ illustration: 'small-after', label: false, tape: false }),
+	optionsSegment({ illustration: 'small-after', label: false, tape: false, named: false }),
+];
 
 interface ErrorPageGalleryCopy {
 	label: string;
