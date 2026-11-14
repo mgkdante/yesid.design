@@ -20,3 +20,5 @@
 <p class="mt-4"><a class="inline-flex min-h-[var(--size-tap-min)] items-center underline" href="/station-tabs">Station tabs: Tabs and native links</a></p>
 <BrandGallery />
 <MotionGallery />
+
+<p class="mt-4"><a href="/text-links">Text links and surfaces</a> · <a href="/registers">Presentation registers</a></p>

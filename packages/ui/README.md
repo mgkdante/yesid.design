@@ -709,7 +709,10 @@ navigation per entry in `groups` (`navLabel` when the accessible name differs fr
 `external` links open in a new tab with `rel="noopener noreferrer"`, and `me` adds `rel="me"` for
 the owner's own profiles; `after` adds controls inside the group), and a status row with
 optional `statusStart`, and, when `statusPrefix` is supplied, a live lamp (`liveLabel` for screen
-readers) and today's date. The status props form an all-or-nothing union: supply both
+readers) and today's date. This self-made status pair is deprecated starting with v0.43.0;
+use `statusStart` with a real source, subject and observation time, or omit both props.
+The date describes the visitor's day, not service health. Lamps stay still under the
+no-endless-decorative-loops policy. See [the migration](../../docs/migrations/footer-status.md). The status props form an all-or-nothing union: supply both
 `statusPrefix` and `liveLabel`, or omit both. This keeps every rendered lamp named for screen
 readers. `statusStart` is independent; without it or the status pair, the entire row is omitted.
 An empty string still opts into the status. Existing callers supplying both props keep their output. `data-in-view`
@@ -853,7 +856,7 @@ relies on `'unsafe-inline'` must not add the hash, because any hash switches `'u
 ## Base stylesheet
 
 `@yesid/ui/base.css` is the base layer both products share: resets, the dark variant, selection,
-focus ring, text links (a link without a class is underlined in `--accent-text`; components
+focus ring, text links (a link without a class is underlined in `--primary`; components
 style their own), scrollbar, circuit grid, shared keyframes, label styles, `.glass-chrome`, the
 `TerminalPanel` and `CodeBlock` classes (`.terminal-*` and `.syn-*`, in the components layer), the
 `SiteHeader` geometry (`--nav-top`, `--nav-padding-y`, `--nav-clearance`), a focus outline under

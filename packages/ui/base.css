@@ -94,7 +94,7 @@ pre, code, table {
 
 	/* A link without a class is a text link (prose, CMS HTML, inline copy); components style their own. */
 	a:not([class], svg *) {
-		color: var(--accent-text);
+		color: var(--primary);
 		text-decoration-line: underline;
 		text-decoration-thickness: 1px;
 		text-underline-offset: 0.2em;

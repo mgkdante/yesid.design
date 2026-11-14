@@ -304,7 +304,7 @@ every locale before enabling those routes.
   const links = $derived([{ href: home, label: 'Home', current: page.url.pathname === home }]);
   const labels = {
     openMenu: 'Open menu', closeMenu: 'Close menu', menu: 'Site menu', theme: 'Dark theme',
-    menuFooter: 'Navigation · All routes', skipToContent: 'Skip to content',
+    menuFooter: '', skipToContent: 'Skip to content',
   };
   const sectionCopy = {
     collapse: 'Collapse sections', expand: 'Expand sections',
@@ -319,7 +319,7 @@ every locale before enabling those routes.
     {#snippet actions()}<SectionsToggle copy={sectionCopy} />{/snippet}
   </SiteHeader>
   <main id="main">{@render children()}</main>
-  <SiteFooter tagline="Example product" groups={[]} statusPrefix="System" liveLabel="Online">
+  <SiteFooter tagline="Example product" groups={[]}>
     {#snippet brand()}<a href={home}>Example product</a>{/snippet}
   </SiteFooter>
 </SiteRoot>
@@ -328,7 +328,12 @@ every locale before enabling those routes.
 For grouped menus, pass `menuGroups={[{ label, items }]}` instead of `menuItems`. Groups take
 precedence when both are supplied. Opt into `compactControls` to move theme and language controls
 into the open menu below 600px of header width, leaving room for a labelled `actions` button.
-Supply both footer status props (`statusPrefix` and `liveLabel`) or omit both. Omit both to hide
+Read [the doctrine](DOCTRINE.md) before composing a page and apply its five-minute review
+before completion. Declare the page register; keep the theme and language toggles unchanged.
+
+The footer status pair is deprecated starting with v0.43.0. Use `statusStart` only for a real
+status with its source, subject and observation time, or omit status entirely. See
+[the migration](migrations/footer-status.md). Supply both footer status props (`statusPrefix` and `liveLabel`) or omit both. Omit both to hide
 its lamp and date. The status row remains only if `statusStart` is supplied. Existing callers can keep their props unchanged.
 
 `SiteHeader.language` renders `LanguageToggle`; a second language control is unnecessary.
@@ -616,3 +621,45 @@ choose when to take the bump.
 A rollback is the same edit pointing every `@yesid` URL at an earlier release this product already
 accepted, in its own pull request, followed by the full product checks. If that release has a
 different package set, add or remove the matching entries. Never move or replace an upstream tag.
+
+## Plain Svelte shell
+
+The document-navigation shell in yesid.login uses `mount` from Svelte and the same shared
+header and footer. A plain Vite/Svelte app initializes `configureUi({})` before mounting,
+imports the token fonts and base styles, and calls `theme.init()` on mount. Its navigation
+lifecycle has no-op hook adapters because each navigation unloads the document:
+
+```svelte
+<script lang="ts">
+  import { onMount, type Snippet } from 'svelte';
+  import { SiteHeader, SiteFooter } from '@yesid/ui/layout';
+  import { createNavigationLifecycle } from '@yesid/ui/brand';
+  import { theme } from '@yesid/ui/state';
+  import '@yesid/tokens/fonts.css';
+  let { children, home, labels, language, groups, tagline }: {
+    children: Snippet; home: string;
+    labels: import('@yesid/ui/layout').SiteHeaderLabels;
+    language: NonNullable<import('@yesid/ui/layout').SiteHeaderProps['language']>;
+    groups: import('@yesid/ui/layout').SiteFooterGroup[]; tagline: string;
+  } = $props();
+  const navigation = createNavigationLifecycle({
+    beforeNavigate() {}, onNavigate() {}, afterNavigate() {},
+  });
+  onMount(() => theme.init());
+</script>
+<SiteHeader {navigation} {home} {labels} language={{ ...language, reload: true }} links={[]} menuItems={[]} />
+<main id="main">{@render children()}</main>
+<SiteFooter {groups} {tagline}>
+  {#snippet brand()}<a href={home}>Example product</a>{/snippet}
+</SiteFooter>
+```
+
+Supply complete product-owned translated labels and language names. Set the document language
+and include the release's theme boot before first paint. Do not copy yesid.login's local menu
+hiding rule. Preserve the shared controls. The app stylesheet imports tokens, Tailwind and
+`@yesid/ui/base.css` in the order above, then sets the body family explicitly if it does not
+use the Tailwind font utility:
+
+```css
+body { font-family: 'Inter Variable', sans-serif; background: var(--background); color: var(--foreground); }
+```
