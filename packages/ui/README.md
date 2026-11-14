@@ -905,3 +905,9 @@ bun run api:check
 
 Package tests and the Gallery's browser suite cover the shared behavior. Each product still runs
 its own tests, build and browser checks when it takes a release; a pass here does not replace them.
+
+## Labelled field recipe
+
+Compose native labelled fields using the [recipe](../../docs/recipes/labelled-field.md).
+The Gallery route /labelled-field demonstrates EN, FR and ES error recovery, busy text
+and the existing input-token boundary. This adds no Field component or token value change.

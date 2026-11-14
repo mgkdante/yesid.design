@@ -39,6 +39,10 @@ motion), with one worker and no retries. They assert behavior, never pixels.
 a dark island. `/registers` demonstrates expressive, reading and task regions with EN, FR
 and ES copy. The focused `text-links.spec.ts` checks cues, forced colours and 320 to 1920px.
 
+/labelled-field demonstrates native labelled fields, long EN/FR/ES copy, error-summary
+focus and links, aria descriptions and simulated sending. labelled-field.spec.ts checks
+axe in both themes, 320 to 1440px reflow, reduced motion, boundaries and 44px targets.
+
 `/masthead` shows Masthead with its kicker (today) and heading first without one, with and without
 the dot, in EN and long FR and ES. `/error-page` renders today's page; `/error-page/[options]`
 prerenders option sets so the chosen props are in the first markup. The segment joins an

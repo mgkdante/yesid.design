@@ -663,3 +663,10 @@ use the Tailwind font utility:
 ```css
 body { font-family: 'Inter Variable', sans-serif; background: var(--background); color: var(--foreground); }
 ```
+
+## Labelled fields
+
+Follow the [labelled field recipe](recipes/labelled-field.md) for native labels, hints,
+required guidance, error-summary focus, busy text and autocomplete. Use the existing input
+token for field boundaries. Products own copy, validation and submission; D14 promotion
+awaits a shared contract in yesid.dev and yesid.login.
