@@ -10,6 +10,7 @@ product. Do not derive a status timestamp from the visitor's clock. No new statu
 
 ```svelte
 <SiteFooter {groups} {tagline}>
+  {#snippet brand()}<a href={home}>Example product</a>{/snippet}
   {#snippet statusStart()}
     <p>{status.subject}: {status.label}. <a href={status.sourceUrl}>{status.sourceName}</a>.
       <time datetime={status.observedAt}>{status.observedLabel}</time></p>

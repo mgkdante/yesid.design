@@ -649,7 +649,9 @@ lifecycle has no-op hook adapters because each navigation unloads the document:
 </script>
 <SiteHeader {navigation} {home} {labels} language={{ ...language, reload: true }} links={[]} menuItems={[]} />
 <main id="main">{@render children()}</main>
-<SiteFooter {groups} {tagline} />
+<SiteFooter {groups} {tagline}>
+  {#snippet brand()}<a href={home}>Example product</a>{/snippet}
+</SiteFooter>
 ```
 
 Supply complete product-owned translated labels and language names. Set the document language

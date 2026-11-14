@@ -11,7 +11,7 @@
 <div data-register="reading" data-ripple-exempt>
   <h1 class="text-title">Text links</h1>
   <p>Orange links stay underlined. Yellow highlights and the conversion button have separate jobs.</p>
-  <Button variant="conversion" href="#source">Talk to Yesid</Button>
+  <Button variant="conversion" size="cta" href="#source">Talk to Yesid</Button>
   <p>Highlighted figure: <strong class="text-accent-text">42 trips</strong>. Demonstration only.</p>
   {#each ['page', 'island'] as region}
     <section class:theme-dark={region === 'island'} aria-label={region === 'island' ? 'Dark island' : 'Page surfaces'}>
