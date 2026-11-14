@@ -15,7 +15,7 @@ An optional summary keeps the finding, period and caveat visible when the body i
 _Avoid_: card (on detail pages), panel, disclosure
 
 **Expand-all control**:
-The single page action that opens every content section, or collapses them all when any is open. Pages with at least two content sections start expanded; after Collapse all the control turns orange, and the visitor's bulk choice is remembered across the site and visits. Individual toggles affect only that view. The TOC and independent panels keep their own state.
+The single page action that opens every content section, or collapses them all when any is open. Pages with at least two content sections start expanded, except chosen optional sections opted into `firstVisitClosed` (owner answer 5A, 13 November 2026); a valid saved bulk choice overrides that opt-in; after Collapse all the control turns orange, and the visitor's bulk choice is remembered across the site and visits. Individual toggles affect only that view. The TOC and independent panels keep their own state.
 _Avoid_: quiet mode, per-section preference, Remember/Forget actions
 
 **Filter group**:

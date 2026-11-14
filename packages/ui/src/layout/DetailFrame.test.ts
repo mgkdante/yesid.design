@@ -63,6 +63,36 @@ describe('layout order', () => {
 		expect(article(view).contains(view.getByTestId('after'))).toBe(true);
 	});
 
+	it.each([
+		[undefined, 'hazard'],
+		['hazard', 'hazard'],
+		['line', 'line'],
+		['none', null],
+	] as const)('draws the %j rule below the header', (rule, drawn) => {
+		const view = frame({ header: part('header'), rule, left: part('left'), right: part('right') });
+		const tape = slot(view, 'separator');
+		const line = slot(view, 'detail-shell-line');
+		expect(tape !== null).toBe(drawn === 'hazard');
+		expect(line !== null).toBe(drawn === 'line');
+		if (line) {
+			expect(line.getAttribute('aria-hidden')).toBe('true');
+			expect(precedes(view.getByTestId('header'), line)).toBe(true);
+			expect(precedes(line, slot(view, 'detail-shell-left'))).toBe(true);
+		}
+	});
+
+	it('puts an opening in the header snippet before both rails, and the summary after the left rail', () => {
+		const header = createRawSnippet(() => ({
+			render: () => '<div><h1>Title</h1><p data-testid="opening">The answer first.</p></div>',
+		}));
+		const view = frame({ header, summary: part('summary'), left: part('left'), right: part('right') });
+		const [left, right] = [slot(view, 'detail-shell-left'), slot(view, 'detail-shell-right')];
+		expect(precedes(view.getByTestId('opening'), left)).toBe(true);
+		expect(precedes(view.getByTestId('opening'), right)).toBe(true);
+		expect(precedes(left, view.getByTestId('summary'))).toBe(true);
+		expect(slot(view, 'detail-shell-center').contains(view.getByTestId('summary'))).toBe(true);
+	});
+
 	it('renders the toolbar and mobile summary only when supplied', () => {
 		const view = frame();
 		expect(slot(view, 'detail-shell-toolbar')).toBeNull();
