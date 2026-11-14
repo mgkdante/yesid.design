@@ -3,7 +3,7 @@ import { expectAccessible } from '@yesid/config/playwright';
 import { openGallery } from './gallery.js';
 
 for (const reducedMotion of ['reduce', 'no-preference'] as const) {
-	test(`terminal signals are explicit and motion gated (${reducedMotion})`, async ({ page }) => {
+	test(`terminal signals are explicit and still (${reducedMotion})`, async ({ page }) => {
 		await page.emulateMedia({ reducedMotion });
 		await openGallery(page);
 		const family = page.locator('[data-gallery-family="brand:TerminalPanel"]');
@@ -12,7 +12,7 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
 		await expect(panels.first().locator('[data-slot="status-dot"]')).toHaveCount(0);
 		await expect(panels.last().getByText('Live sample feed')).toHaveCount(1);
 		const lamp = panels.last().locator('[data-slot="status-dot"]');
-		await expect(lamp).toHaveCSS('animation-name', reducedMotion === 'reduce' ? 'none' : 'pulse-glow');
+		await expect(lamp).toHaveCSS('animation-name', 'none');
 		await expectAccessible(page, { include: '[data-gallery-family="brand:TerminalPanel"]' });
 	});
 }

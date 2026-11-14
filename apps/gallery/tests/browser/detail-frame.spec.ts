@@ -173,7 +173,7 @@ test('error page motion, long-link fit and footer', async ({ page }) => {
 
 	await page.emulateMedia({ reducedMotion: 'no-preference' });
 	await page.reload();
-	await expect(page.locator('.light-a').first()).not.toHaveCSS('animation-name', 'none');
+	await expect(page.locator('.light-a').first()).toHaveCSS('animation-name', 'none');
 
 	if (!desktop) return;
 	await page.goto('/error-page');
