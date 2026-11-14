@@ -1,6 +1,6 @@
 {
 	"name": "yesid.design",
-	"version": "0.42.0-rc.2",
+	"version": "0.42.0-rc.3",
 	"private": true,
 	"type": "module",
 	"description": "yesid.dev design and product standard: tokens, UI, motion, gates, SEO, analytics, i18n and config packages, plus the Gallery app.",
