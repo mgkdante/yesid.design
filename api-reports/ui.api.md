@@ -1398,6 +1398,9 @@ const ErrorPage: Component<ErrorPageProps, {}, "">;
 // @public (undocumented)
 type ErrorPage = ReturnType<typeof ErrorPage>;
 
+// @public
+type ErrorPageIllustration = 'large-first' | 'small-after' | 'none';
+
 // @public (undocumented)
 interface ErrorPageLink {
     // (undocumented)
@@ -1413,14 +1416,15 @@ interface ErrorPageProps {
     detail?: string;
     // (undocumented)
     heading: string;
-    // (undocumented)
-    label: string;
+    illustration?: ErrorPageIllustration;
+    label?: string;
     signLabel?: string;
     // (undocumented)
     status: number;
     statusNote?: string;
     suggestions?: readonly ErrorPageLink[];
     suggestionsLabel?: string;
+    tape?: boolean;
 }
 
 declare namespace Feedback {
@@ -1697,6 +1701,7 @@ declare namespace Layout {
         DetailFrameProps,
         DetailFrameToc,
         ErrorPage,
+        ErrorPageIllustration,
         ErrorPageLink,
         ErrorPageProps,
         ListingFrame,
@@ -1793,14 +1798,14 @@ interface MastheadProps {
     class?: string;
     // (undocumented)
     cornerMeta?: Snippet;
+    dot?: boolean;
     // (undocumented)
     explainer?: Snippet;
     // (undocumented)
     heading: string;
     // (undocumented)
     headingId?: string;
-    // (undocumented)
-    kicker: string;
+    kicker?: string;
     // (undocumented)
     lede?: string;
     // (undocumented)

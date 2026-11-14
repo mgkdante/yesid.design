@@ -5,7 +5,7 @@ const routes = [
 	'/', '/error-page', '/station-tabs', '/site-header', '/site-header-compact',
 	'/detail-frame', '/data-page', '/button-focus', '/sections', '/sections/late',
 	'/sections/next', '/sections/single', '/navigation-lifecycle-fixture',
-	'/density', '/listing-frame',
+	'/density', '/listing-frame', '/masthead', '/error-page?illustration=small-after&label=0&tape=0',
 ];
 
 for (const reducedMotion of ['no-preference', 'reduce'] as const) {

@@ -88,6 +88,13 @@ describe('suggestions', () => {
 		expect(items.map((link) => link.classList.contains('suggestion-primary'))).toEqual([true, false]);
 	});
 
+	it.each([undefined, ''])('names the navigation by the heading when suggestionsLabel is %j', (suggestionsLabel) => {
+		const view = page({ suggestionsLabel });
+		const nav = view.getByRole('navigation', { name: 'This page is under construction' });
+		expect(nav.getAttribute('aria-labelledby')).toBe(view.getByRole('heading', { level: 1 }).id);
+		expect(nav.hasAttribute('aria-label')).toBe(false);
+	});
+
 	it.each([[[]], [undefined]])('renders no navigation for suggestions=%j', (suggestions) => {
 		expect(page({ suggestions }).queryByRole('navigation')).toBeNull();
 	});
@@ -97,5 +104,58 @@ describe('terminal line', () => {
 	it('renders only when statusNote is given', () => {
 		expect(page({ statusNote: undefined }).queryByTestId('terminal-line')).toBeNull();
 		expect(page().queryByTestId('terminal-line')).not.toBeNull();
+	});
+});
+
+describe('options', () => {
+	const order = (view: View) =>
+		[...view.container.querySelectorAll('.error-page-content > *')].map((part) =>
+			part.matches('.error-illustration')
+				? part.classList.contains('error-illustration--small')
+					? 'small scene'
+					: 'large scene'
+				: part.matches('.error-copy')
+					? 'copy'
+					: part.matches('nav')
+						? 'links'
+						: 'status line',
+		);
+
+	it("keeps today's page by default: tape, label, then a large scene before the copy", () => {
+		const view = page();
+		expect(view.getAllByTestId('hazard-tape')).toHaveLength(1);
+		expect(view.getByTestId('error-label').textContent).toBe('ROUTE NOT FOUND');
+		expect(order(view)).toEqual(['large scene', 'copy', 'links', 'status line']);
+	});
+
+	it('places a small scene after the heading, body, destinations and status line', () => {
+		const view = page({ illustration: 'small-after' });
+		expect(order(view)).toEqual(['copy', 'links', 'status line', 'small scene']);
+		expect(signText(view)).toEqual(['SAMPLE', '404']);
+	});
+
+	it('drops the scene with illustration="none"', () => {
+		const view = page({ illustration: 'none' });
+		expect(view.queryByTestId('construction-scene')).toBeNull();
+		expect(order(view)).toEqual(['copy', 'links', 'status line']);
+	});
+
+	it('drops the hazard tape with tape={false}', () => {
+		expect(page({ tape: false }).queryByTestId('hazard-tape')).toBeNull();
+	});
+
+	it('starts with the heading when label is omitted', () => {
+		const view = page({ label: undefined, illustration: 'small-after', tape: false });
+		expect(view.queryByTestId('error-label')).toBeNull();
+		const copy = view.container.querySelector('.error-copy')!;
+		expect(copy.firstElementChild?.tagName).toBe('H1');
+		expect(view.container.querySelector('.error-page')!.firstElementChild).toBe(
+			view.container.querySelector('.error-page-content'),
+		);
+	});
+
+	it('keeps the status announcement for other statuses without a label', () => {
+		const view = page({ status: 500, label: undefined, illustration: 'none' });
+		expect(view.getByRole('alert').textContent).toContain('500');
 	});
 });

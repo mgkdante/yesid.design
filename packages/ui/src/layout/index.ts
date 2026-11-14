@@ -5,7 +5,7 @@ export { default as DetailFrame } from './DetailFrame.svelte';
 export type { DetailFrameProps, DetailFrameToc } from './DetailFrame.svelte';
 
 export { default as ErrorPage } from './ErrorPage.svelte';
-export type { ErrorPageLink, ErrorPageProps } from './ErrorPage.svelte';
+export type { ErrorPageIllustration, ErrorPageLink, ErrorPageProps } from './ErrorPage.svelte';
 
 export { default as ListingFrame } from './ListingFrame.svelte';
 export type { ListingFrameProps } from './ListingFrame.svelte';

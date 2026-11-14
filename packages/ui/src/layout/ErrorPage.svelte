@@ -2,6 +2,8 @@
   Error route body: hazard rule, construction scene, label, heading, body, suggested
   destinations and a terminal status line. The scene shows its 404 sign only for 404s; other
   statuses also announce the numeric status. The app owns copy and <svelte:head>.
+  `label`, `tape` and `illustration` keep today's page by default; `illustration="small-after"`
+  puts a small scene after the heading, body and destinations instead of a large one first.
 -->
 <script lang="ts" module>
 	export interface ErrorPageLink {
@@ -9,14 +11,25 @@
 		label: string;
 	}
 
+	/**
+	 * Where the construction scene sits and how large it is: `large-first` (default) above the copy,
+	 * `small-after` below the heading, body and destinations, or `none`.
+	 */
+	export type ErrorPageIllustration = 'large-first' | 'small-after' | 'none';
+
 	export interface ErrorPageProps {
 		status: number;
-		label: string;
+		/** Station label above the heading; omit it to start with the heading. */
+		label?: string;
 		heading: string;
 		body: string;
+		/** Hazard tape above the page. Defaults to `true`. */
+		tape?: boolean;
+		/** Placement and size of the construction scene. Defaults to `'large-first'`. */
+		illustration?: ErrorPageIllustration;
 		/** The first link is styled as the primary destination. */
 		suggestions?: readonly ErrorPageLink[];
-		/** Accessible name of the suggestions navigation. */
+		/** Accessible name of the suggestions navigation; without it the navigation is named by the heading. */
 		suggestionsLabel?: string;
 		/** Comment after `$ route --status <status>`; the terminal line renders only when given. */
 		statusNote?: string;
@@ -38,6 +51,8 @@
 		label,
 		heading,
 		body,
+		tape = true,
+		illustration = 'large-first',
 		suggestions = [],
 		suggestionsLabel,
 		statusNote,
@@ -46,29 +61,41 @@
 	}: ErrorPageProps = $props();
 
 	const notFound = $derived(status === 404);
+	const uid = $props.id();
+	const headingId = `error-page-heading-${uid}`;
 </script>
 
-<section class="error-page" data-slot="error-page">
-	<div data-testid="hazard-tape">
-		<Separator variant="hazard" />
+{#snippet scene()}
+	<div class="error-illustration" class:error-illustration--small={illustration === 'small-after'}>
+		<ErrorIllustration code={notFound ? String(status) : undefined} {signLabel} />
 	</div>
+{/snippet}
+
+<section class="error-page" data-slot="error-page">
+	{#if tape}
+		<div data-testid="hazard-tape">
+			<Separator variant="hazard" />
+		</div>
+	{/if}
 
 	<div class="error-page-content">
-		<div class="error-illustration">
-			<ErrorIllustration code={notFound ? String(status) : undefined} {signLabel} />
-		</div>
+		{#if illustration === 'large-first'}
+			{@render scene()}
+		{/if}
 
 		<div class="error-copy">
-			<div data-testid="error-label">
-				<SectionLabel text={label} variant="station" align="center" />
-			</div>
+			{#if label !== undefined}
+				<div data-testid="error-label">
+					<SectionLabel text={label} variant="station" align="center" />
+				</div>
+			{/if}
 			{#if !notFound}
 				<p class="error-status" role="alert">
 					<span class="error-glyph" aria-hidden="true">◆</span>
 					<span class="error-code">{status}</span>
 				</p>
 			{/if}
-			<h1>{heading}</h1>
+			<h1 id={headingId}>{heading}</h1>
 			<p class="error-body">{body}</p>
 			{#if detail}
 				<p class="error-detail">{detail}</p>
@@ -76,7 +103,11 @@
 		</div>
 
 		{#if suggestions.length > 0}
-			<nav class="suggestions" aria-label={suggestionsLabel}>
+			<nav
+				class="suggestions"
+				aria-label={suggestionsLabel || undefined}
+				aria-labelledby={suggestionsLabel ? undefined : headingId}
+			>
 				{#each suggestions as suggestion, index (suggestion.href)}
 					<a
 						href={suggestion.href}
@@ -100,6 +131,10 @@
 				<span class="terminal-note"> {statusNote}</span>
 				<TerminalCursor class="error-terminal-cursor" />
 			</p>
+		{/if}
+
+		{#if illustration === 'small-after'}
+			{@render scene()}
 		{/if}
 	</div>
 </section>
@@ -129,6 +164,10 @@
 	.error-illustration {
 		width: 100%;
 		max-width: 24rem;
+	}
+
+	.error-illustration--small {
+		max-width: 14rem;
 	}
 
 	.error-copy {
@@ -295,7 +334,7 @@
 		.error-page-content {
 			gap: 1.5rem;
 		}
-		.error-illustration {
+		.error-illustration:not(.error-illustration--small) {
 			max-width: 28rem;
 		}
 		.error-copy {
