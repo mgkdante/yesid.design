@@ -143,7 +143,7 @@
 ## Direct public assets
 
 - `./station-tabs.css` — direct asset `./station-tabs.css` (`default`), sha256 `00af002eb573b00f418b0d9bc9c8755cf8e07a64a51fdfcda8e6a60e9ca7b0d4`
-- `./base.css` — direct asset `./base.css` (`default`), sha256 `e781b9e484e6e44026ac074c1cd233f3e4c437aef9110d1b0be7d1d52d736f06`
+- `./base.css` — direct asset `./base.css` (`default`), sha256 `d98c41dee63aa6ffd5ae9be092549d30ec66b947b85c8c53380d302c6def985a`
 - `./boot.json` — direct asset `./src/head/boot.json` (`default`), sha256 `168b9a3e53dc73f0caa95b158fbc77b126b23b11c0c19272c0ac3881742a0030`
 
 ## Declaration namespaces
@@ -894,6 +894,7 @@ type ButtonOnlyProps_2 = Exclude<keyof HTMLButtonAttributes, keyof HTMLAnchorAtt
 type ButtonOwnProps = {
     variant?: ButtonVariant;
     size?: ButtonSize;
+    wrap?: boolean;
 };
 
 // @public (undocumented)
@@ -921,7 +922,7 @@ sm: string;
 cta: string;
 'cta-lg': string;
 };
-}, undefined, "rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", {
+}, undefined, "rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-[color,background-color,border-color,box-shadow,translate] select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", {
 variant: {
 default: string;
 conversion: string;
@@ -951,7 +952,7 @@ sm: string;
 cta: string;
 'cta-lg': string;
 };
-}, undefined, "rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", unknown, unknown, undefined>>;
+}, undefined, "rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-[color,background-color,border-color,box-shadow,translate] select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0", unknown, unknown, undefined>>;
 
 // @public (undocumented)
 const Card: Component<$$ComponentProps_4, {}, "ref">;
@@ -2593,6 +2594,7 @@ interface SiteHeaderMenuItem {
 // @public (undocumented)
 interface SiteHeaderProps {
     actions?: Snippet;
+    brand?: Snippet;
     compactControls?: boolean;
     // (undocumented)
     home: string;
@@ -2609,6 +2611,7 @@ interface SiteHeaderProps {
     search?: Snippet;
     // (undocumented)
     wordmark?: string;
+    wordmarkAutoPlay?: boolean;
 }
 
 // @public (undocumented)
