@@ -38,3 +38,9 @@ motion), with one worker and no retries. They assert behavior, never pixels.
 `/text-links` demonstrates orange underlined prose links on every documented surface and
 a dark island. `/registers` demonstrates expressive, reading and task regions with EN, FR
 and ES copy. The focused `text-links.spec.ts` checks cues, forced colours and 320 to 1920px.
+
+`/masthead` shows Masthead with its kicker (today) and heading first without one, with and without
+the dot, in EN and long FR and ES. `/error-page` takes query options: `illustration=small-after` or
+`none`, `label=0`, `tape=0`, `named=0` (no `suggestionsLabel`) and `lang=fr` or `es`; with none it
+renders today's page. The focused `quiet-task-headers.spec.ts` checks order, fit and stillness from
+320 to 1920px in both themes and both motion settings.
