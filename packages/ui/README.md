@@ -574,9 +574,14 @@ appear. The root takes ordinary attributes such as `class`, `style` and `data-te
 
 `ArticleHeader` is the header those pages share: back link, optional `category`, the `title` with
 its `highlight` keyword in the accent, `subtitle`, `meta` (pending state included), and `actions`
-and `controls` snippets. `highlight` accents the first case-insensitive match that is a whole word:
-letters, digits and combining marks in any script count as word characters, so `AI` never
-matches inside `BRAIN`, and `énergé` never inside `énergétiques`. `watermark`, `edgeLeft`, `edgeRight` and the `decorations` snippet draw
+and `controls` snippets. `highlight` accents the first case-insensitive match that is a whole word.
+Words follow `Intl.Segmenter`, so `AI` never matches inside `BRAIN` and `中文` matches in
+`我喜欢中文`; title and highlight compare in NFC, and the accent keeps the title's own characters.
+An apostrophe between letters stays inside the word (`can` never matches in `can't`), while an
+elision such as `l'`, `d’`, `qu’` or Italian `dell'` starts a new word (`espace` matches in
+`l'espace`). Without `Intl.Segmenter`, letters, digits and combining marks form words under the
+same apostrophe policy; text without spaces then reads as one word, so a match there may be
+missed but a word is never split. `watermark`, `edgeLeft`, `edgeRight` and the `decorations` snippet draw
 decorative chrome; `--article-deco-opacity` sets how strongly it reads. The subtitle and the meta
 row share one mono type, `--article-meta-size`. A `ManifestoCanvas` fills the header; a `canvas`
 snippet replaces it (an empty one leaves the header plain) and receives the header element once

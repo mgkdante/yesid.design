@@ -28,9 +28,10 @@
 		 */
 		presentation?: 'expressive' | 'reading';
 		/**
-		 * First case-insensitive whole-word match in the title renders in the accent (expressive
-		 * only). Letters, digits and combining marks in any script count as word characters, so
-		 * `AI` never matches inside `BRAIN`.
+		 * The first case-insensitive whole-word match in the title renders in the accent (expressive
+		 * only). Words follow `Intl.Segmenter`, so `AI` never matches inside `BRAIN` and `中文`
+		 * matches in `我喜欢中文`; titles compare in NFC; `can` never matches inside `can't`, while an
+		 * elision such as `l'` or `d’` starts a new word, so `espace` matches in `l'espace`.
 		 */
 		highlight?: string;
 		/** A line above the title (expressive); the first meta entry (reading). */
@@ -55,21 +56,11 @@
 		titleId?: string;
 		testId?: string;
 	}
-
-	const WORD = String.raw`[\p{L}\p{N}\p{M}]`;
-
-	/** The first case-insensitive match of `word` in `text` with no word character on either side. */
-	function findWholeWord(text: string, word: string | undefined): { start: number; end: number } | null {
-		const needle = word?.trim();
-		if (!needle) return null;
-		const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		const match = new RegExp(`(?<!${WORD})${escaped}(?!${WORD})`, 'iu').exec(text);
-		return match ? { start: match.index, end: match.index + match[0].length } : null;
-	}
 </script>
 
 <script lang="ts">
 	import { boop } from '@yesid/motion/actions';
+	import { findHighlight } from './article-highlight.js';
 	import CornerMarks from '../brand/CornerMarks.svelte';
 	import ManifestoCanvas from '../brand/ManifestoCanvas.svelte';
 
@@ -99,7 +90,7 @@
 
 	const reading = $derived(presentation === 'reading');
 	const titleParts = $derived.by(() => {
-		const match = reading ? null : findWholeWord(title, highlight);
+		const match = reading ? null : findHighlight(title, highlight);
 		if (!match) return [{ text: title, highlight: false }];
 		return [
 			{ text: title.slice(0, match.start), highlight: false },
@@ -431,7 +422,7 @@
 		display: inline-flex;
 		flex-wrap: wrap;
 		align-items: baseline;
-		column-gap: 0.5em;
+		gap: 0.5em;
 		min-width: 0;
 	}
 

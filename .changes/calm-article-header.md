@@ -4,7 +4,7 @@
 
 Add a calm reading presentation for article, case-study and data pages. The expressive
 presentation stays the default, so existing callers keep today's output apart from the two
-defect fixes below.
+behaviour changes below.
 
 - `ArticleHeader` `presentation="reading"`: on the page colour, left aligned on the reading
   column (`--article-measure`, else DetailFrame's `--detail-center-width`, else 46rem), title in
@@ -21,15 +21,23 @@ defect fixes below.
   accent rail or artwork, a sentence-case subtitle and a neutral line. `blueprint` is now
   optional; the expressive presentation renders an empty art layer without it.
 
-Defect fixes:
+Behaviour changes for existing callers:
 
-- `highlight` matches whole words only, Unicode aware: `AI` no longer accents part of `BRAIN`.
-  A highlight that appears only inside other words now accents nothing; one that appears as a
-  word later in the title now accents that word. Proof: `ArticleHeader.test.ts` and the Gallery
+- `highlight` (Y-4-approved behaviour correction): the previous contract accented the first
+  case-insensitive substring match, so `AI` accented part of `BRAIN`. It now accents the first
+  case-insensitive whole-word match. Words follow `Intl.Segmenter`, so Chinese and Thai titles
+  split into words; title and highlight compare in NFC; an apostrophe between letters stays
+  inside the word (`can` never matches in `can't`), while an elision such as `l'`, `d’` or `qu’`
+  starts a new word (`espace` matches in `l'espace`). Without `Intl.Segmenter`, letters, digits
+  and combining marks form words under the same apostrophe policy. A highlight that appears only
+  inside other words now accents nothing; one that also appears as a word later in the title now
+  accents that word. Proof: `article-highlight.test.ts`, `ArticleHeader.test.ts` and the Gallery
   `/article-header` browser test fail on the previous source.
-- A label and its date in the meta row wrap inside the column instead of overflowing (they were
-  `nowrap`, and the header clips): a long Spanish date reached 429px on a 320px screen. Products
-  can drop overrides of `.header__meta-pair`.
+- Defect fix: a label and its date in the meta row wrap inside the column instead of
+  overflowing (they were `nowrap`, and the header clips): a long Spanish date reached 429px on a
+  320px screen. The pair's spacing is unchanged in the expressive presentation (`gap: 0.5em`
+  between the label and the date, now also between rows when it wraps). Products can drop
+  overrides of `.header__meta-pair`.
 
 Migration: none required. To adopt, pass `presentation="reading"` to `ArticleHeader` (yesid.dev
 articles and case studies, Transit data pages) and `ListingFrame` (reading listings), pass

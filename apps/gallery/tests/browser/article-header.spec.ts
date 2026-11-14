@@ -65,6 +65,27 @@ test('long titles and dated meta wrap inside the header in both presentations', 
 	}
 });
 
+test('a wrapped expressive meta pair keeps its 0.5em gap between rows', async ({ page }, { project }) => {
+	sweep(project.name);
+	await open(page, '/article-header?only=long-es-expressive');
+	await resize(page, 320);
+	const pair = await page.locator('[data-slot="article-header"] .header__meta-pair').first().evaluate((node) => {
+		const [label, value] = [...node.children].map((child) => child.getBoundingClientRect());
+		const style = getComputedStyle(node);
+		return {
+			fontSize: parseFloat(style.fontSize),
+			rowGap: parseFloat(style.rowGap),
+			columnGap: parseFloat(style.columnGap),
+			wrapped: value.top >= label.bottom,
+			space: value.top - label.bottom,
+		};
+	});
+	expect(pair.wrapped).toBe(true);
+	expect(pair.rowGap).toBeCloseTo(pair.fontSize / 2, 1);
+	expect(pair.columnGap).toBeCloseTo(pair.fontSize / 2, 1);
+	expect(pair.space).toBeGreaterThanOrEqual(pair.rowGap - 0.5);
+});
+
 test('--article-title-size sets the title size in both presentations', async ({ page }) => {
 	await open(page, '/article-header');
 	for (const id of ['brain-word', 'essay-en']) {

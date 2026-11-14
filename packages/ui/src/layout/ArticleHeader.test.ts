@@ -182,6 +182,18 @@ describe('title highlight', () => {
 		expect(heading.textContent).toBe(text);
 	});
 
+	it.each([
+		["Why I can't stop measuring", 'can', null],
+		['我喜欢中文', '中文', '中文'],
+		['ภาษาไทย', 'ไทย', 'ไทย'],
+		['Cafe\u0301 Arona', 'Caf\u00e9', 'Cafe\u0301'],
+		["Explorer l'espace public", 'espace', 'espace'],
+	])('follows Unicode words, apostrophes and NFC in %j for %j', (text, highlight, wrapped) => {
+		const heading = title(header({ title: text, highlight }));
+		expect(heading.querySelector('span')?.textContent ?? null).toBe(wrapped);
+		expect(heading.textContent).toBe(text);
+	});
+
 	it('treats regular-expression characters in the highlight literally', () => {
 		const heading = title(header({ title: 'The AXI bus and the A.I. desk', highlight: 'A.I.' }));
 		expect(heading.querySelector('span')?.textContent).toBe('A.I.');
