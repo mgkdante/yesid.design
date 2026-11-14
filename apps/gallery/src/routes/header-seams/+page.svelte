@@ -7,6 +7,10 @@
  const navigation = getContext<NavigationLifecycle>('gallery-navigation');
 </script>
 
+<svelte:head>
+ <title>yesid.design | Header seams and wrapping</title>
+</svelte:head>
+
 <SiteHeader {navigation} home="/header-seams" links={[]} menuItems={[]} compactControls wordmarkAutoPlay={false}
  labels={LABELS} language={{ locale: 'en', locales: ['en', 'fr', 'es'], href: next => `/header-seams?lang=${next}`, label: 'Language', names: LANGUAGE_NAMES }}>
  {#snippet brand()}
@@ -18,7 +22,7 @@
  <div class="my-6 grid gap-4" style="width:200px">
   <Button wrap>Envoyer les instructions de connexion par courriel</Button>
   <Button wrap href="/header-seams">Enviar las instrucciones para iniciar sesión por correo</Button>
-  <Button>Continue</Button>
+  <Button class="min-h-11">Continue</Button>
  </div>
  <table style="width:100%; table-layout:fixed" aria-label="Deployment words">
   <thead><tr><th scope="col">Scope</th><th scope="col">Description</th></tr></thead>
@@ -28,6 +32,6 @@
 </main>
 <style>
  .brand-cluster { display: inline-flex; align-items: center; gap: 8px; font-size: 1.125rem; }
- .product-link { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; }
+ .product-link { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font-weight: 700; }
  th, td { padding: 8px; text-align: start; }
 </style>

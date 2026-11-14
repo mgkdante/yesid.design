@@ -338,7 +338,7 @@
 								class:compact-controls={compactMenuControls}
 							>
 								<span class="fallback-control-row"><span class="fallback-control-label" aria-hidden="true">{labels.theme}</span><ThemeToggle label={labels.theme} /></span>
-								{#if language && language.locales.length >= 2}<span class="fallback-control-row"><span class="fallback-control-label" aria-hidden="true">{menuLanguageLabel}</span><LanguageToggle {...language} bind:ref={pillLanguageLink} /></span>{/if}
+								{#if language}<span class="fallback-control-row"><span class="fallback-control-label" aria-hidden="true">{menuLanguageLabel}</span><LanguageToggle {...language} bind:ref={pillLanguageLink} /></span>{/if}
 							</span>
 						{/if}
 						{#if hasMenu}
