@@ -19,9 +19,11 @@ export const themeBootScript = `(() => {
 	let finished = false;
 	const readChoice = () => {
 		delete root.dataset.sectionsChoice;
+		delete root.dataset.sectionsSaved;
 		try {
 			const choice = localStorage.getItem('${SECTIONS_CHOICE_KEY}');
 			root.dataset.sectionsChoice = choice === 'collapsed' ? 'collapsed' : 'expanded';
+			if (choice === 'collapsed' || choice === 'expanded') root.dataset.sectionsSaved = '';
 		} catch {}
 	};
 	const applySection = (section, open, fallback = false) => {
@@ -106,7 +108,11 @@ export const themeBootScript = `(() => {
 		if (target && !target.matches('.section-card')) target = target.querySelector('.section-card') || target;
 		for (const section of document.querySelectorAll(cards)) {
 			let open = section.getAttribute('data-section-default') !== 'closed';
-			if (available && section.hasAttribute('data-section-bulk') && root.dataset.sectionsChoice) open = root.dataset.sectionsChoice === 'expanded';
+			if (available && section.hasAttribute('data-section-bulk')) {
+				const choice = root.dataset.sectionsChoice;
+				if (section.hasAttribute('data-section-first-visit-closed') && !root.hasAttribute('data-sections-saved')) open = false;
+				else if (choice) open = choice === 'expanded';
+			}
 			if (target && section.contains(target)) open = true;
 			applySection(section, open);
 		}
