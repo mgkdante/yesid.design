@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { expect, test, type TestInfo } from '@playwright/test';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import boot from '../../../../packages/ui/src/head/boot.json' with { type: 'json' };
 
 function proofPath(info: TestInfo, name: string): string {
@@ -10,6 +10,21 @@ function proofPath(info: TestInfo, name: string): string {
 	mkdirSync(directory, { recursive: true });
 	return join(directory, `${info.project.name}-${name}`);
 }
+
+async function inlineScriptHashes(page: Page, html: string): Promise<string[]> {
+	const scripts = await page.evaluate(html => {
+		const parsed = new DOMParser().parseFromString(html, 'text/html');
+		return [...parsed.querySelectorAll('script:not([src])')]
+			.map(script => script.textContent ?? '').filter(Boolean);
+	}, html);
+	return scripts.map(script => `sha256-${createHash('sha256').update(script).digest('base64')}`);
+}
+
+test('CSP sources use parsed script nodes regardless of tag case and quoted attributes', async ({ page }) => {
+	const source = 'const example = "<script>";';
+	const hashes = await inlineScriptHashes(page, `<SCRIPT data-example=">">${source}</SCRIPT><script src="/external.js"></script>`);
+	expect(hashes).toEqual([`sha256-${createHash('sha256').update(source).digest('base64')}`]);
+});
 
 for (const choice of ['first', 'collapsed', 'expanded', 'blocked']) {
 	for (const motion of ['reduce', 'no-preference'] as const) {
@@ -28,14 +43,15 @@ for (const choice of ['first', 'collapsed', 'expanded', 'blocked']) {
 				};
 				requestAnimationFrame(sample);
 			}, choice);
-			await page.route('**/sections/selective', async route => {
-				const response = await route.fetch();
-				const html = await response.text();
-				const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(match => match[1]).filter(Boolean);
-				const hashes = scripts.map(script => `sha256-${createHash('sha256').update(script).digest('base64')}`);
-				expect(hashes).toContain(boot.hash);
-				await route.fulfill({ response, headers: { ...response.headers(), 'content-security-policy': `script-src 'self' ${hashes.map(hash => `'${hash}'`).join(' ')}` } });
-			});
+			const response = await page.request.get('/sections/selective');
+			const html = await response.text();
+			const hashes = await inlineScriptHashes(page, html);
+			expect(hashes).toContain(boot.hash);
+			await page.route('**/sections/selective', route => route.fulfill({
+				response,
+				body: html,
+				headers: { ...response.headers(), 'content-security-policy': `script-src 'self' ${hashes.map(hash => `'${hash}'`).join(' ')}` },
+			}));
 			let release!: () => void;
 			const gate = new Promise<void>(resolve => { release = resolve; });
 			await page.route('**/*.js', async route => { await gate; await route.continue(); });
