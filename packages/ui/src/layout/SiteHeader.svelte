@@ -71,7 +71,7 @@
 </script>
 
 <script lang="ts">
-	import { onDestroy, tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { Dialog } from 'bits-ui';
 	import { magnetic } from '@yesid/motion/actions';
 	import { isPrefersReducedMotion } from '@yesid/motion/stores/reducedMotion';
@@ -103,6 +103,22 @@
 		: '');
 
 	let narrow = $state(false);
+	let hydrated = $state(false);
+	let fallbackControls = $state<HTMLSpanElement>();
+	let headerElement: HTMLElement;
+	onMount(() => {
+		if (!compactControls) {
+			hydrated = true;
+			return;
+		}
+		// Match the CSS container before relocating controls. A native disclosure may already be open.
+		narrow = headerElement.getBoundingClientRect().width - parseFloat(getComputedStyle(headerElement).paddingInlineEnd) < 600;
+		if (fallbackControls?.matches(':popover-open')) {
+			fallbackControls.hidePopover();
+			menuOpen = active = narrow;
+		}
+		hydrated = true;
+	});
 	const controlsInMenu = $derived(compactControls && narrow);
 	let pillLanguageLink = $state<HTMLAnchorElement | null>(null);
 	function measureHeader(node: HTMLElement) {
@@ -261,6 +277,7 @@
 				<header
 					data-testid="nav"
 					data-slot="site-header"
+					bind:this={headerElement}
 					use:measureHeader
 					class="nav-root pointer-events-none fixed left-0 right-0 flex flex-col items-center"
 					style:z-index={active ? 'var(--z-nav)' : 'var(--z-sheet)'}
@@ -271,6 +288,7 @@
 						aria-label={labels.nav}
 						class="nav-pill pointer-events-auto flex items-center"
 						class:nav-pill-compact={active}
+						class:nav-pill-compact-controls={compactControls}
 						use:linksFit={{ paused: active }}
 					>
 						<Wordmark href={home} text={wordmark} autoPlay class="nav-wordmark" />
@@ -303,7 +321,13 @@
 						<span class="nav-divider" aria-hidden="true"></span>
 						{@render actions?.()}
 						{#if !controlsInMenu}
-							<span class="pill-controls" class:compact-controls={compactControls}>
+							<span
+								bind:this={fallbackControls}
+								id="{contentId}-controls"
+								popover={compactControls && !hydrated ? 'auto' : undefined}
+								class="pill-controls"
+								class:compact-controls={compactControls}
+							>
 								<ThemeToggle label={labels.theme} />
 								{#if language}<LanguageToggle {...language} bind:ref={pillLanguageLink} />{/if}
 							</span>
@@ -315,8 +339,9 @@
 							class="menu-toggle"
 							class:menu-toggle-open={active}
 							aria-label={active ? labels.closeMenu : labels.openMenu}
-							aria-expanded={menuOpen}
-							aria-controls={contentId}
+							aria-expanded={compactControls && !hydrated ? undefined : menuOpen}
+							popovertarget={compactControls && !hydrated ? `${contentId}-controls` : undefined}
+							aria-controls={compactControls && !hydrated ? `${contentId}-controls` : contentId}
 							onclick={toggleMenu}
 						>
 							<span class="menu-toggle-line menu-toggle-top"></span>
@@ -377,8 +402,24 @@
 
 <style>
 	.pill-controls { display: contents; }
+	.pill-controls[popover] { border: 0; padding: 0; background: transparent; color: inherit; }
 	@container site-header (width < 600px) {
 		.pill-controls.compact-controls { display: none; }
+		.pill-controls[popover]:popover-open {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 16px;
+			position: fixed;
+			inset: var(--nav-clearance) 8px auto;
+			margin: 0 auto;
+			width: fit-content;
+			padding: 16px;
+			border: 1px solid var(--border-brand);
+			border-radius: var(--radius-pill);
+			background: var(--background);
+			color: var(--foreground);
+		}
 	}
 	.menu-group-heading {
 		margin-top: 24px;
@@ -488,9 +529,11 @@
 
 	/* Links that don't fit move to the menu (links-fit); this holds until it measures them. */
 	@container site-header (width < 375px) {
-		.nav-links-part {
+		.nav-pill:not(.nav-pill-compact-controls) .nav-links-part {
 			display: none;
 		}
+		.nav-links [data-priority='2'],
+		.nav-links [data-priority='3'] { display: none; }
 	}
 	@container site-header (width < 500px) {
 		.nav-links [data-priority='2'] {
