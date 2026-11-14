@@ -1,12 +1,15 @@
 <!--
-  A surface masthead: station kicker, dotted heading, optional lede and meta row, then the body and
-  a hazard tape. `cornerMeta` renders inside the header (pair it with `CornerMeta`).
+  A surface masthead: optional station kicker, dotted heading, optional lede and meta row, then the
+  body and a hazard tape. Task pages start with the heading: omit `kicker`, and set `tape={false}`.
+  `cornerMeta` renders inside the header (pair it with `CornerMeta`). No fixed heights: long French
+  and Spanish headings wrap.
 -->
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 
 	export interface MastheadProps {
-		kicker: string;
+		/** Station label above the heading; omit it to start with the heading. */
+		kicker?: string;
 		heading: string;
 		subheading?: string;
 		lede?: string;
@@ -16,8 +19,10 @@
 		cornerMeta?: Snippet;
 		meta?: Snippet;
 		children?: Snippet;
-		/** Hazard tape under the masthead. */
+		/** Hazard tape under the masthead. Defaults to `true`. */
 		tape?: boolean;
+		/** The brand dot after the heading. Defaults to `true`. */
+		dot?: boolean;
 		class?: string;
 	}
 </script>
@@ -40,6 +45,7 @@
 		meta,
 		children,
 		tape = true,
+		dot = true,
 		class: className,
 	}: MastheadProps = $props();
 </script>
@@ -47,8 +53,10 @@
 <div class={cn('masthead', className)} data-slot="masthead">
 	<header class="masthead-head" class:masthead-head--cornered={cornerMeta}>
 		{@render cornerMeta?.()}
-		<SectionLabel text={kicker} variant="station" />
-		<SectionHeading {heading} {subheading} {level} id={headingId} dot {explainer} />
+		{#if kicker !== undefined}
+			<SectionLabel text={kicker} variant="station" />
+		{/if}
+		<SectionHeading {heading} {subheading} {level} id={headingId} {dot} {explainer} />
 		{#if lede}
 			<p class="masthead-lede">{lede}</p>
 		{/if}

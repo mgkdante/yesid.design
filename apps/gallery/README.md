@@ -38,3 +38,12 @@ motion), with one worker and no retries. They assert behavior, never pixels.
 `/text-links` demonstrates orange underlined prose links on every documented surface and
 a dark island. `/registers` demonstrates expressive, reading and task regions with EN, FR
 and ES copy. The focused `text-links.spec.ts` checks cues, forced colours and 320 to 1920px.
+
+`/masthead` shows Masthead with its kicker (today) and heading first without one, with and without
+the dot, in EN and long FR and ES. `/error-page` renders today's page; `/error-page/[options]`
+prerenders option sets so the chosen props are in the first markup. The segment joins an
+illustration (`large-first`, `small-after`, `none`), any of `no-label`, `no-tape` and `unnamed` (no
+`suggestionsLabel`), and a language (`en`, `fr`, `es`) with dots, for example
+`/error-page/small-after.no-label.no-tape.en`; `OPTION_SEGMENTS` in `options.ts` lists them. The
+focused `quiet-task-headers.spec.ts` checks order, fit, stillness and pre- and post-hydration
+geometry from 320 to 1920px in both themes and both motion settings.

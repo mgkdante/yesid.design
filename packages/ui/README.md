@@ -733,14 +733,22 @@ reports whether it is on screen.
 `ErrorPage` is the error route body: hazard rule, `ErrorIllustration`, `label`, `heading`, `body`,
 optional `detail`, `suggestions` in a navigation named `suggestionsLabel`, and a terminal line when
 `statusNote` is given. For 404 the scene's sign shows the code; other statuses announce the code
-with `role="alert"`. The app keeps its copy and `<svelte:head>`.
+with `role="alert"`. The app keeps its copy and `<svelte:head>`. Every part of today's page stays by
+default and each can be turned off: `label` is optional (omit it to start with the heading),
+`tape={false}` drops the hazard rule, and `illustration` places the scene: `'large-first'` (the
+default, a large scene above the copy), `'small-after'` (a small scene after the heading, body,
+destinations and terminal line, so the way back comes first) or `'none'`. The scene's lamps are
+still. The suggestions navigation is always named: by `suggestionsLabel`, or by the heading when
+the label is missing or empty.
 
 ## Data pages
 
 `@yesid/ui/layout` also exports the parts of a data page. `Surface` is the page column with the
-page gutter. `Masthead` heads a surface with a station `kicker`, a dotted `heading`, optional
-`lede`, `meta` and body, and a hazard tape (`tape={false}` drops it); its `cornerMeta` snippet
-takes a `CornerMeta`. `Breadcrumb` renders `items` (`{ name, href }`) as a navigation named
+page gutter. `Masthead` heads a surface with an optional station `kicker`, a dotted `heading`
+(`dot={false}` drops the dot), optional `lede`, `meta` and body, and a hazard tape (`tape={false}`
+drops it); its `cornerMeta` snippet takes a `CornerMeta`. A task page starts with its heading: omit
+`kicker`, and drop the tape. The masthead sets no fixed heights, so long French and Spanish
+headings wrap. `Breadcrumb` renders `items` (`{ name, href }`) as a navigation named
 `label`, with the last item as the current page, and nothing for fewer than two items; build the
 trail's JSON-LD with `buildBreadcrumbListJsonLd` from `@yesid/seo-kit/jsonld`. `ControlsRail` is
 a card that groups controls under `label`. `DashboardGrid` fits as many `minTile`-wide columns as
