@@ -19,23 +19,10 @@
 		margin-left: 0.25rem;
 		vertical-align: text-bottom;
 		background: var(--accent);
-		animation: terminal-blink 1s step-end infinite;
 	}
 
 	:global([data-theme='light']) .terminal-cursor,
 	:global(.theme-light) .terminal-cursor {
 		background: var(--accent-text);
-	}
-
-	@keyframes terminal-blink {
-		50% {
-			opacity: 0;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.terminal-cursor {
-			animation: none;
-		}
 	}
 </style>

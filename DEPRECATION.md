@@ -58,6 +58,15 @@ consumer or clean-room verification.
 
 ### Owner-approved behavior changes
 
+- **Y-30, owner instruction 2026-11-14:** "make sure we're removing the pulsing dots from
+  the whole site ... from everywhere." This scoped compatibility exception permits the patch
+  to make opt-in gradient Separator still and to bound StatusDot `pulse`, TerminalPanel
+  `signal.live` and `.led-pulse` to two cycles (four seconds), without a deprecation window.
+  Props, types and exports remain. ErrorIllustration, MetroStation, StopLabel and TerminalCursor
+  had default-on decorative loops; their still reduced-motion frames correct the WCAG 2.2.2
+  defect. The date and quotation are supplied by the owner brief, not a publication receipt.
+  See [inventory and regression proof](docs/migrations/no-endless-decorative-loops.md).
+
 - **2026-11-07:** the owner changed D15's first-visit default from collapsed to expanded on both
   products. A stored `collapsed` choice still collapses content; a missing or malformed choice now
   opens it. Public exports, props and method signatures are unchanged. The boot asset has a new
