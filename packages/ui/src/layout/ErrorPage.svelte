@@ -29,7 +29,7 @@
 		illustration?: ErrorPageIllustration;
 		/** The first link is styled as the primary destination. */
 		suggestions?: readonly ErrorPageLink[];
-		/** Accessible name of the suggestions navigation; without it the navigation is named by the heading. */
+		/** Accessible name of the suggestions navigation; when missing or blank the navigation is named by the heading. */
 		suggestionsLabel?: string;
 		/** Comment after `$ route --status <status>`; the terminal line renders only when given. */
 		statusNote?: string;
@@ -63,6 +63,8 @@
 	const notFound = $derived(status === 404);
 	const uid = $props.id();
 	const headingId = `error-page-heading-${uid}`;
+	// A blank label would give the landmark an empty name, so fall back to the heading.
+	const navLabel = $derived(suggestionsLabel?.trim() ? suggestionsLabel : undefined);
 </script>
 
 {#snippet scene()}
@@ -105,8 +107,8 @@
 		{#if suggestions.length > 0}
 			<nav
 				class="suggestions"
-				aria-label={suggestionsLabel || undefined}
-				aria-labelledby={suggestionsLabel ? undefined : headingId}
+				aria-label={navLabel}
+				aria-labelledby={navLabel ? undefined : headingId}
 			>
 				{#each suggestions as suggestion, index (suggestion.href)}
 					<a

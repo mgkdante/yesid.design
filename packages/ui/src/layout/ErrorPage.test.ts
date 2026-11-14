@@ -88,11 +88,20 @@ describe('suggestions', () => {
 		expect(items.map((link) => link.classList.contains('suggestion-primary'))).toEqual([true, false]);
 	});
 
-	it.each([undefined, ''])('names the navigation by the heading when suggestionsLabel is %j', (suggestionsLabel) => {
-		const view = page({ suggestionsLabel });
-		const nav = view.getByRole('navigation', { name: 'This page is under construction' });
-		expect(nav.getAttribute('aria-labelledby')).toBe(view.getByRole('heading', { level: 1 }).id);
-		expect(nav.hasAttribute('aria-label')).toBe(false);
+	it.each([undefined, '', '   ', '\t', '\n', ' \t\n '])(
+		'names the navigation by the heading when suggestionsLabel is %j',
+		(suggestionsLabel) => {
+			const view = page({ suggestionsLabel });
+			const nav = view.getByRole('navigation', { name: 'This page is under construction' });
+			expect(nav.getAttribute('aria-labelledby')).toBe(view.getByRole('heading', { level: 1 }).id);
+			expect(nav.hasAttribute('aria-label')).toBe(false);
+		},
+	);
+
+	it('keeps a supplied label exactly as given, surrounding spaces included', () => {
+		const nav = page({ suggestionsLabel: ' Where to next ' }).getByRole('navigation', { name: 'Where to next' });
+		expect(nav.getAttribute('aria-label')).toBe(' Where to next ');
+		expect(nav.hasAttribute('aria-labelledby')).toBe(false);
 	});
 
 	it.each([[[]], [undefined]])('renders no navigation for suggestions=%j', (suggestions) => {
