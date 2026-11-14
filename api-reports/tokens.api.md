@@ -31,7 +31,7 @@
 
 ## Direct public assets
 
-- `./tokens.json` — direct asset `./tokens.json` (`default`), sha256 `6cecf31312233d4cdb7e62846907e017334fecad8de7bb56d004e95d32739c34`
+- `./tokens.json` — direct asset `./tokens.json` (`default`), sha256 `0c555108b7935580595019741287ef349b3214dae721c6e376f7c19104086918`
 - `./tokens.css` — direct asset `./tokens.css` (`default`), sha256 `04cf8381811b93f60854071a141c876c2f346829fe2e73455ff511295667d919`
 - `./theme.css` — direct asset `./theme.css` (`default`), sha256 `ff7f813ff3242b5b7150fa56ba7ed98d8eb33ba7c5625fbe82ccf5da2eee9707`
 - `./fonts.css` — direct asset `./fonts.css` (`default`), sha256 `86b24f9e84418fa584e8cb8ac4ecdefb0869376eb6ecc07054c5f4412d30a362`

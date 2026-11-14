@@ -71,7 +71,6 @@ consumer or clean-room verification.
   now use `--primary`. Remove product rules that colour links yellow; a component that needs
   another link style styles its own. No prop, type or export changes. Rehearse in all three products.
 
-
 - **Y-30, owner instruction 2026-11-14:** "make sure we're removing the pulsing dots from
   the whole site ... from everywhere." This scoped compatibility exception permits the patch
   to make opt-in gradient Separator, StatusDot `pulse`, TerminalPanel `signal.live` and

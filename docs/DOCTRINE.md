@@ -1,8 +1,7 @@
 # The yesid.design doctrine: honest, calm by default, expressive on purpose
 
 Approved by the owner on 13 November 2026. Read this before composing a page.
-The [registers fixture](../apps/gallery/src/routes/registers/+page.svelte) and
-[text-link fixture](../apps/gallery/src/routes/text-links/+page.svelte) demonstrate the rules.
+Gallery fixtures accompany the rules they demonstrate below.
 
 **Owner decisions this doctrine applies** (binding): keep the yesid.design philosophy, the four colours, cards and collapsible cards, and D15; WCAG 2.2 AA; equal languages; no em dashes; a section starts with its heading, never an eyebrow (10 November 2026); Transit answers 3A (test status colours before any change), 4A (calm data-reading style; one restrained construction scene on home and footer), 5A (a page may start chosen optional sections closed on a first visit) and 8A (compact phone header); and on 13 November 2026: the theme and language toggles stay exactly as they are and are core identity; the language order is English, French, Spanish, then English again, owned by yesid.design; the construction props keep their sliding animation; the yesid.dev home motion as decided (section 3); a mandate to apply the calm register to every other page while keeping everything he named; and his answers of that evening ("Approved and A to all"), among them orange text links (9A) and the French and Spanish voices (6A, 7A).
 
@@ -42,8 +41,8 @@ A signature is an expressive element the owner has approved, with its job and it
 | Theme and language toggles | Every product's header (or its phone menu, by opt-in) | Identity and the visitor's choices | Unchanged (section 2) |
 | The wordmark and its dot | Every header and footer | Identity | The header's one-time wordmark play may be turned off on task pages (roadmap Y-18) |
 | The construction scene and its sliding props | yesid.dev home closing; Transit home and footer (4A); below yesid.login's sign-in task | The brand's closing gesture | Where a page passes the reveal marker (`ConstructionProps` `revealAt`, as yesid.dev and Transit do), the props slide up out of the ground only as the visitor scrolls to the scene, exactly as today; under reduced motion they appear whole without moving. yesid.login passes no marker, so its scene is still today and stays so. The scene sits at the end of a page or below a task, never between the reader and the answer |
-| The closing departure board | yesid.dev home closing | Real destinations (contact, GitHub, blog, About) as signage | Rows stay real links; no blinking cursor or invented readouts  |
-| "click me" and the Montréal metro scene | yesid.dev home opening | Invites the metro intro replay | Clicking opens the scene; under reduced motion it opens a still form of the scene with nothing moving  |
+| The closing departure board | yesid.dev home closing | Real destinations (contact, GitHub, blog, About) as signage | Rows stay real links; no blinking cursor or invented readouts |
+| "click me" and the Montréal metro scene | yesid.dev home opening | Invites the metro intro replay | Clicking opens the scene; under reduced motion it opens a still form of the scene with nothing moving |
 | The nine manifesto flow lines | yesid.dev home | Ambient brand texture | A visible control pauses them; still under reduced motion; decorative text stays hidden from assistive technology, meaningful links stay readable |
 | The glowing weather sun and the three drifting clouds (and the other weather scenes) | yesid.dev home, About, and Contact beside or after the form, never before it | Represent the current weather | Same pause control; still under reduced motion; if the weather cannot load, no weather is shown rather than a dash or a guess; a storm flash stays under three flashes a second |
 | The shared error illustration | Every "page not found" | Shows that something is missing, in the brand's language | Small, after the heading and recovery links; its lights stay still (Y-22) |
@@ -73,7 +72,7 @@ One brand, three registers. They share every contract that makes the family reco
 
 **Placement:** expressive elements sit at the door (the top of an expressive page), at the end (a closing section or the footer zone), or beside the main content as context (the weather on About and Contact). Never between a reader and the answer, never inside a form or task region.
 
-**How a page declares its register:** set `data-register="expressive"`, `"reading"` or `"task"` on the route's top element (the first element inside `<main id="main">`); an undeclared page is reading. A signature region may declare its own register: the section or container that holds a closing scene carries `data-register="expressive"` even on a reading or task page, and a layout-owned footer scene (Transit's) carries it on the layout's scene container. The attribute is a declaration for reviewers, mockups, Gallery fixtures and product tests (a product may fail a test when a scene renders outside an expressive region; that policy stays with the product, per D7). No component reads it, and it is neither a theme nor a visitor setting: light and dark are a separate axis, and no "quiet mode" returns. Calm arrives through component options that pages choose , and default changes happen only where the owner approves them as named exceptions.
+**How a page declares its register:** set `data-register="expressive"`, `"reading"` or `"task"` on the route's top element (the first element inside `<main id="main">`); an undeclared page is reading. A signature region may declare its own register: the section or container that holds a closing scene carries `data-register="expressive"` even on a reading or task page, and a layout-owned footer scene (Transit's) carries it on the layout's scene container. The attribute is a declaration for reviewers, mockups, Gallery fixtures and product tests (a product may fail a test when a scene renders outside an expressive region; that policy stays with the product, per D7). No component reads it, and it is neither a theme nor a visitor setting: light and dark are a separate axis, and no "quiet mode" returns. Calm arrives through component options that pages choose, and default changes happen only where the owner approves them as named exceptions.
 
 Reading and task share calm rules but differ in width, density and what comes first.
 
@@ -85,8 +84,9 @@ Each rule has its reason and a do / don't pair. "Carried by" names the yesid.des
 
 Lamps, dates, "Live", "Online", "System", demo figures, telemetry ticks, serial numbers, drawing stamps, coordinates and countdowns appear only when a real source supplies the state, its subject and its time. Otherwise they are not drawn. The theme toggle's lamp is a control, not a status (section 2).
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Readers take a lamp or a date as a measurement. Earlier footers drew a pulsing "Live" lamp and a date the component made up, and terminal panels always drew a green lamp, even around a contact form.
+
+**Gallery:** [`/site-header`](../apps/gallery/src/routes/site-header/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -101,8 +101,9 @@ Carried by: TerminalPanel `signal` and optional footer status (v0.42.0); documen
 
 Reading and task pages spend no boldness of their own: their identity comes from the shared chrome, the toggles, the type and the colour roles, and at most a signature region at their end. An expressive page leads with one gesture at the door and may carry the signatures listed in section 3. Never add new costumes: no console, construction site or technical drawing stacked on a page beyond the listed signatures. Real material is not a gesture: screenshots, photographs, diagrams and code that explain the work are content and are never rationed.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Boldness spent on purpose is remembered; costumes stacked everywhere dilute the identity and push the answer down. A slogan, metric tiles and a decorative console can fill the opening before the reader learns what the product does.
+
+**Gallery:** [`/registers`](../apps/gallery/src/routes/registers/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -120,8 +121,9 @@ Reading and task pages spend no boldness of their own: their identity comes from
 - **Status colours** belong to named states only, always with a word and a shape (Transit: ▼ Early, ● On time, ▲ Late, ○ Delay unknown; yesid.login: a dot beside "Access confirmed"), never as decoration or a chart series. No status palette is verified colour-blind safe; tokens change only after the owner chooses from the rendered colour test (3A, item Y-7).
 - **Charts:** one neutral colour for a single series; a legend and direct labels for two to four series; values and labels in text colours, never a series colour; one axis per chart.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** When highlights, ordinary figures, status and links share a colour, readers must guess what the colour means. Giving each colour one job keeps actions distinct from evidence and wayfinding.
+
+**Gallery:** [`/text-links`](../apps/gallery/src/routes/text-links/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -144,8 +146,9 @@ Carried by: Y-28 orange text links (v0.43.0), Y-6 neutral surfaces (v0.44.0), Y-
 - Floors: body 16 px or more; meaningful labels 12 px or more, preferably 14 to 15 px; mono 13 px or more; the 11 px micro size for chrome only. Text wraps; it never shrinks to fit.
 - A separator joins facts a reader needs ("Record · data through Nov 10"), never system-like fragments.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Monospace, tracked uppercase labels and tiny categories made ordinary reading look like technical signage. Highlighting part of a word can also change its meaning, so type treatment must follow the content.
+
+**Gallery:** [`/registers`](../apps/gallery/src/routes/registers/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -160,8 +163,9 @@ Carried by: Y-22 optional Masthead kicker and Y-4 calm article header (v0.43.0);
 
 Cards hold one subject; comparisons are aligned rows inside one card; no card inside a card inside a section. Static cards use the neutral border; orange edges mark interaction or selection. Hover, press and lift effects appear only on whole-card links, buttons and section headings. No glow on reading or task surfaces, with two exceptions: the bulk control's orange active state (D15) and lit artwork in a signature region; the glow tokens otherwise serve the conversion button on expressive pages.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Repeated frames compete with the content and hide which items belong together. Hover effects on static cards suggest an action that the surface cannot perform.
+
+**Gallery:** [`/registers`](../apps/gallery/src/routes/registers/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -174,8 +178,9 @@ Carried by: Y-1 heading-only hover on sections (v0.42.0), Y-6 (v0.44.0), Y-11 ro
 
 A page title names the subject in plain words. A section heading says what the section tells; its summary gives the finding. A task heading says the task. No slogan in a reading or task title, no console phrase, no rotated or visually hidden title.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Ceremonial title stages delay the answer, especially on a phone. A plain heading tells readers what the page contains or what they can do next.
+
+**Gallery:** [`/registers`](../apps/gallery/src/routes/registers/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -193,8 +198,9 @@ A page title names the subject in plain words. A section heading says what the s
 - D15 stands: on a page with the Expand all control and at least two content sections, a first visit opens content sections, and the visitor's saved bulk choice wins later. With 5A, a page may start chosen optional sections closed on a first visit (Y-12); the saved choice still wins. Individual toggles affect that view only; the TOC and filters stay independent.
 - Do not mark ordinary content sections `independent` to escape the visitor's choice.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** A paragraph that closes its section when tapped interrupts reading and text selection. A clipped summary hides the finding or its limits exactly when the body is closed.
+
+**Gallery:** [`/sections`](../apps/gallery/src/routes/sections/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -207,15 +213,16 @@ Carried by: Y-1 (v0.42.0), Y-12 (v0.43.0).
 
 Motion answers an action (open, close, confirm, navigate, a refresh result) or is one of the signatures in section 3. Reading and task surfaces stay still: no new ambient loops, pulses, blinking or count-ups. A signature that loops on its own for more than five seconds has a visible control that pauses it and stops under reduced motion (WCAG 2.2.2). A scroll-linked signature, such as the construction props' slide, moves only while the visitor scrolls and appears whole under reduced motion. Reading surfaces keep native scrolling and carry `data-ripple-exempt` (D9). Under reduced motion nothing scales, slides or blinks, and every signature uses its still form.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Endless decorative motion competes with reading, and a pulsing lamp can imply a state nobody measured. Motion that answers an action or belongs to a named signature keeps a clear purpose.
+
+**Gallery:** [`/error-page`](../apps/gallery/src/routes/error-page/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
 | The construction props slide up as the visitor reaches the closing scene; with reduced motion they appear whole | Every card fades up as it scrolls into view |
 | The manifesto lines move, with a "Pause animation" button beside them | Lamps that blink on a 404 while the reader looks for a way back |
 
-Carried by: Y-2 and Y-13 (v0.42.0); still error illustration option (Y-22, v0.43.0); the yesid.dev pause control and "click me" still form are product work .
+Carried by: Y-2 and Y-13 (v0.42.0); still error illustration option (Y-22, v0.43.0); the yesid.dev pause control and "click me" still form are product work.
 
 ### Rule 9. Plain, specific words in every language
 
@@ -227,8 +234,7 @@ Carried by: Y-2 and Y-13 (v0.42.0); still error illustration option (Y-22, v0.43
 - No em dashes. No count that will go stale in permanent text ("three sites"); a number that matters is a dated measurement.
 - Products own every visitor-facing word; components ship none (D16). The owner approves commercial and legal wording; interface wording follows the plan's drafts under his mandate.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Vague promises and command syntax make readers work out both the meaning and the next action. Plain words and complete translations let each visitor follow the same journey.
 
 | Purpose | English | Français (Québec) | Español |
 | --- | --- | --- | --- |
@@ -244,8 +250,7 @@ Don't: "Initialize connection ->", "I help businesses grow.", "Invalid or expire
 
 Every figure and every state has its own words: live (with its age), last received (held), simulated (a demonstration), unavailable (failed, with a next step), measured zero ("0" with its unit), not published, not enough data. Never a lone dash, never zero for "not measured", never failure words for a deliberate demonstration, never success words for something that only might have happened.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** A dash, zero or generic message makes readers guess whether a value was measured, is missing or failed to load. Calling a chosen demonstration a failure, or a request an accomplished result, creates the same confusion.
 
 | State | English | Français (Québec) | Español |
 | --- | --- | --- | --- |
@@ -261,8 +266,9 @@ Don't: "-" where a weather value failed; "Email sent" when the service only acce
 
 The theme toggle and the language toggle are the standard yesid.design ones on every page of every product: same look, same behaviour, same place in the header (or in the phone menu by U1's opt-in). The language signpost cycles in the brand order. No product relabels, restyles or replaces them, and no mockup shows a substitute.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** The owner kept the theme and language toggles as core identity. A shared language order prevents products from giving the same control a different next step.
+
+**Gallery:** [`/site-header`](../apps/gallery/src/routes/site-header/+page.svelte), [`/site-header-compact`](../apps/gallery/src/routes/site-header-compact/+page.svelte).
 
 | Do | Don't |
 | --- | --- |
@@ -275,8 +281,7 @@ Carried by: U1 (v0.42.0); the brand language order (Y-27, v0.42.0).
 
 Distinctiveness comes from Yesid's real work: screenshots beside the text they explain, named contributions, highlighted code as selectable text, real photographs, route plates, and the scenes he made. No stock imagery, placeholder media or invented outcomes. A number that is evidence shows its unit and period, and its source where one exists. The service metrics already published on yesid.dev keep their approved form, without a source, date or tooltip (owner rule); a published metric stays unless it is wrong.
 
-**Gallery:** [Registers](../apps/gallery/src/routes/registers/+page.svelte),
-[text links](../apps/gallery/src/routes/text-links/+page.svelte).
+**Why.** Real screenshots, photographs and selectable code let readers inspect the work being described. Invented machinery and decorative imagery provide no comparable proof.
 
 | Do | Don't |
 | --- | --- |
