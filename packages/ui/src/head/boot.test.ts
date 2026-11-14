@@ -40,7 +40,7 @@ describe('theme boot script', () => {
 	it.each([null, 'collapsed', 'expanded', 'false', '{broken'])('reads only a valid bulk choice (%s), without writing a default', (stored) => {
 		if (stored !== null) localStorage.setItem('sections-choice', stored);
 		runBoot();
-		expect(document.documentElement.dataset.sectionsChoice).toBe(stored === 'collapsed' ? 'collapsed' : 'expanded');
+		expect(document.documentElement.dataset.sectionsChoice).toBe(stored === 'collapsed' || stored === 'expanded' ? stored : 'default');
 		expect(localStorage.getItem('sections-choice')).toBe(stored);
 	});
 

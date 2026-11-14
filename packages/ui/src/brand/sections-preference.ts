@@ -14,7 +14,7 @@ export function rememberSections(open: boolean): void {
 }
 
 /** Read once per mount, after all siblings exist. Never writes a visitor's choice. */
-export function initialSectionOpen(element: HTMLElement | null, declared: boolean, independent = false): boolean {
+export function initialSectionOpen(element: HTMLElement | null, declared: boolean, independent = false, firstVisitClosed = false): boolean {
 	if (!element) return declared;
 	if (element.hasAttribute('data-section-fallback')) return true;
 	let target: Element | null = null;
@@ -26,7 +26,7 @@ export function initialSectionOpen(element: HTMLElement | null, declared: boolea
 	if (target && element.contains(target)) return true;
 	if (independent || !hasBulkSections()) return declared;
 	const choice = document.documentElement.dataset.sectionsChoice;
-	return choice === 'collapsed' ? false : choice === 'expanded' ? true : declared;
+	return choice === 'collapsed' ? false : choice === 'expanded' ? true : firstVisitClosed ? false : choice === 'default' ? true : declared;
 }
 
 export function hasBulkSections(): boolean {

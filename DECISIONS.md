@@ -125,7 +125,10 @@ prop with a default stays in the app.
 On both products, pages with a bulk control and at least two collapsible content sections start
 expanded on a first visit, with a neutral control. After Collapse all the control is orange, with
 `activeEffect="glow"`; expanded content clears that active state. A visitor's bulk choice wins on
-later pages and visits.
+later pages and visits. Under owner answer 5A (2026-11-13), a page may opt chosen optional
+content sections into `firstVisitClosed`. With no valid saved choice those sections start closed;
+other sections retain the expanded default. A saved Expand all or Collapse all still wins.
+The main answer stays outside collapsible bodies; `independent` is not an escape from bulk choice.
 `sections-choice` in origin-local localStorage holds only `collapsed` or `expanded`, written by
 bulk actions. Individual section toggles affect that view only. There is no page or section key,
 cookie, server state or CMS setting. Malformed values use the first-visit default without repair.

@@ -29,3 +29,16 @@ it('remembers only a bulk choice, across complete page remounts', async () => {
 	const last = render(Fixture);
 	expect(last.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe('true');
 });
+
+for (const choice of [null, 'collapsed', 'expanded'] as const) {
+	it(`selective first-visit default respects ${choice ?? 'no saved choice'}`, async () => {
+		if (choice) localStorage.setItem(key, choice);
+		new Function(themeBootScript)();
+		const view = render(Fixture, { firstVisitClosed: true });
+		expect(view.getByRole('button', { name: 'First' }).getAttribute('aria-expanded')).toBe(choice === 'collapsed' ? 'false' : 'true');
+		expect(view.getByRole('button', { name: 'Second' }).getAttribute('aria-expanded')).toBe(choice === 'expanded' ? 'true' : 'false');
+		expect(localStorage.getItem(key)).toBe(choice);
+		await fireEvent.click(view.getByRole('button', { name: 'Second' }));
+		expect(localStorage.getItem(key)).toBe(choice);
+	});
+}
