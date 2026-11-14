@@ -144,10 +144,124 @@ describe('title highlight', () => {
 		expect(heading.textContent).toBe(text);
 	});
 
-	it.each([undefined, '', 'absent'])('adds no highlight span for %j', (highlight) => {
+	it.each([undefined, '', '  ', 'absent'])('adds no highlight span for %j', (highlight) => {
 		const heading = title(header({ highlight }));
 		expect(heading.querySelector('span')).toBeNull();
 		expect(heading.textContent).toBe('How we measure reliability');
+	});
+
+	it.each([
+		['One BRAIN for four tools', 'AI'],
+		['One brain for four tools', 'ai'],
+		['Remeasured reliability', 'measure'],
+		['Les défis énergétiques', 'énergé'],
+		['Desafíos del tránsito', 'fío'],
+		// A combining accent belongs to the word it follows.
+		['Cafe\u0301 notes', 'Cafe'],
+		['Ελληνικά δεδομένα', 'ληνικά'],
+		['Line 240 delays', '24'],
+	])('never accents part of a word: %j with %j', (text, highlight) => {
+		const heading = title(header({ title: text, highlight }));
+		expect(heading.querySelector('span')).toBeNull();
+		expect(heading.textContent).toBe(text);
+	});
+
+	it.each([
+		['One brain for four AI tools: T3 Code and Notion', 'AI', 'AI'],
+		['One BRAIN for four AI tools', 'ai', 'AI'],
+		['Les défis ÉNERGÉTIQUES du réseau', 'énergétiques', 'ÉNERGÉTIQUES'],
+		['Por qué apuesto por el tránsito', 'TRÁNSITO', 'tránsito'],
+		['Learning C++ in a weekend', 'C++', 'C++'],
+		['Notes on (AI) tools', 'AI', 'AI'],
+		['l’IA générative', 'IA', 'IA'],
+	])('accents the first whole-word match in %j for %j', (text, highlight, wrapped) => {
+		const heading = title(header({ title: text, highlight }));
+		const spans = heading.querySelectorAll('span');
+		expect(spans).toHaveLength(1);
+		expect(spans[0].textContent).toBe(wrapped);
+		expect(heading.textContent).toBe(text);
+	});
+
+	it.each([
+		["Why I can't stop measuring", 'can', null],
+		['我喜欢中文', '中文', '中文'],
+		['ภาษาไทย', 'ไทย', 'ไทย'],
+		['Cafe\u0301 Arona', 'Caf\u00e9', 'Cafe\u0301'],
+		["Explorer l'espace public", 'espace', 'espace'],
+	])('follows Unicode words, apostrophes and NFC in %j for %j', (text, highlight, wrapped) => {
+		const heading = title(header({ title: text, highlight }));
+		expect(heading.querySelector('span')?.textContent ?? null).toBe(wrapped);
+		expect(heading.textContent).toBe(text);
+	});
+
+	it('treats regular-expression characters in the highlight literally', () => {
+		const heading = title(header({ title: 'The AXI bus and the A.I. desk', highlight: 'A.I.' }));
+		expect(heading.querySelector('span')?.textContent).toBe('A.I.');
+		const plain = header({ title: 'The AXI bus', highlight: 'A.I' }).container.querySelector('h1')!;
+		expect(plain.querySelector('span')).toBeNull();
+	});
+});
+
+describe('reading presentation', () => {
+	const reading = (props: Partial<ArticleHeaderProps> = {}) =>
+		header({
+			presentation: 'reading',
+			category: 'Professional',
+			meta: [{ text: 'Nov 2026', datetime: '2026-11' }, '4 min read', 'English'],
+			...props,
+		});
+
+	it('marks the root and keeps the expressive presentation as the default', () => {
+		expect(root(reading()).dataset.presentation).toBe('reading');
+		expect(root(header()).dataset.presentation).toBe('expressive');
+	});
+
+	it('draws no canvas, grid or decoration layer, whatever decoration is passed', () => {
+		const view = reading({
+			watermark: 'Method',
+			edgeLeft: 'LINE 24',
+			edgeRight: 'JUL 9 2026',
+			decorations: html('<i data-testid="extra">+</i>'),
+			canvas: html('<canvas data-testid="canvas"></canvas>'),
+		});
+		expect(view.container.querySelector('canvas')).toBeNull();
+		expect(view.container.querySelector('[aria-hidden="true"]:not(.header__meta-sep)')).toBeNull();
+		for (const text of ['Method', 'LINE 24', 'JUL 9 2026', '+']) expect(view.queryByText(text)).toBeNull();
+	});
+
+	it('shows no highlight', () => {
+		const heading = title(reading({ title: 'One brain for four AI tools', highlight: 'AI' }));
+		expect(heading.querySelector('span')).toBeNull();
+		expect(heading.textContent).toBe('One brain for four AI tools');
+	});
+
+	it('starts with the back link and the title, then gives the category as the first meta entry', () => {
+		const view = reading({ subtitle: 'How one workspace feeds every assistant' });
+		const content = title(view).parentElement!;
+		expect([...content.children].slice(0, 2)).toEqual([view.getByRole('link'), title(view)]);
+		const row = metaRow(view)!;
+		expect(precedes(title(view), row)).toBe(true);
+		const items = [...row.children].map((item) => item.textContent?.trim());
+		expect(items).toEqual(['Professional', 'Nov 2026', '4 min read', 'English']);
+		expect(row.querySelectorAll('[aria-hidden="true"]')).toHaveLength(3);
+		expect(view.getAllByText('Professional')).toHaveLength(1);
+	});
+
+	it('renders a category alone as the meta row, and keeps the pending skeleton after it', () => {
+		expect(metaRow(reading({ meta: [] }))!.textContent?.trim()).toBe('Professional');
+		const pending = metaRow(reading({ meta: [], metaPending: true }))!;
+		expect(pending.dataset.pending).toBe('true');
+		expect(pending.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+	});
+
+	it('keeps actions and controls in the content column', () => {
+		const view = reading({
+			actions: html('<a href="/map" data-testid="action">Map</a>'),
+			controls: html('<button type="button" data-testid="control">Collapse</button>'),
+		});
+		const controlRow = view.container.querySelector('[data-slot="article-header-controls"]')!;
+		expect(controlRow.parentElement).toBe(title(view).parentElement);
+		expect(precedes(view.getByTestId('action'), view.getByTestId('control'))).toBe(true);
 	});
 });
 
