@@ -132,6 +132,9 @@ conversion buttons, see Colors), motion-with-intent, no fluff.
 Public narrative and implementation rules: README.md and
 docs/BUILD-A-YESID-PRODUCT.md.
 
+Before composing a page, read the doctrine ([docs/DOCTRINE.md](docs/DOCTRINE.md)): core identity,
+signatures by name, three registers, calm by default.
+
 ## Colors
 
 **THE FOUR-COLOR INFRASTRUCTURE DOCTRINE** (constitutional). Real infrastructure speaks four
@@ -140,16 +143,15 @@ structure. Each holds a named role; every component usage maps to exactly one:
 
 - **ORANGE — interactive/signage** (\`primary\` \`#E07800\`, light \`#985000\`): nav and component
   links, buttons, CTAs, focus rings, active/hover states, signage accents. The clickable hue for
-  everything except conversion and text links (below).
-- **YELLOW — wayfinding & hazard & highlight** (\`accent\` \`#FFB627\` as surface/art;
-  \`accent-text\` as AA text, light \`#815D00\`; \`line-amber\`; \`accent-surface\`): section
-  labels/overlines (\`.label-station\`), departure-board and status readouts, metric/number
-  callouts, data-viz/diagram amber, selected/highlight states, hazard tape.
-  THE YELLOW-CONVERSION RULE: the only clickable yellow surface is the "talk to Yesid"
-  conversion buttons (contact submit, hero contact, about send, closer CTA) drawn as the
-  theme-invariant signage pair (\`accent\` \`#FFB627\` ground / \`signage-bg\` \`#1C1814\` ink,
-  ~10:1, hover \`accent-hover\`), at most one per view. Text links (a link without a class)
-  are underlined in \`accent-text\` ink. Every other yellow stays unclickable.
+  everything except conversion (below), text links included: a link without a class is underlined in \`primary\` ink.
+- **YELLOW: wayfinding and highlight** (\`accent\` as surface and art; \`accent-text\` as AA text;
+  \`line-amber\`; \`accent-surface\`): the one highlight per screen (the answer figure or the
+  selected item), departure-board signage, map and diagram amber, string colours in highlighted
+  code, and hazard tape for a real caution or the page's signature. Not for ordinary numbers,
+  labels above headings or status: ordinary numbers use reading ink, and status uses the status
+  tokens with a word and a shape. The yellow conversion rule is unchanged: the only clickable
+  yellow surface is the "talk to Yesid" button, at most one per view; every other yellow stays
+  unclickable, text links included (they are orange).
 - **WHITE — reflective** (\`reflective\` \`#F5F5F0\`, theme-invariant; dark \`foreground\`):
   key headline words on dark, catch-lights (\`edge-highlight\`), white-core métro dots and
   reflective chips over guaranteed-dark grounds.
@@ -166,6 +168,8 @@ Inter Variable for headings + body; JetBrains Mono Variable for code, terminals,
 Self-hosted (no Google Fonts CDN). Type scale uses \`clamp()\` for fluid sizing across breakpoints.
 Hard floors: body ≥ 16px, mono ≥ 13px, labels ≥ 12px, micro for chrome only.
 
+Sentence case. Uppercase only for short signage. A section starts with its heading, never with a label above it.
+
 ## Layout
 
 Four CSS Grid recipes: Full-Bleed · Contained · Content+Sidebars · Edge-Title-Grid. Container
@@ -177,7 +181,9 @@ docs/BUILD-A-YESID-PRODUCT.md.
 
 Shadow tokens use \`color-mix(in srgb, var(--primary) N%, transparent)\` for brand-connected
 glows. Six tiers: \`glow-sm\`, \`glow-md\`, \`glow-lg\`, \`card\`, \`section\`, \`nav\`. No raw
-\`box-shadow\` in components.
+\`box-shadow\` in components except the existing Card, SiteHeader, TocNav and StopLabel surface,
+chrome and signage shadows. These exceptions do not authorize new glow on reading or task
+surfaces. Only the D15 bulk control and lit artwork in a signature region may glow there.
 
 ## Motion
 
@@ -208,6 +214,12 @@ the public \`@yesid/ui\` package documentation and the living Gallery.
 
 **Don't**
 
+- Draw a status, date or lamp without a real source.
+- Put a label above a heading.
+- Accent one word of a title.
+- Add hover effects to content that does not act.
+- Restyle the theme or language toggle.
+- Colour a link yellow.
 - Hardcode hex colors in components.
 - Use arbitrary Tailwind values (\`text-[14px]\`, \`p-[22px]\`) — use the scale or a token.
 - Use \`vh\` on mobile; use \`dvh\`/\`svh\`/\`lvh\`.

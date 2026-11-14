@@ -54,3 +54,13 @@ _Avoid_: Gallery acceptance, throwaway rehearsal branch
 **Consumer adoption**:
 A product's reviewed integration of one exact stable release; it may begin as that release's rehearsal. Publication, adoption and deployed acceptance each need their own evidence.
 _Avoid_: automatic sync, merging a prerelease
+
+**Register**: The amount of expression a page or region spends: expressive, reading or task.
+Light and dark are a separate axis. An undeclared page is reading.
+
+**Signature**: An expressive element approved by the owner by name, with its job and conditions.
+
+**Evidence**: Anything a reader takes as measured fact, including a number, status, date or lamp.
+It needs a source, subject and time.
+
+**Demonstration**: Simulated content shown on purpose, labelled beside the figures it explains.

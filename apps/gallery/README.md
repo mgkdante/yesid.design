@@ -34,3 +34,7 @@ bun run test:browser:list
 UTC, `en-CA` and reduced motion, on the standard projects from `@yesid/config/playwright` (untagged
 tests at phone, tablet and desktop, `@theme` tests in light and dark, `@motion` tests with reduced
 motion), with one worker and no retries. They assert behavior, never pixels.
+
+`/text-links` demonstrates orange underlined prose links on every documented surface and
+a dark island. `/registers` demonstrates expressive, reading and task regions with EN, FR
+and ES copy. The focused `text-links.spec.ts` checks cues, forced colours and 320 to 1920px.
