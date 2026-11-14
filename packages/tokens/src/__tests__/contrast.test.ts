@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { runContrastPairs, runIdentities, type ContrastPair, type Mode, type TokenIdentity } from '@yesid/gates';
+import { ratio, runContrastPairs, runIdentities, type ContrastPair, type Mode, type TokenIdentity } from '@yesid/gates';
 import { describe, expect, it } from 'vitest';
 
 const tokens = JSON.parse(readFileSync(new URL('../../tokens.json', import.meta.url), 'utf8')) as Record<string, unknown>;
@@ -26,6 +26,7 @@ const PAIRS: ContrastPair[] = [
 			...['primary', 'accent-text'].map((fg) => on(fg, 'accent-surface')),
 			...['accent-text', 'secondary-foreground'].map((fg) => on(fg, 'terminal-chrome')),
 			on('accent-text', 'manifesto'),
+			...['terminal-chrome', 'manifesto'].map((bg) => on('primary', bg)),
 			...['terminal-ink', 'terminal-ink-muted'].flatMap((fg) => ['terminal', 'terminal-chrome'].map((bg) => on(fg, bg))),
 			// Non-text contrast (WCAG 1.4.11).
 			...['input', 'line-amber', 'signal-lunar'].flatMap((fg) => ['background', 'card'].map((bg) => on(fg, bg, 3))),
@@ -40,6 +41,10 @@ const PAIRS: ContrastPair[] = [
 const IDENTITIES = THEMES.map((theme): TokenIdentity => [`${theme} terminal is the page background`, [theme, 'terminal'], [theme, 'background']]);
 
 describe('token contrast (WCAG 2.2 AA)', () => {
+	it('light primary stays AA on the documented tinted card', () => {
+		const tree = tokens as { color: { light: { primary: { $value: string } } } };
+		expect(ratio(tree.color.light.primary.$value, '#ECE1D7')).toBeGreaterThanOrEqual(4.5);
+	});
 	for (const { label, ratio, floor, pass } of runContrastPairs(tokens, PAIRS)) {
 		it(`${label} is at least ${floor}:1`, () => {
 			expect(pass, `${label} is ${ratio.toFixed(2)}:1`).toBe(true);

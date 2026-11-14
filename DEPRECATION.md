@@ -54,9 +54,22 @@ Removal evidence belongs in the pull request: the original deprecation release,
 dates, intervening minor, migration documentation, API report diff, and focused
 consumer or clean-room verification.
 
+## Active deprecations
+
+- **SiteFooter `statusPrefix` / `liveLabel`, starting v0.43.0:** Deprecated, retained and
+  functional. Migrate to omission or the existing `statusStart` snippet with a real source and
+  time. The former pulse is already still. See [footer status](docs/migrations/footer-status.md).
+  Earliest removal: publication date plus 90 days and an intervening minor (earliest v0.45.0
+  when v0.44.0 retains it), unless the owner waives the gates. Publication has not occurred.
+
 ## Removals
 
 ### Owner-approved behavior changes
+
+- **Y-28, answer 9A, 2026-11-13, planned v0.43.0:** the owner approved orange
+  underlined text links as a named default look change. Text links (a link without a class)
+  now use `--primary`. Remove product rules that colour links yellow; a component that needs
+  another link style styles its own. No prop, type or export changes. Rehearse in all three products.
 
 - **Y-30, owner instruction 2026-11-14:** "make sure we're removing the pulsing dots from
   the whole site ... from everywhere." This scoped compatibility exception permits the patch
