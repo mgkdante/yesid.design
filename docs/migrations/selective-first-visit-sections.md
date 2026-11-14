@@ -39,7 +39,9 @@ including delayed hydration, blocked storage and no JavaScript.
 ## Consumers checked read-only
 
 Transit T4, T6, T7 and T11 can opt optional depth into this prop while keeping findings visible;
-map tools remain independent. yesid.dev's case-study technical section can use the same prop,
+map tools remain independent. T4 uses `RouteDetail`, T6 uses `StopDetail`, T7 uses
+`NetworkTile` inside `NetworkSurface`, and T11 uses `MetricsExplainer`. T7 must explicitly
+forward the new prop through its product-owned `NetworkTile` wrapper when it adopts the option. yesid.dev's case-study technical section can use the same prop,
 with its localized title and summary. Selecting the optional section is a product decision;
 no title matching, new CMS field or product-specific branch is introduced here.
 yesid.login has no content-section adoption. Product rehearsal remains required at release adoption.
