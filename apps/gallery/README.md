@@ -38,3 +38,7 @@ motion), with one worker and no retries. They assert behavior, never pixels.
 `/text-links` demonstrates orange underlined prose links on every documented surface and
 a dark island. `/registers` demonstrates expressive, reading and task regions with EN, FR
 and ES copy. The focused `text-links.spec.ts` checks cues, forced colours and 320 to 1920px.
+
+/labelled-field demonstrates native labelled fields, long EN/FR/ES copy, error-summary
+focus and links, aria descriptions and simulated sending. labelled-field.spec.ts checks
+axe in both themes, 320 to 1440px reflow, reduced motion, boundaries and 44px targets.

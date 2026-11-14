@@ -22,3 +22,5 @@
 <MotionGallery />
 
 <p class="mt-4"><a href="/text-links">Text links and surfaces</a> · <a href="/registers">Presentation registers</a></p>
+
+<p><a href="/labelled-field">Labelled field recipe</a></p>
