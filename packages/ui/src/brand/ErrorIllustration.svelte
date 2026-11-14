@@ -1,6 +1,6 @@
 <!--
   Construction scene for error pages: scaffolding, a station sign, barriers, cones and two
-  blinking lamps (static under reduced motion). The sign shows `signLabel` and `code` when given.
+  steady lamps. The sign shows `signLabel` and `code` when given.
   Colors come from CSS classes because SVG presentation attributes can't read custom properties.
 -->
 <script lang="ts" module>
@@ -178,31 +178,9 @@
 	}
 
 	.light-a {
-		animation: blink-light 1.2s step-end infinite;
+		opacity: 1;
 	}
 	.light-b {
-		animation: blink-light 1.2s step-end infinite;
-		animation-delay: 0.6s;
-	}
-
-	@keyframes blink-light {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.15;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.light-a {
-			animation: none;
-			opacity: 1;
-		}
-		.light-b {
-			animation: none;
-			opacity: var(--opacity-subtle);
-		}
+		opacity: var(--opacity-subtle);
 	}
 </style>

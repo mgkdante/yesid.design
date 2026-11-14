@@ -25,6 +25,24 @@ there is no shadcn CLI, registry or package dependency.
 `@yesid/ui/card` exports only `Card` and its `Root` alias. Compose its content with ordinary
 markup. Variant functions stay internal to the Button, Badge and Sheet implementations; their
 props and public variant types remain available.
+## Motion
+
+Decorative motion never loops endlessly (WCAG 2.2.2). ErrorIllustration lamps,
+StopLabel's marker, MetroStation and TerminalCursor stay in their existing reduced-motion
+frames. MetroStation retains `pulseDelay` for compatibility; its hidden ping no longer animates.
+The opt-in gradient Separator is a still orange-to-yellow rule. StatusDot `pulse`,
+TerminalPanel `signal.live` and the shared `.led-pulse` class are accepted for compatibility
+and produce no visual pulse. All props, types and exports remain available. Reduced motion stays still.
+These opt-in changes follow the owner-approved compatibility exception in `DEPRECATION.md`.
+
+Skeleton and consumer spinners may loop only while something is actually loading. The caller
+owns that lifetime: render them within an `aria-busy="true"` loading region and remove them
+when it completes. Skeleton only animates inside that busy region. In the Gallery, the explicit
+browser allowlist accepts only Skeleton inside `aria-busy="true"`.
+The browser regression checks every Gallery route after load and after six seconds, with normal
+and reduced motion. See [the inventory](../../docs/migrations/no-endless-decorative-loops.md)
+for consumer callers and the JavaScript driver audit.
+
 
 ## Source scanning and application tokens
 
@@ -306,7 +324,7 @@ No product locale type or copy table enters the package.
 
 ### MetroStation
 
-Renders the zero-padded station number in a 2rem signage roundel with a pulse.
+Renders the zero-padded station number in a still 2rem signage roundel.
 
 ### TocBadge
 
@@ -316,7 +334,7 @@ token differs.
 
 ### TerminalCursor
 
-A blinking block cursor in `accent` (`accent-text` in light); it stops blinking under reduced motion.
+A steady block cursor in `accent` (`accent-text` in light).
 
 ### TerminalPanel and CodeBlock
 
@@ -328,9 +346,9 @@ pairs. Extra attributes go to the root. Its look comes from the `.terminal-*` cl
 
 There is no lamp or colored window chrome by default. To report a status the caller can verify,
 pass `signal={{ color: 'green', label: 'Live feed', live: true }}`. `color` uses `StatusDotColor`;
-`label` is required and supplies screen-reader text. Omit `live` for a steady lamp. Only `live: true`
-may pulse, after mount and when the `motion-gated` policy permits it. Server output stays still,
-and reduced-motion CSS also suppresses the pulse. `status` remains independent text.
+`label` is required and supplies screen-reader text. The lamp stays steady even with `live: true`;
+`live` remains accepted for compatibility and produces no visual pulse. Server output and reduced
+motion are also still. `status` remains independent text.
 Removing the automatic green pulse corrects an unmeasured status claim; existing callers need
 no prop changes unless they want to report a verified signal.
 
@@ -471,7 +489,7 @@ See [the breaking migration](../../docs/migrations/deepen-section-jump.md) for r
 
 Stateless atoms. `CornerMarks` draws four corner ticks and needs a positioned parent. `StatusDot`
 takes a signal aspect (`orange` to `lunar`) or a data status (`early` to `unknown`), with
-optional `pulse` and `ring`. `MetricDisplay` renders `value` and `label`; the `absent` snippet
+optional `pulse` and `ring`. `pulse` remains accepted for compatibility and produces no visual pulse. `MetricDisplay` renders `value` and `label`; the `absent` snippet
 replaces an empty value and `info` follows the label, so absence text and tooltips stay with the
 caller. `SectionHeading` takes `heading` or `overline`, plus `number`, `headingAccent`, and an
 `explainer` snippet. `SectionIcon` is the closed `SectionIconName` set that `TocBadge` also uses.

@@ -207,7 +207,7 @@ pre, code, table {
 }
 
 .led-pulse {
-	animation: pulse-glow 2s ease-in-out infinite;
+	animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

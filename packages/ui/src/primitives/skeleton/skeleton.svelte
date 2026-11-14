@@ -27,7 +27,7 @@ halt animation for users who opt out.
 </div>
 
 <style>
-	.skeleton-pulse {
+	:global([aria-busy='true']) .skeleton-pulse {
 		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 	}
 
@@ -42,7 +42,7 @@ halt animation for users who opt out.
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.skeleton-pulse {
+		:global([aria-busy='true']) .skeleton-pulse {
 			animation: none;
 		}
 	}

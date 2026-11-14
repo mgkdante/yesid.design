@@ -74,7 +74,7 @@
 		height: 32px;
 		border-radius: 50%;
 		background: color-mix(in srgb, var(--accent, var(--primary)) 50%, transparent);
-		animation: station-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+		display: none;
 	}
 
 	.station-number-badge {
@@ -105,24 +105,5 @@
 	.metro-line-svg {
 		display: block;
 		min-height: 20px;
-	}
-
-	@keyframes station-ping {
-		0% {
-			transform: scale(1);
-			opacity: 0.6;
-		}
-		75%,
-		100% {
-			transform: scale(2.5);
-			opacity: 0;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.station-pulse {
-			animation: none;
-			display: none;
-		}
 	}
 </style>

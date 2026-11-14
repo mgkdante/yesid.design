@@ -61,30 +61,11 @@
 		border-radius: 50%;
 		background: var(--primary);
 		box-shadow: 0 0 6px 2px rgb(var(--primary-rgb) / 0.6);
-		animation: pulse-glow 2s ease-in-out infinite;
 	}
 
 	:global([data-theme='light']) .stop-label::before,
 	:global(.theme-light) .stop-label::before {
 		outline: 2px solid var(--lamp-bezel);
 		outline-offset: 0px;
-	}
-
-	@keyframes pulse-glow {
-		0%,
-		100% {
-			opacity: 1;
-			box-shadow: 0 0 4px 1px rgb(var(--primary-rgb) / 0.5);
-		}
-		50% {
-			opacity: 0.7;
-			box-shadow: 0 0 10px 4px rgb(var(--primary-rgb) / 0.8);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.stop-label::before {
-			animation: none;
-		}
 	}
 </style>

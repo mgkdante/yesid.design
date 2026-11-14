@@ -433,7 +433,7 @@
 			<Card.Content class="grid grid-cols-2 gap-2">
 				{#each statusColors as color (color)}
 					<span class="flex items-center gap-2 font-mono text-caption">
-						<StatusDot {color} size="md" label={color} />
+						<StatusDot {color} pulse size="md" label={color} />
 						{color}
 					</span>
 				{/each}

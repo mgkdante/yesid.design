@@ -210,7 +210,7 @@
 {/if}
 
 <style>
-	/* Brand chrome line — orange→yellow flow. Decorative branding, NOT a data
+	/* Brand chrome line, orange to yellow. Decorative branding, not a data
 	   mark, so --primary/--accent are doctrine-compliant here. */
 	.gradient-separator-line {
 		height: 2px;
@@ -218,28 +218,8 @@
 		background: linear-gradient(
 			90deg,
 			var(--primary),
-			var(--accent),
-			var(--primary),
 			var(--accent)
 		);
-		background-size: 200% 100%;
-		animation: gradient-flow 3s linear infinite;
-	}
-
-	@keyframes gradient-flow {
-		0% {
-			background-position: 0% 0%;
-		}
-		100% {
-			background-position: 200% 0%;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.gradient-separator-line {
-			animation: none;
-			background: linear-gradient(90deg, var(--primary), var(--accent));
-			background-size: 100% 100%;
-		}
+		background-size: 100% 100%;
 	}
 </style>
