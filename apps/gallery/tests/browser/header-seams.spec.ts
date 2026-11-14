@@ -38,6 +38,7 @@ for (const width of [320, 390]) {
  test(`table preserves whole words at ${width}`, async ({ page }) => {
   await page.setViewportSize({ width, height: 844 });
   await page.goto('/button-focus');
+  await page.locator('html[data-gallery-ready="true"]').waitFor();
   await page.locator('main').evaluate(node => {
    node.innerHTML = '<table style="width:100%;table-layout:fixed"><tbody><tr><th scope="row">Deployment</th><td>Reliable environments support teams</td></tr></tbody></table>';
   });
