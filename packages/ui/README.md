@@ -526,6 +526,12 @@ give the drawings.
 `onHeaderMount(header, frame)` runs once on mount for header motion such as a scroll scrub; return
 its cleanup.
 
+That is the default, `presentation="expressive"`. `presentation="reading"` is the calm listing
+header for reading pages: the `heading` h1 is visible and horizontal at every width, with no edge
+title, accent rail or artwork (`edgeTitle` and `blueprint` are ignored, and `blueprint` may be
+omitted), a sentence-case subtitle in reading type, and a neutral line instead of the hazard rule.
+The title, the line and the filter column share one left edge.
+
 The filter column holds the `search` snippet and a panel with the `filters` snippet. From 1024px
 the panel is always shown and the column is sticky. Below 1024px a button labelled `filterLabel`
 opens it. The panel starts closed on every mount. The panel
@@ -539,9 +545,21 @@ it and to park the sticky column below it. It falls back to `0px`.
 
 ## Detail frame and article header
 
-`DetailFrame` is the detail and article page template: the `header` snippet, a hazard rule, an
+`DetailFrame` is the detail and article page template: the `header` snippet, a rule, an
 optional `toolbar` band, then a grid of an optional left rail, the center (`children`, with an
-optional `summary` on top) and an optional right rail, then `after`. `left` and `right` render in
+optional `summary` on top) and an optional right rail, then `after`. `rule` is `hazard` (the
+default tape), `line` (a neutral hairline for reading pages) or `none`.
+
+`header` renders first, before the rule and the grid, so it is the place for an opening that must
+come before both rails: the answer, the summary of findings, or the first paragraph a phone reader
+should see before the contents or the metadata. Put the opening after the `ArticleHeader` inside
+the `header` snippet. `summary` is the top of the center column instead: inside the grid, after
+the left rail in the DOM, and below it on phones when `leftMobile` or `paneOwnedRail` shows it.
+From 1024px, with both rails, the frame sets `--detail-center-width` to the center track's width,
+so content in `header` can line up with the center column
+(`max-width: calc(var(--detail-center-width, 46rem) + 2 * var(--space-page-x))`, centred, with
+`--space-page-x` inline padding); the reading `ArticleHeader` does this itself.
+ `left` and `right` render in
 frame asides that stick below the chrome at `--detail-rail-top` (default `--chrome-offset`) and
 hide below 1024px, unless `leftMobile` keeps the left one. `rail` replaces the left cell with the
 caller's own element, such as a rail that becomes a sheet on mobile. `railScroll` caps rails to the
@@ -556,7 +574,9 @@ appear. The root takes ordinary attributes such as `class`, `style` and `data-te
 
 `ArticleHeader` is the header those pages share: back link, optional `category`, the `title` with
 its `highlight` keyword in the accent, `subtitle`, `meta` (pending state included), and `actions`
-and `controls` snippets. `watermark`, `edgeLeft`, `edgeRight` and the `decorations` snippet draw
+and `controls` snippets. `highlight` accents the first case-insensitive match that is a whole word:
+letters, digits and combining marks in any script count as word characters, so `AI` never
+matches inside `BRAIN`, and `énergé` never inside `énergétiques`. `watermark`, `edgeLeft`, `edgeRight` and the `decorations` snippet draw
 decorative chrome; `--article-deco-opacity` sets how strongly it reads. The subtitle and the meta
 row share one mono type, `--article-meta-size`. A `ManifestoCanvas` fills the header; a `canvas`
 snippet replaces it (an empty one leaves the header plain) and receives the header element once
@@ -565,7 +585,21 @@ header scrolls, fixed and clipped to the header, so it lines up with a fixed pag
 Like `ListingFrame`, it expects the page to pad its top by `--chrome-offset` and pulls itself under
 the chrome. The back link sits midway between the chrome and the next line; an app whose
 `--chrome-offset` leaves a gap under its chrome sets `--chrome-gap` to that gap. The title uses
-`--text-title`, so it follows the density mode.
+`--text-title`, so it follows the density mode; `--article-title-size` replaces it, for example
+with a container-relative size. Long titles wrap between words and break inside a word only when
+it is wider than the column (soft hyphens, U+00AD, choose the break); meta entries, including a
+label and its date, wrap inside the column. Products need no selector inside the header for this.
+
+That is the default, `presentation="expressive"`. `presentation="reading"` is the calm header for
+articles, case studies and data pages: on the page colour, left aligned on the reading column
+(`--article-measure`, else DetailFrame's `--detail-center-width`, else `46rem`, centred like the
+column), with the title in sentence case as written, Inter throughout, an orange underlined back
+link, and no canvas, circuit grid, chevrons, corner marks, crosshair cursor or highlight.
+`watermark`, `edgeLeft`, `edgeRight`, `decorations`, `canvas`, `highlight` and `accent` are
+ignored, so a page can switch presentation without changing its other props. There is no line
+above the title: `category` becomes the first meta entry below it, at the meta size (15px), and a
+wrapped meta line never starts with a separator. Pair it with `DetailFrame`'s `rule="line"` and
+`measure`, and put an opening in the `header` snippet after it.
 
 ## Site header
 

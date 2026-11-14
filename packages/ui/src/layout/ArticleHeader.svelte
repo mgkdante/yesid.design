@@ -1,9 +1,12 @@
 <!--
-  Article and project page header: circuit-grid band with decorative chrome, a back link, an
-  optional category line, the title (one keyword accented), subtitle, meta row, and actions and
-  controls snippets. It sits under the fixed site chrome: it cancels the page's top padding of
-  `--chrome-offset` and pads itself by the same amount. An app whose offset leaves a gap under its
-  chrome sets `--chrome-gap` to it, so the back link sits midway between the chrome and the next line.
+  Article and project page header: a back link, the title, subtitle, meta row, and actions and
+  controls snippets. The expressive presentation (default) draws a circuit-grid band with
+  decorative chrome, a category line above the title and one whole-word keyword in the accent. The
+  reading presentation is the calm header: left aligned on the reading column, sentence case, no
+  canvas or decoration, no highlight, and the category leads the meta row below the title.
+  It sits under the fixed site chrome: it cancels the page's top padding of `--chrome-offset` and
+  pads itself by the same amount. An app whose offset leaves a gap under its chrome sets
+  `--chrome-gap` to it, so the back link sits midway between the chrome and the next line.
 -->
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
@@ -18,8 +21,19 @@
 
 	export interface ArticleHeaderProps {
 		title: string;
-		/** First case-insensitive match in the title renders in the accent. */
+		/**
+		 * `expressive` (default): the circuit-grid band with its decoration. `reading`: the calm
+		 * header, left aligned and undecorated; it ignores `highlight`, `accent`, `watermark`,
+		 * `edgeLeft`, `edgeRight`, `decorations` and `canvas`, and shows `category` in the meta row.
+		 */
+		presentation?: 'expressive' | 'reading';
+		/**
+		 * First case-insensitive whole-word match in the title renders in the accent (expressive
+		 * only). Letters, digits and combining marks in any script count as word characters, so
+		 * `AI` never matches inside `BRAIN`.
+		 */
 		highlight?: string;
+		/** A line above the title (expressive); the first meta entry (reading). */
 		category?: string;
 		subtitle?: string;
 		backHref: string;
@@ -41,6 +55,17 @@
 		titleId?: string;
 		testId?: string;
 	}
+
+	const WORD = String.raw`[\p{L}\p{N}\p{M}]`;
+
+	/** The first case-insensitive match of `word` in `text` with no word character on either side. */
+	function findWholeWord(text: string, word: string | undefined): { start: number; end: number } | null {
+		const needle = word?.trim();
+		if (!needle) return null;
+		const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const match = new RegExp(`(?<!${WORD})${escaped}(?!${WORD})`, 'iu').exec(text);
+		return match ? { start: match.index, end: match.index + match[0].length } : null;
+	}
 </script>
 
 <script lang="ts">
@@ -50,6 +75,7 @@
 
 	let {
 		title,
+		presentation = 'expressive',
 		highlight,
 		category,
 		subtitle,
@@ -71,61 +97,73 @@
 
 	let headerEl = $state<HTMLElement>();
 
+	const reading = $derived(presentation === 'reading');
 	const titleParts = $derived.by(() => {
-		if (!highlight) return [{ text: title, highlight: false }];
-		const at = title.toLowerCase().indexOf(highlight.toLowerCase());
-		if (at < 0) return [{ text: title, highlight: false }];
-		const end = at + highlight.length;
+		const match = reading ? null : findWholeWord(title, highlight);
+		if (!match) return [{ text: title, highlight: false }];
 		return [
-			{ text: title.slice(0, at), highlight: false },
-			{ text: title.slice(at, end), highlight: true },
-			{ text: title.slice(end), highlight: false },
+			{ text: title.slice(0, match.start), highlight: false },
+			{ text: title.slice(match.start, match.end), highlight: true },
+			{ text: title.slice(match.end), highlight: false },
 		].filter((part) => part.text);
 	});
+	const metaEntries = $derived<readonly ArticleMetaEntry[]>(
+		reading && category ? [category, ...meta] : meta,
+	);
 </script>
 
 <div
 	bind:this={headerEl}
 	class="article-header"
+	class:article-header--reading={reading}
 	style="--article-accent: {accent};"
 	data-slot="article-header"
+	data-presentation={presentation}
 	data-testid={testId}
 >
-	<div class="header__circuit-grid" aria-hidden="true"></div>
-	{#if canvas}
-		{@render canvas(headerEl)}
-	{:else}
-		<ManifestoCanvas containerEl={headerEl} />
+	{#if !reading}
+		<div class="header__circuit-grid" aria-hidden="true"></div>
+		{#if canvas}
+			{@render canvas(headerEl)}
+		{:else}
+			<ManifestoCanvas containerEl={headerEl} />
+		{/if}
 	{/if}
 
 	<section class="header-section">
-		<div class="header__decoration-layer" aria-hidden="true">
-			<CornerMarks size="md" opacity={0.12} />
+		{#if !reading}
+			<div class="header__decoration-layer" aria-hidden="true">
+				<CornerMarks size="md" opacity={0.12} />
 
-			<div class="header__chevrons">
-				{#each [0, 1, 2] as i (i)}
-					<div class="header__chevron"></div>
-				{/each}
+				<div class="header__chevrons">
+					{#each [0, 1, 2] as i (i)}
+						<div class="header__chevron"></div>
+					{/each}
+				</div>
+
+				{#if watermark}
+					<div class="header__watermark">{watermark}</div>
+				{/if}
+				{#if edgeLeft}
+					<div class="header__edge header__edge-left">{edgeLeft}</div>
+				{/if}
+				{#if edgeRight}
+					<div class="header__edge header__edge-right">{edgeRight}</div>
+				{/if}
+				{@render decorations?.()}
 			</div>
-
-			{#if watermark}
-				<div class="header__watermark">{watermark}</div>
-			{/if}
-			{#if edgeLeft}
-				<div class="header__edge header__edge-left">{edgeLeft}</div>
-			{/if}
-			{#if edgeRight}
-				<div class="header__edge header__edge-right">{edgeRight}</div>
-			{/if}
-			{@render decorations?.()}
-		</div>
+		{/if}
 
 		<div class="header__content">
-			<a href={backHref} class="header__back" use:boop={{ scale: 1.05, timing: 200 }}>
-				{backLabel}
-			</a>
+			{#if reading}
+				<a href={backHref} class="header__back">{backLabel}</a>
+			{:else}
+				<a href={backHref} class="header__back" use:boop={{ scale: 1.05, timing: 200 }}>
+					{backLabel}
+				</a>
+			{/if}
 
-			{#if category}
+			{#if category && !reading}
 				<div class="header__cat-line">{category}</div>
 			{/if}
 
@@ -140,10 +178,10 @@
 				<p class="header__subtitle">{subtitle}</p>
 			{/if}
 
-			{#if meta.length > 0 || metaPending}
+			{#if metaEntries.length > 0 || metaPending}
 				<div class="header__meta" data-pending={metaPending}>
-					{#each meta as entry, i (i)}
-						<span class="header__meta-item">
+					{#each metaEntries as entry, i (i)}
+						<span class="header__meta-item" class:header__meta-item--category={reading && category && i === 0}>
 							{#if i > 0}<span class="header__meta-sep" aria-hidden="true"></span>{/if}
 							{#if typeof entry === 'string'}
 								<span>{entry}</span>
@@ -294,6 +332,7 @@
 		flex-direction: column;
 		align-items: center;
 		width: 100%;
+		min-width: 0;
 		margin-inline: auto;
 		padding: max(0px, calc(0.5rem - var(--chrome-gap, 0px))) 1.25rem 1.5rem;
 		text-align: center;
@@ -338,11 +377,16 @@
 		background: color-mix(in srgb, var(--article-accent) 30%, transparent);
 	}
 
+	/* Long titles wrap inside the column, between words; a word wider than the column breaks inside
+	   instead of overflowing (as base.css does for body text). Soft hyphens (U+00AD) in the title
+	   choose where a long word breaks. */
 	.header__title {
+		max-width: 100%;
 		margin: 0 0 0.75rem;
 		font-family: var(--font-heading);
-		font-size: var(--text-title);
+		font-size: var(--article-title-size, var(--text-title));
 		font-weight: 900;
+		overflow-wrap: anywhere;
 		text-transform: uppercase;
 		letter-spacing: -0.04em;
 		line-height: 0.95;
@@ -385,9 +429,10 @@
 
 	.header__meta-pair {
 		display: inline-flex;
+		flex-wrap: wrap;
 		align-items: baseline;
-		gap: 0.5em;
-		white-space: nowrap;
+		column-gap: 0.5em;
+		min-width: 0;
 	}
 
 	.header__meta-skeleton {
@@ -456,6 +501,123 @@
 		.header__subtitle {
 			margin-bottom: 1rem;
 		}
+	}
+
+	/* Reading presentation: the calm header. It sits on the page colour, starts at the left edge of
+	   the reading column (`--article-measure`, else DetailFrame's `--detail-center-width`, else
+	   46rem, centred like the column) and sets everything in Inter at reading sizes. */
+	.article-header--reading {
+		--article-meta-size: var(--text-small);
+		overflow: visible;
+		clip-path: none;
+		background: transparent;
+		cursor: auto;
+	}
+
+	.article-header--reading .header__content {
+		align-items: flex-start;
+		max-width: calc(var(--article-measure, var(--detail-center-width, 46rem)) + 2 * var(--space-page-x));
+		padding: max(0px, calc(0.5rem - var(--chrome-gap, 0px))) var(--space-page-x) clamp(1.5rem, 1rem + 2vw, 2.5rem);
+		text-align: start;
+	}
+
+	.article-header--reading .header__back {
+		margin-bottom: 0.25rem;
+		font-family: var(--font-body);
+		font-size: var(--text-back-link);
+		color: var(--primary);
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.2em;
+		text-decoration-color: color-mix(in srgb, var(--primary) 45%, transparent);
+		transition: text-decoration-color var(--duration-normal) ease;
+	}
+
+	.article-header--reading .header__back:hover {
+		color: var(--primary);
+		text-decoration-color: currentColor;
+	}
+
+	.article-header--reading .header__title {
+		max-width: 24em;
+		margin-bottom: 0;
+		font-size: var(--article-title-size, var(--text-title));
+		font-weight: 750;
+		text-transform: none;
+		letter-spacing: var(--tracking-tight);
+		line-height: 1.15;
+		text-shadow: none;
+		text-wrap: balance;
+	}
+
+	.article-header--reading .header__subtitle {
+		max-width: 38em;
+		margin: 0.75rem 0 0;
+		font-family: var(--font-body);
+		font-size: var(--text-reading-support);
+		line-height: 1.5;
+		color: color-mix(in srgb, var(--muted-foreground) 35%, var(--foreground));
+	}
+
+	/* Each entry after the first starts with its separator. The row reaches one separator's width
+	   past the column's start and clips it, so a wrapped line never begins with a separator. */
+	.article-header--reading .header__meta {
+		--meta-sep-space: calc(3px + 0.625rem);
+		justify-content: flex-start;
+		column-gap: 0.625rem;
+		row-gap: 0.25rem;
+		margin-top: 1rem;
+		margin-inline-start: calc(-1 * var(--meta-sep-space));
+		clip-path: inset(0 0 0 var(--meta-sep-space));
+		font-family: var(--font-body);
+		font-variant-numeric: tabular-nums;
+		line-height: 1.5;
+		color: var(--muted-foreground);
+	}
+
+	.article-header--reading .header__meta-item {
+		gap: 0.625rem;
+	}
+
+	.article-header--reading .header__meta > :first-child {
+		padding-inline-start: var(--meta-sep-space);
+	}
+
+	/* A label and its value wrap as words, like the sentence they read as. */
+	.article-header--reading .header__meta-pair {
+		display: inline;
+	}
+
+	.article-header--reading .header__meta-pair > :first-child::after {
+		content: ' ';
+	}
+
+	.article-header--reading .header__meta-item--category {
+		font-weight: 600;
+		color: color-mix(in srgb, var(--muted-foreground) 35%, var(--foreground));
+	}
+
+	.article-header--reading .header__meta-sep {
+		background: currentColor;
+		opacity: 0.6;
+	}
+
+	.article-header--reading .header__meta-skeleton {
+		background: color-mix(in srgb, var(--foreground) 10%, transparent);
+	}
+
+	.article-header--reading .header__actions,
+	.article-header--reading .header__controls {
+		justify-content: flex-start;
+		margin-top: 1.25rem;
+	}
+
+	.article-header--reading .header__actions {
+		column-gap: 1.25rem;
+	}
+
+	.article-header--reading .header__actions + .header__controls {
+		margin-top: 0.75rem;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

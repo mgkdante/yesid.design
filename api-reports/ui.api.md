@@ -342,7 +342,6 @@ interface ArticleHeaderProps {
     // (undocumented)
     backLabel: string;
     canvas?: Snippet<[HTMLElement | undefined]>;
-    // (undocumented)
     category?: string;
     // (undocumented)
     controls?: Snippet;
@@ -355,6 +354,7 @@ interface ArticleHeaderProps {
     // (undocumented)
     meta?: readonly ArticleMetaEntry[];
     metaPending?: boolean;
+    presentation?: 'expressive' | 'reading';
     // (undocumented)
     subtitle?: string;
     // (undocumented)
@@ -1341,7 +1341,6 @@ interface DetailFrameProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>
     after?: Snippet;
     // (undocumented)
     children: Snippet;
-    // (undocumented)
     header?: Snippet;
     // (undocumented)
     left?: Snippet;
@@ -1355,6 +1354,7 @@ interface DetailFrameProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>
     railScroll?: boolean;
     // (undocumented)
     right?: Snippet;
+    rule?: 'hazard' | 'line' | 'none';
     summary?: Snippet;
     // (undocumented)
     toc?: DetailFrameToc;
@@ -1741,7 +1741,7 @@ type ListingFrame = ReturnType<typeof ListingFrame>;
 // @public (undocumented)
 interface ListingFrameProps {
     aside?: Snippet;
-    blueprint: Snippet;
+    blueprint?: Snippet;
     // (undocumented)
     children: Snippet;
     // (undocumented)
@@ -1752,6 +1752,7 @@ interface ListingFrameProps {
     filters: Snippet;
     heading: string;
     onHeaderMount?: (header: HTMLElement, frame: HTMLElement) => (() => void) | void;
+    presentation?: 'expressive' | 'reading';
     // (undocumented)
     search?: Snippet;
     // (undocumented)
